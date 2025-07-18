@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "432176160698",
+    "project_id": "fixero-9e0a9",
+    "storage_bucket": "fixero-9e0a9.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:432176160698:android:570a9102ef8da835014783",
+        "android_client_info": {
+          "package_name": "com.fixero.fixero"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCib0g6Kryicezu29z-UwOSGi22Qlg8swc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
