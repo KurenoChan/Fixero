@@ -63,7 +63,7 @@ class AuthService {
           message = 'Google login UI is unavailable.';
           break;
         default:
-          print('Unknown Google login error: $e');
+          // print('Unknown Google login error: $e');
           message = 'Google login failed. Please try again.';
       }
 

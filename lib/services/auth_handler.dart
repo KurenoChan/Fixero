@@ -26,11 +26,33 @@ class AuthHandler {
         );
       }
     } on FirebaseAuthException catch (e) {
-      String message = switch (e.code) {
-        'user-not-found' => 'No user found.',
-        'wrong-password' => 'Wrong password.',
-        _ => 'Login failed. Please try again.',
-      };
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No account found for this email.';
+          break;
+        case 'wrong-password':
+          message = 'Incorrect password. Please try again.';
+          break;
+        case 'invalid-email':
+          message = 'This email address is not valid.';
+          break;
+        case 'user-disabled':
+          message = 'This user account has been disabled.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many attempts. Try again later.';
+          break;
+        case 'network-request-failed':
+          message = 'Network error. Please check your connection.';
+          break;
+        case 'invalid-credential':
+          message = 'Invalid email or password.';
+          break;
+        default:
+          print('Unknown login error: $e');
+          message = 'Login failed. Please try again later.';
+      }
 
       if (context.mounted) {
         ScaffoldMessenger.of(
