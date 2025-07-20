@@ -1,21 +1,21 @@
 import 'package:fixero/components/fixero_homeappbar.dart';
 import 'package:flutter/material.dart';
 
-import '../../services/auth_service.dart';
-import 'login_page.dart';
+// import '../../services/auth_service.dart';
+// import 'login_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
-  Future<void> _handleSignOut(BuildContext context) async {
-    await AuthService.signOut();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-        (route) => false,
-      );
-    });
-  }
+  // Future<void> _handleSignOut(BuildContext context) async {
+  //   await AuthService.signOut();
+  //   WidgetsBinding.instance.addPostFrameCallback((_) {
+  //     Navigator.of(context).pushAndRemoveUntil(
+  //       MaterialPageRoute(builder: (context) => const LoginPage()),
+  //       (route) => false,
+  //     );
+  //   });
+  // }
 
   void _handleServiceTap(BuildContext context, String label, IconData icon) {
     // Example behavior: show a dialog
