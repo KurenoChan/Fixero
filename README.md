@@ -39,7 +39,7 @@
 
 ## 🧭 Navigation Structure
 
-'''
+```
 Home
 ├── Dashboard (Stats + Overview)
 │ ├── Active Jobs
@@ -61,7 +61,7 @@ Home
 ├── Settings
 ├── Profile
 └── App Preferences
-'''
+```
 
 ---
 
