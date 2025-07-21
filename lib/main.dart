@@ -1,6 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:fixero/pages/intro/intro_page.dart';
 import 'package:fixero/pages/main/home_page.dart';
+import 'package:fixero/pages/main/inventory_page.dart';
 import 'package:fixero/pages/main/login_page.dart';
 import 'package:fixero/theme/dark_mode.dart';
 import 'package:fixero/theme/light_mode.dart';
@@ -55,50 +56,11 @@ class MainApp extends StatelessWidget {
       darkTheme: darkMode,
       themeMode: ThemeMode.system,
 
-      // theme: ThemeData(
-      //   colorScheme: ColorScheme.fromSeed(
-      //     seedColor: Colors.black,
-      //     brightness: Brightness.dark, // Important to switch to dark mode
-      //   ),
-      //   // Background color for all pages
-      //   scaffoldBackgroundColor: Colors.black,
-      //   textTheme: const TextTheme(
-      //     bodyLarge: TextStyle(color: Colors.white),
-      //     bodyMedium: TextStyle(color: Colors.white),
-      //     titleLarge: TextStyle(color: Colors.white),
-      //   ),
-      //   appBarTheme: const AppBarTheme(
-      //     backgroundColor: Colors.black,
-      //     foregroundColor: Colors.white, // For title/icon color in AppBar
-      //   ),
-      //
-      //   elevatedButtonTheme: ElevatedButtonThemeData(
-      //     style: ElevatedButton.styleFrom(
-      //       backgroundColor: Colors.white,
-      //       foregroundColor: Colors.black,
-      //       shape: RoundedRectangleBorder(
-      //         borderRadius: BorderRadius.circular(10),
-      //       ),
-      //     ),
-      //   ),
-      //
-      //   inputDecorationTheme: const InputDecorationTheme(
-      //     filled: true,
-      //     fillColor: Colors.white10,
-      //     labelStyle: TextStyle(color: Colors.white),
-      //     hintStyle: TextStyle(color: Colors.grey),
-      //     border: OutlineInputBorder(
-      //       borderSide: BorderSide(color: Colors.white),
-      //     ),
-      //     enabledBorder: OutlineInputBorder(
-      //       borderRadius: BorderRadius.all(Radius.circular(5)),
-      //       borderSide: BorderSide(color: Colors.white),
-      //     ),
-      //     focusedBorder: OutlineInputBorder(
-      //       borderSide: BorderSide(color: Colors.blue),
-      //     ),
-      //   ),
-      // ),
+      initialRoute: HomePage.routeName,
+      routes: {
+        HomePage.routeName: (_) => const HomePage(),
+        InventoryPage.routeName: (_) => const InventoryPage(),
+      },
 
       home: AnimatedSplashScreen(
         splash: 'assets/images/logo/splash_fixero.gif',

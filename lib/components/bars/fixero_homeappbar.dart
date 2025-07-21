@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class FixeroHomeAppbar extends StatelessWidget implements PreferredSizeWidget {
+class FixeroHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String username;
   final String profileImgUrl;
 
-  const FixeroHomeAppbar({
+  const FixeroHomeAppBar({
     super.key,
     required this.username,
     required this.profileImgUrl,
@@ -16,6 +16,7 @@ class FixeroHomeAppbar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       elevation: 0,
       flexibleSpace: Padding(
         padding: const EdgeInsets.only(top: 0.0), // top spacing

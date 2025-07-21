@@ -14,6 +14,8 @@ import '../../data/service_dao.dart';
 // import 'login_page.dart';
 
 class HomePage extends StatefulWidget {
+  static const routeName = '/home';
+
   const HomePage({super.key});
 
   @override
@@ -67,7 +69,7 @@ class _HomePageState extends State<HomePage> {
 
     return SafeArea(
       child: Scaffold(
-        appBar: const FixeroHomeAppbar(
+        appBar: const FixeroHomeAppBar(
           username: "Henry Roosevelt",
           profileImgUrl: "https://i.pravatar.cc/150?img=11",
         ),
