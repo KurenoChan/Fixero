@@ -1,4 +1,4 @@
-import 'package:fixero/components/bars/fixero_searcher.dart';
+import 'package:fixero/components/tools/fixero_searcher.dart';
 import 'package:fixero/utils/formatter.dart';
 import 'package:flutter/material.dart';
 
