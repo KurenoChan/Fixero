@@ -1,12 +1,17 @@
+import 'package:fixero/components/bars/fixero_searcher.dart';
 import 'package:fixero/utils/formatter.dart';
 import 'package:flutter/material.dart';
 
 class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final List<String> searchHints;
+  final List<String> searchTerms;
 
   const FixeroMainAppBar({
     super.key,
     required this.title,
+    required this.searchHints,
+    required this.searchTerms,
   });
 
   @override
@@ -23,7 +28,10 @@ class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 35),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.inversePrimary,
-            borderRadius: BorderRadius.only(bottomLeft: Radius.circular(20), bottomRight: Radius.circular(20)),
+            borderRadius: BorderRadius.only(
+              bottomLeft: Radius.circular(20),
+              bottomRight: Radius.circular(20),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -40,11 +48,10 @@ class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
 
               // RIGHT SIDE
-              IconButton(
-                icon: Icon(Icons.search, color: Theme.of(context).primaryColor, size: 30),
-                onPressed: () {},
+              FixeroSearcher(
+                searchHints: searchHints,
+                searchTerms: searchTerms,
               ),
-
             ],
           ),
         ),

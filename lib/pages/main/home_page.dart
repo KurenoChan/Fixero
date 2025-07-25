@@ -249,14 +249,8 @@ class _HomePageState extends State<HomePage> {
                       context: context,
                       value: "Popular Services",
                       chart: FixeroPieChart(data: ServiceDAO.initializeData()),
+                      trendColor: theme.colorScheme.inversePrimary,
                     ),
-
-
-                    // 1. Income Insights
-
-                    // 2. Jobs Demand Insights
-
-                    // 3. Popular Service Insights
                   ],
                 ),
               ],

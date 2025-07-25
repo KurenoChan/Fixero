@@ -16,9 +16,9 @@ class FixeroPieChart<T extends ChartDataModel> extends StatelessWidget {
           return PieChartSectionData(
             value: item.value,
             title: "${item.label} (${item.value.toStringAsFixed(0)}%)",
-            color: Colors.primaries[e.key % Colors.primaries.length],
+            color: Colors.primaries[e.key % Colors.primaries.length].withAlpha(180),
             radius: 60,
-            titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            titleStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
           );
         }).toList(),
       ),
