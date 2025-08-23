@@ -1,15 +1,16 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
-import 'package:fixero/pages/intro/intro_page.dart';
-import 'package:fixero/pages/main/home_page.dart';
-import 'package:fixero/pages/main/inventory_page.dart';
-import 'package:fixero/pages/main/login_page.dart';
-import 'package:fixero/theme/dark_mode.dart';
-import 'package:fixero/theme/light_mode.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_core/firebase_core.dart' show Firebase;
+import 'common/styles/dark_mode.dart';
+import 'common/styles/light_mode.dart';
+import 'features/authentication/views/login_page.dart';
+import 'features/intro/views/intro_page.dart';
+import 'features/inventory_management/views/inventory_page.dart';
 import 'firebase_options.dart';
+import 'home_page.dart';
 
 void main() async {
   // Initialize Flutter binding
