@@ -11,10 +11,6 @@ import 'data/dao/income_dao.dart';
 import 'data/dao/jobdemand_dao.dart';
 import 'data/dao/service_dao.dart';
 
-
-// import '../../services/auth_service.dart';
-// import 'login_page.dart';
-
 class HomePage extends StatefulWidget {
   static const routeName = '/home';
 
