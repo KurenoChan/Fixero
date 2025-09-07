@@ -56,7 +56,7 @@ class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
       //       children: [
       //         // LEFT SIDE
       //         IconButton(
-      //           icon: Icon(
+      //           icons: Icon(
       //             Icons.chevron_left,
       //             color: theme.primaryColor,
       //             size: 30,

@@ -7,33 +7,34 @@
 ## 📱 Key Features
 
 - 🔧 **Job Management**
-    - View, create, schedule, and assign repair jobs
-    - Track job status: Scheduled, Ongoing, Completed
-    - Job filters, mechanic allocation, and service insights
 
+  - View, create, schedule, and assign repair jobs
+  - Track job status: Scheduled, Ongoing, Completed
+  - Job filters, mechanic allocation, and service insights
 - 🚙 **Vehicle Management**
-    - Browse vehicles by type (car, bike, van, truck)
-    - View detailed vehicle records (plate no, model, color, year)
-    - Access full service history linked to customer jobs
 
+  - Browse vehicles by type (car, bike, van, truck)
+  - View detailed vehicle records (plate no, model, color, year)
+  - Access full service history linked to customer jobs
 - 🧑‍🔧 **Mechanic Oversight**
-    - Assign jobs based on workload and specialties
-    - Track mechanic status and history
 
+  - Assign jobs based on workload and specialties
+  - Track mechanic status and history
 - 🛠️ **Inventory Control**
-    - Browse categorized spare parts and tools
-    - Real-time stock alerts (low, out-of-stock)
-    - Manage restocks and procurement requests
-    - View supplier history and stock usage trends
 
+  - Browse categorized spare parts and tools
+  - Real-time stock alerts (low, out-of-stock)
+  - Manage restocks and procurement requests
+  - View supplier history and stock usage trends
 - 📄 **Invoice Management**
-    - Generate and track invoices linked to jobs
-    - Monitor payment status and totals
 
+  - Generate and track invoices linked to jobs
+  - Monitor payment status and totals
 - 💬 **Customer CRM**
-    - View customer profiles and vehicle ownership
-    - Access communication and interaction history
-    - Optional customer portal for job updates or chat
+
+  - View customer profiles and vehicle ownership
+  - Access communication and interaction history
+  - Optional customer portal for job updates or chat
 
 ---
 
@@ -81,3 +82,4 @@ Home
    ```bash
    git clone https://github.com/yourusername/fixero.git
    cd fixero
+   ```
