@@ -37,10 +37,7 @@ class FixeroHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Text(
                     "Welcome",
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.8),
+                      color: Theme.of(context).colorScheme.onInverseSurface,
                       fontSize: 20,
                     ),
                   ),
@@ -59,7 +56,7 @@ class FixeroHomeAppBar extends StatelessWidget implements PreferredSizeWidget {
               CircleAvatar(
                 radius: 24,
                 backgroundImage: NetworkImage(profileImgUrl),
-                backgroundColor: Colors.grey[200],
+                  backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
               ),
             ],
           ),

@@ -109,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                       onPressed: () {},
                       style: TextButton.styleFrom(
                         backgroundColor: theme.colorScheme.inversePrimary
-                            .withValues(alpha: 0.5),
+                            .withValues(alpha: 0.4),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
@@ -292,11 +292,11 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.inversePrimary,
-            theme.colorScheme.inversePrimary.withValues(alpha: 0.5),
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.5),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(10),
       ),
@@ -305,7 +305,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text(
             title,
-            style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
+            style: TextStyle(fontSize: 16, color: theme.colorScheme.inversePrimary),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -315,7 +315,7 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(
               fontSize: 25,
               fontWeight: FontWeight.bold,
-              color: theme.colorScheme.primary,
+              color: theme.colorScheme.inversePrimary,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -339,19 +339,19 @@ class _HomePageState extends State<HomePage> {
         width: 100,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: theme.colorScheme.inversePrimary.withValues(alpha: 0.3),
+          color: theme.colorScheme.primary.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: theme.colorScheme.inversePrimary),
+            Icon(icon, color: theme.colorScheme.primary),
             const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
                 fontSize: 14,
-                color: theme.colorScheme.inversePrimary,
+                color: theme.colorScheme.primary,
               ),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
@@ -387,7 +387,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.symmetric(vertical: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.inversePrimary.withAlpha(30),
+        color: theme.colorScheme.inversePrimary.withAlpha(50),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -411,7 +411,7 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.inversePrimary,
+                            color: theme.colorScheme.primary,
                           ),
                         ),
                       if (title != null)
@@ -419,7 +419,7 @@ class _HomePageState extends State<HomePage> {
                           title,
                           style: TextStyle(
                             fontSize: 15,
-                            color: theme.colorScheme.inversePrimary.withAlpha(150),
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w500,
                           ),
                         ),

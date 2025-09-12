@@ -70,10 +70,11 @@ class _RegisterPageState extends State<RegisterPage>
 
             // Blurred Overlay
             BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+              filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
               child: Container(
-                // color: Colors.white.withValues(alpha: 0.2),
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).scaffoldBackgroundColor.withValues(alpha: 0.2),
               ),
             ),
 
@@ -108,17 +109,33 @@ class _RegisterPageState extends State<RegisterPage>
                         TextFormField(
                           keyboardType: TextInputType.name,
                           controller: _usernameController,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          cursorColor: Theme.of(context).colorScheme.onSurface,
                           decoration: InputDecoration(
-                            prefixIcon: Icon(Icons.person_2_rounded),
+                            prefixIcon: Icon(
+                              Icons.person_2_rounded,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
                             labelText: 'Username',
+                            labelStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             border: OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             filled: true,
-                            fillColor: Colors.white30,
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                           ),
-                          validator: (value) => Validators.validateUsername(value!),
+                          validator: (value) =>
+                              Validators.validateUsername(value!),
                         ),
 
                         const SizedBox(height: 15),
@@ -127,17 +144,30 @@ class _RegisterPageState extends State<RegisterPage>
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
                           controller: _emailController,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          cursorColor: Theme.of(context).colorScheme.onSurface,
                           decoration: InputDecoration(
                             prefixIcon: Icon(Icons.email),
                             labelText: 'Email',
+                            labelStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             border: OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             filled: true,
-                            fillColor: Colors.white30,
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                           ),
-                          validator: (value) => Validators.validateEmail(value!),
+                          validator: (value) =>
+                              Validators.validateEmail(value!),
                         ),
 
                         const SizedBox(height: 15),
@@ -146,6 +176,10 @@ class _RegisterPageState extends State<RegisterPage>
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !showPassword,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          cursorColor: Theme.of(context).colorScheme.onSurface,
                           decoration: InputDecoration(
                             border: UnderlineInputBorder(
                               borderSide: BorderSide.none,
@@ -153,6 +187,11 @@ class _RegisterPageState extends State<RegisterPage>
                             ),
                             prefixIcon: const Icon(Icons.lock),
                             labelText: 'Password',
+                            labelStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 showPassword
@@ -166,9 +205,13 @@ class _RegisterPageState extends State<RegisterPage>
                               },
                             ),
                             filled: true,
-                            fillColor: Colors.white30,
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                           ),
-                          validator: (value) => Validators.validatePassword(value!),
+                          validator: (value) =>
+                              Validators.validatePassword(value!),
                         ),
 
                         const SizedBox(height: 15),
@@ -177,6 +220,10 @@ class _RegisterPageState extends State<RegisterPage>
                         TextFormField(
                           controller: _confirmPasswordController,
                           obscureText: !showConfirmPassword,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          cursorColor: Theme.of(context).colorScheme.onSurface,
                           decoration: InputDecoration(
                             border: UnderlineInputBorder(
                               borderSide: BorderSide.none,
@@ -184,6 +231,11 @@ class _RegisterPageState extends State<RegisterPage>
                             ),
                             prefixIcon: const Icon(Icons.lock),
                             labelText: 'Confirm Password',
+                            labelStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 showConfirmPassword
@@ -197,9 +249,13 @@ class _RegisterPageState extends State<RegisterPage>
                               },
                             ),
                             filled: true,
-                            fillColor: Colors.white30,
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                           ),
-                            validator: (value) => Validators.validatePassword(value!),
+                          validator: (value) =>
+                              Validators.validatePassword(value!),
                         ),
 
                         const SizedBox(height: 30),
@@ -284,8 +340,8 @@ class _RegisterPageState extends State<RegisterPage>
 
                         // 2. Google Login Button
                         SignInButton(
-                            Buttons.google,
-                            onPressed: _handleGoogleLogin,
+                          Buttons.google,
+                          onPressed: _handleGoogleLogin,
                         ),
 
                         const SizedBox(height: 10.0),

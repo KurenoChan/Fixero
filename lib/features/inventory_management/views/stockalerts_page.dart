@@ -21,7 +21,7 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
   ];
 
   String _filter = "All";
-  String _query = "";
+  final String _query = "";
 
   @override
   Widget build(BuildContext context) {

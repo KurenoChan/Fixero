@@ -42,7 +42,7 @@ class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
                 // capitalize
                 Formatter.capitalize(title),
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: Theme.of(context).colorScheme.surfaceBright,
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
                 ),

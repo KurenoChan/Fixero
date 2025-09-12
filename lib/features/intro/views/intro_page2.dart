@@ -55,7 +55,7 @@ class IntroPage2 extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: Text(
             'Get low-stock alerts and manage inventory in real time.',
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: 20,
                 color: Colors.white54

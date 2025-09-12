@@ -46,7 +46,9 @@ class _InventoryPageState extends State<InventoryPage> {
                 // Handle Stock Alert tap
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const StockAlertsPage())
+                  MaterialPageRoute(
+                    builder: (context) => const StockAlertsPage(),
+                  ),
                 );
               },
             ),
@@ -98,8 +100,39 @@ class _InventoryPageState extends State<InventoryPage> {
     return GestureDetector(
       onTap: onTap,
       child: Stack(
+        clipBehavior: Clip.none, // so badge can float outside card
         fit: StackFit.passthrough,
         children: [
+          Card(
+            color: theme.colorScheme.primary.withValues(alpha: 0.3),
+            elevation: 3,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Column(
+                children: [
+                  // Icon
+                  Icon(icon, size: 50, color: theme.colorScheme.primary),
+                  const SizedBox(height: 16),
+                  // Title
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
           if (badgeCount > 0)
             Positioned(
               top: 10,
@@ -129,36 +162,6 @@ class _InventoryPageState extends State<InventoryPage> {
                 ),
               ),
             ),
-
-          Card(
-            color: theme.colorScheme.inversePrimary.withAlpha(70),
-            elevation: 3,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Column(
-                children: [
-                  // Icon
-                  Icon(icon, size: 50, color: theme.colorScheme.inversePrimary),
-                  const SizedBox(height: 16),
-                  // Title
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 30,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
         ],
       ),
     );

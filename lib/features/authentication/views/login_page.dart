@@ -65,7 +65,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
               child: Container(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.5),
+                color: Theme.of(
+                  context,
+                ).scaffoldBackgroundColor.withValues(alpha: 0.2),
               ),
             ),
 
@@ -99,15 +101,27 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
                           controller: _emailController,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          cursorColor: Theme.of(context).colorScheme.onSurface,
                           decoration: InputDecoration(
                             prefixIcon: Icon(Icons.email),
                             labelText: 'Email',
+                            labelStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             border: OutlineInputBorder(
                               borderSide: BorderSide.none,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             filled: true,
-                            fillColor: Colors.white30,
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                           ),
                           validator: (value) =>
                               Validators.validateEmail(value!),
@@ -119,6 +133,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !showPassword,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          cursorColor: Theme.of(context).colorScheme.onSurface,
                           decoration: InputDecoration(
                             border: UnderlineInputBorder(
                               borderSide: BorderSide.none,
@@ -126,6 +144,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             ),
                             prefixIcon: const Icon(Icons.lock),
                             labelText: 'Password',
+                            labelStyle: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 showPassword
@@ -139,7 +162,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               },
                             ),
                             filled: true,
-                            fillColor: Colors.white30,
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .surfaceContainerHighest
+                                .withValues(alpha: 0.3),
                           ),
                           validator: (value) =>
                               Validators.validatePassword(value!),

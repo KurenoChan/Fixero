@@ -25,7 +25,8 @@ class _FixeroSearchBarState extends State<FixeroSearchBar> {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return SizedBox(
+      width: double.infinity,
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(

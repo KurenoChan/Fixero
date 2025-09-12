@@ -43,9 +43,9 @@ class AuthService {
       // Login to Firebase with Google credential
       final result = await _auth.signInWithCredential(credential);
 
-      // Set logged-in flag
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
+      // // Set logged-in flag
+      // final prefs = await SharedPreferences.getInstance();
+      // await prefs.setBool('isLoggedIn', true);
 
       return result;
     } on GoogleSignInException catch (e) {
@@ -92,8 +92,8 @@ class AuthService {
   static Future<void> signOut() async {
     await _auth.signOut();
     await GoogleSignIn.instance.signOut();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isLoggedIn', false);
+    // final prefs = await SharedPreferences.getInstance();
+    // await prefs.setBool('isLoggedIn', false);
   }
 
   static User? get currentUser => _auth.currentUser;

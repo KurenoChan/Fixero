@@ -13,7 +13,7 @@ class FixeroSearcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.search, color: Theme.of(context).primaryColor, size: 30),
+      icon: Icon(Icons.search, color: Theme.of(context).colorScheme.onPrimary, size: 30),
       onPressed: () async {
         final localContext = context;
 

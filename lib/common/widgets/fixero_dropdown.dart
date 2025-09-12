@@ -32,7 +32,7 @@ class FixeroDropdown extends StatelessWidget {
 
       isExpanded: true,
       icon: const Icon(Icons.arrow_drop_down),
-      dropdownColor: theme.colorScheme.primary,
+      dropdownColor: theme.colorScheme.surface,
       borderRadius: BorderRadius.circular(10),
       underline: const SizedBox(),
     );

@@ -54,7 +54,7 @@ class IntroPage1 extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: Text(
             'Track jobs, assign tasks, and stay organized — all in one app.',
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: 20,
                 color: Colors.white54

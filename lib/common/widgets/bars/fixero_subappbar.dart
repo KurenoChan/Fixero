@@ -20,14 +20,14 @@ class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: 0,
       toolbarHeight: 150,
       leading: IconButton(
-        icon: Icon(Icons.chevron_left, color: theme.primaryColor, size: 30),
+        icon: Icon(Icons.chevron_left, color: theme.colorScheme.onPrimary, size: 30),
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
         // capitalize
         Formatter.capitalize(title),
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
+          color: Theme.of(context).colorScheme.onPrimary,
           fontSize: 25,
         ),
       ),

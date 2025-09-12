@@ -54,7 +54,7 @@ class IntroPage3 extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: Text(
             'Your smart mobile tool for running efficient workshops.',
-            textAlign: TextAlign.justify,
+            textAlign: TextAlign.center,
             style: TextStyle(
                 fontSize: 20,
                 color: Colors.white54
