@@ -29,6 +29,7 @@ class _RegisterPageState extends State<RegisterPage>
     if (_formKey.currentState!.validate()) {
       await AuthHandler.handleEmailAndPasswordRegister(
         context,
+        _usernameController.text,
         _emailController.text,
         _passwordController.text,
         _confirmPasswordController.text,
@@ -57,11 +58,21 @@ class _RegisterPageState extends State<RegisterPage>
         child: Stack(
           children: [
             // Background Image
+            // Container(
+            //   decoration: BoxDecoration(
+            //     image: DecorationImage(
+            //       image: AssetImage(
+            //         'assets/images/background/bg_login_register.jpg',
+            //       ),
+            //       fit: BoxFit.cover,
+            //     ),
+            //   ),
+            // ),
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(
-                    'assets/images/background/bg_login_register.jpg',
+                  image: NetworkImage(
+                    'https://images.unsplash.com/photo-1541348263662-e068662d82af?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                   ),
                   fit: BoxFit.cover,
                 ),

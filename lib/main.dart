@@ -24,7 +24,7 @@ void main() async {
   // TODO: REMOVE THIS LATER
   // ************************
   // Force logout for testing
-  await FirebaseAuth.instance.signOut();
+  // await FirebaseAuth.instance.signOut();
 
   // Read intro flag once
   final prefs = await SharedPreferences.getInstance();
@@ -36,21 +36,6 @@ void main() async {
 class MainApp extends StatelessWidget {
   final bool seenIntro;
   const MainApp({super.key, required this.seenIntro});
-
-  // Widget _getNextScreen() {
-  //   if (!seenIntro) {
-  //     return const IntroPage();
-  //   }
-
-  //   final user = FirebaseAuth.instance.currentUser;
-  //   if (user == null) {
-  //     print('No user logged in → go to LoginPage');
-  //     return const LoginPage();
-  //   } else {
-  //     print('User is logged in → go to HomePage');
-  //     return const HomePage();
-  //   }
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -64,34 +49,38 @@ class MainApp extends StatelessWidget {
         HomePage.routeName: (_) => const HomePage(),
         InventoryPage.routeName: (_) => const InventoryPage(),
       },
-      // home: AnimatedSplashScreen(
-      //   splash: 'assets/logo/splash_fixero.gif',
-      //   splashIconSize: 2000.0,
-      //   centered: true,
-      //   nextScreen: _getNextScreen(),
-      //   backgroundColor: Colors.black,
-      //   duration: 4000,
-      // ),
+
       home: AnimatedSplashScreen(
         splash: 'assets/logo/splash_fixero.gif',
         splashIconSize: 2000.0,
         centered: true,
-        nextScreen: StreamBuilder<User?>(
-          stream: FirebaseAuth.instance.authStateChanges(),
-          builder: (context, snapshot) {
-            if (!seenIntro) return const IntroPage();
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            }
-            if (snapshot.hasData) {
-              return const HomePage();
-            }
-            return const LoginPage();
-          },
-        ),
+        nextScreen: AuthGate(seenIntro: seenIntro),
         backgroundColor: Colors.black,
         duration: 4000,
       ),
+    );
+  }
+}
+
+
+class AuthGate extends StatelessWidget {
+  final bool seenIntro;
+  const AuthGate({super.key, required this.seenIntro});
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (!seenIntro) return const IntroPage();
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        }
+        if (snapshot.hasData) {
+          return const HomePage();
+        }
+        return const LoginPage();
+      },
     );
   }
 }

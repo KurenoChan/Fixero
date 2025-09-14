@@ -1,11 +1,10 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../data/services/auth_service.dart';
 import '../../../home_page.dart';
-import '../views/login_page.dart';
-
 
 class AuthHandler {
   static Future<void> handleEmailAndPasswordLogin(
@@ -65,6 +64,7 @@ class AuthHandler {
 
   static Future<void> handleEmailAndPasswordRegister(
     BuildContext context,
+    String username,
     String email,
     String password,
     String confirmPassword,
@@ -77,20 +77,29 @@ class AuthHandler {
     }
 
     try {
-      await AuthService.registerWithEmailAndPassword(email, password);
+      // Step 1: Create Auth user
+      final userCredential = await AuthService.registerWithEmailAndPassword(
+        email,
+        password,
+      );
+
+      final uid = userCredential.user?.uid;
+
+      if (uid != null) {
+        final db = FirebaseDatabase.instance.ref("users/managers/$uid");
+
+        await db.set({
+          "managerName": username,
+          "managerPassword": password,
+          "managerEmail": email,
+        });
+      }
 
       if (!context.mounted) return;
 
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Registration successful!')));
-
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const LoginPage()),
-        );
-      }
     } on FirebaseAuthException catch (e) {
       final msg = e.code == 'email-already-in-use'
           ? 'Email already in use.'
@@ -100,15 +109,56 @@ class AuthHandler {
     }
   }
 
+  // static Future<void> handleGoogleLogin(BuildContext context) async {
+  //   try {
+  //     await AuthService.loginWithGoogle();
+
+  //     if (context.mounted) {
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const HomePage()),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     if (context.mounted) {
+  //       ScaffoldMessenger.of(
+  //         context,
+  //       ).showSnackBar(SnackBar(content: Text(e.toString())));
+  //     }
+  //   }
+  // }
+
   static Future<void> handleGoogleLogin(BuildContext context) async {
     try {
-      await AuthService.loginWithGoogle();
+      final userCredential = await AuthService.loginWithGoogle();
 
-      if (context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
+      // If login failed or was cancelled
+      if (userCredential == null || userCredential.user == null) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Google login failed.")));
+        }
+        return;
+      }
+
+      if (!context.mounted) return;
+
+
+      final user = userCredential.user!;
+      final uid = user.uid;
+      final dbRef = FirebaseDatabase.instance.ref("users/managers/$uid");
+
+      // Check if this manager already exists in RTDB
+      final snapshot = await dbRef.get();
+
+      if (!snapshot.exists) {
+        // If not found, insert new manager data
+        await dbRef.set({
+          "managerName": user.displayName ?? "Manager",
+          "managerEmail": user.email ?? "",
+          "managerPassword": "", // Google login → no password stored
+        });
       }
     } catch (e) {
       if (context.mounted) {

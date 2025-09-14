@@ -35,7 +35,8 @@ class _FixeroSearchBarState extends State<FixeroSearchBar> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
         ),
         onChanged: (value) {
-
+          // TODO: Suggest the possible items to be searched based on similarity
+          
         },
       ),
     );

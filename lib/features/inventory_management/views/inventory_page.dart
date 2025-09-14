@@ -1,3 +1,4 @@
+import 'package:fixero/features/inventory_management/views/browseinventory_page.dart';
 import 'package:fixero/features/inventory_management/views/stockalerts_page.dart';
 import 'package:flutter/material.dart';
 
@@ -77,7 +78,12 @@ class _InventoryPageState extends State<InventoryPage> {
                     icon: Icons.article,
                     title: "Browse Inventory",
                     onTap: () {
-                      // Handle Stock Alert tap
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const BrowseInventoryPage(),
+                        ),
+                      );
                     },
                   ),
                 ),
@@ -104,8 +110,7 @@ class _InventoryPageState extends State<InventoryPage> {
         fit: StackFit.passthrough,
         children: [
           Card(
-            color: theme.colorScheme.primary.withValues(alpha: 0.3),
-            elevation: 3,
+            color: theme.colorScheme.primary.withValues(alpha: 0.35),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),

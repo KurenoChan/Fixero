@@ -27,8 +27,7 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
   Widget build(BuildContext context) {
     final filteredItems = _items.where((item) {
       final matchesFilter = _filter == "All" || item["status"] == _filter;
-      final matchesSearch =
-      item["name"]!.toLowerCase().contains(_query.toLowerCase());
+      final matchesSearch = item["name"]!.toLowerCase().contains(_query.toLowerCase());
       return matchesFilter && matchesSearch;
     }).toList();
 

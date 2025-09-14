@@ -1,4 +1,6 @@
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fixero/data/repositories/users/manager_repository.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 
 import 'common/widgets/bars/fixero_bottomappbar.dart';
@@ -24,10 +26,30 @@ class _HomePageState extends State<HomePage> {
   final List<String> insightsFilterOptions = const ["This Month", "This Year"];
   late String _selectedInsightFilter;
 
+  String? _managerName;
+  String? _profileImgUrl;
+
   @override
   void initState() {
     super.initState();
+    _loadManagerData();
     _selectedInsightFilter = insightsFilterOptions[0];
+  }
+
+  Future<void> _loadManagerData() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid != null) {
+      final repo = ManagerRepository();
+      final manager = await repo.getManager(uid); // correct method name
+      if (mounted && manager != null) {
+        setState(() {
+          _managerName = manager.name;
+          _profileImgUrl =
+              manager.profileImgUrl ??
+              "https://cdn-icons-png.flaticon.com/512/3237/3237476.png";
+        });
+      }
+    }
   }
 
   void _handleInsightFilterChange(String newFilter) {
@@ -67,16 +89,27 @@ class _HomePageState extends State<HomePage> {
 
     return SafeArea(
       child: Scaffold(
-        appBar: const FixeroHomeAppBar(
-          username: "Henry Roosevelt",
-          profileImgUrl: "https://i.pravatar.cc/150?img=11",
+        appBar: FixeroHomeAppBar(
+          username: Formatter.capitalize(_managerName ?? "Loading..."),
+
+          profileImgUrl:
+              _profileImgUrl ??
+              "https://cdn-icons-png.flaticon.com/512/3237/3237476.png",
         ),
+
         bottomNavigationBar: FixeroBottomAppBar(),
         body: ListView(
           padding: const EdgeInsets.all(15),
           children: [
             const SizedBox(height: 10),
 
+            // Image.network(
+            //   'https://www.boschautoparts.com/o/commerce-media/accounts/-1/images/2220845',
+            //   height: 200, // optional
+            //   fit: BoxFit.cover, // optional
+            // ),
+
+            
             // =====================
             // 1. Dashboard Overview
             // =====================
@@ -229,7 +262,10 @@ class _HomePageState extends State<HomePage> {
                       title: "Income",
                       value: "RM 10,135",
                       trend: "+8%",
-                      chart: FixeroLineChart(data: IncomeDAO.initializeData(), color: Colors.teal),
+                      chart: FixeroLineChart(
+                        data: IncomeDAO.initializeData(),
+                        color: Colors.teal,
+                      ),
                     ),
 
                     // 2. Job Demand
@@ -238,8 +274,10 @@ class _HomePageState extends State<HomePage> {
                       title: "Job Demand",
                       value: "28",
                       trend: "-5%",
-                      chart: FixeroBarChart(data: JobDemandDAO.initializeData(), color: Color.fromRGBO(
-                          255, 178, 122, 1.0)),
+                      chart: FixeroBarChart(
+                        data: JobDemandDAO.initializeData(),
+                        color: Color.fromRGBO(255, 178, 122, 1.0),
+                      ),
                     ),
 
                     // 3. Popular Service (only chart)
@@ -305,7 +343,10 @@ class _HomePageState extends State<HomePage> {
         children: [
           Text(
             title,
-            style: TextStyle(fontSize: 16, color: theme.colorScheme.inversePrimary),
+            style: TextStyle(
+              fontSize: 16,
+              color: theme.colorScheme.inversePrimary,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -349,10 +390,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 8),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 14,
-                color: theme.colorScheme.primary,
-              ),
+              style: TextStyle(fontSize: 14, color: theme.colorScheme.primary),
               textAlign: TextAlign.center,
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -367,20 +405,21 @@ class _HomePageState extends State<HomePage> {
   Widget _insightsCard({
     required BuildContext context,
     required Widget chart,
-    String? title,          // e.g., "Income"
-    String? value,          // e.g., "RM 10,135"
-    String? trend,          // e.g., "+8%" or "-5%"
-    Color? trendColor,      // Optional override
+    String? title, // e.g., "Income"
+    String? value, // e.g., "RM 10,135"
+    String? trend, // e.g., "+8%" or "-5%"
+    Color? trendColor, // Optional override
   }) {
     final theme = Theme.of(context);
 
     // Auto-determine color if not provided
-    Color effectiveTrendColor = trendColor ??
+    Color effectiveTrendColor =
+        trendColor ??
         (trend != null && trend.startsWith('-')
             ? Colors.red
             : (trend != null && trend.startsWith('+')
-            ? Colors.green
-            : Colors.grey));
+                  ? Colors.green
+                  : Colors.grey));
 
     return Container(
       width: double.infinity,
@@ -442,10 +481,7 @@ class _HomePageState extends State<HomePage> {
 
           // Chart Section
           ConstrainedBox(
-            constraints: const BoxConstraints(
-              minHeight: 200,
-              maxHeight: 320,
-            ),
+            constraints: const BoxConstraints(minHeight: 200, maxHeight: 320),
             child: Padding(
               padding: const EdgeInsets.only(top: 4),
               child: chart,

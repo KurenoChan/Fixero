@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:fixero/features/authentication/views/forgotpassword_page.dart';
 import 'package:fixero/features/authentication/views/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_button/sign_in_button.dart';
@@ -50,11 +51,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         child: Stack(
           children: [
             // Background Image
+            // Container(
+            //   decoration: BoxDecoration(
+            //     image: DecorationImage(
+            //       image: AssetImage(
+            //         'assets/images/background/bg_login_register.jpg',
+            //       ),
+            //       fit: BoxFit.cover,
+            //     ),
+            //   ),
+            // ),
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage(
-                    'assets/images/background/bg_login_register.jpg',
+                  image: NetworkImage(
+                    'https://images.unsplash.com/photo-1541348263662-e068662d82af?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
                   ),
                   fit: BoxFit.cover,
                 ),
@@ -178,7 +189,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             // style: ButtonStyle(
                             //   backgroundColor: WidgetStateProperty.all<Color>(Colors.white30),
                             // ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ForgotPasswordPage(),
+                                ),
+                              );
+                            },
                             child: const Text(
                               "Forgot Password?",
                               style: TextStyle(
