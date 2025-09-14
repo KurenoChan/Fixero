@@ -5,6 +5,7 @@ This document explains how our team will collaborate on the Fixero Flutter proje
 ---
 
 ## 🔧 Prerequisites
+
 1. Install **Visual Studio Code**.
 2. Install Git on your computer: [Download Git](https://git-scm.com/downloads).
 3. Install these VS Code extensions:
@@ -14,6 +15,7 @@ This document explains how our team will collaborate on the Fixero Flutter proje
 ---
 
 ## 📂 Getting the Project for the First Time
+
 1. Open VS Code.
 2. Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on Mac) → type **"Git: Clone"**.
 3. Paste the Fixero GitHub repository URL.
@@ -23,6 +25,7 @@ This document explains how our team will collaborate on the Fixero Flutter proje
 ---
 
 ## 🌱 Creating Your Own Branch
+
 We use feature branches so everyone works separately before merging to `main`.
 
 1. In VS Code, go to the bottom-left corner where the branch name is shown.
@@ -34,6 +37,7 @@ We use feature branches so everyone works separately before merging to `main`.
 ---
 
 ## ✏️ Making Changes
+
 1. Work on your feature in your own branch.
 2. After making changes:
    - Go to **Source Control** panel in VS Code (`Ctrl+Shift+G`).
@@ -44,6 +48,7 @@ We use feature branches so everyone works separately before merging to `main`.
 ---
 
 ## 🔀 Creating a Pull Request (PR)
+
 1. Once your feature is ready, go to **Source Control** → **Pull Request**.
 2. Create a **New Pull Request** from your branch into `main`.
 3. Add a description of what you changed.
@@ -53,6 +58,7 @@ We use feature branches so everyone works separately before merging to `main`.
 ---
 
 ## 👀 Testing Different Branches
+
 - You can switch branches (bottom-left corner of VS Code).
 - Run the project on each branch to check differences.
 - Report any issues on the Pull Request page.
@@ -60,16 +66,17 @@ We use feature branches so everyone works separately before merging to `main`.
 ---
 
 ## 🔐 Firebase Init Setup
-Since Firebase requires confidential keys, the `firebase_init` folder is **not uploaded to GitHub**.  
-Follow these steps:
 
-1. Download the **`firebase_init`** folder from our shared **Google Drive**.  
+Since Firebase requires confidential keys, the `firebase_init` folder is **not uploaded to GitHub**.Follow these steps:
+
+1. Download the **`firebase_init`** folder from our shared **Google Drive**.
+
    - This folder contains the **`serviceAccountKey.json`** (confidential).
    - ⚠️ **Do NOT upload this folder to GitHub**.
-
 2. Place the folder inside your local project root.
-
 3. Open terminal and run:
+
    ```bash
    cd firebase_init
    npm init -y
+   ```
