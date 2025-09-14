@@ -62,7 +62,7 @@ class InventoryListPage<T> extends StatelessWidget {
                             decoration: BoxDecoration(
                               color: Theme.of(
                                 context,
-                              ).colorScheme.primary.withValues(alpha: 0.15),
+                              ).colorScheme.primary.withValues(alpha: 0.25),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Column(
@@ -105,7 +105,7 @@ class InventoryListPage<T> extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: Theme.of(
                                     context,
-                                  ).colorScheme.surfaceContainerLow,
+                                  ).colorScheme.surfaceContainer,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
@@ -166,9 +166,7 @@ class InventoryListPage<T> extends StatelessWidget {
                       return Container(
                         margin: const EdgeInsets.symmetric(vertical: 5),
                         decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerLow,
+                          color: Theme.of(context).colorScheme.surfaceContainer,
                           borderRadius: BorderRadius.circular(10.0),
                         ),
                         child: ListTile(
