@@ -35,7 +35,7 @@ class Item {
       stockQuantity: map['stockQuantity'] ?? 0,
       unit: map['unit'] ?? '',
       lowStockThreshold: map['lowStockThreshold'] ?? 0,
-      imageUrl: map['imageUrl'] ?? '',
+      imageUrl: map['itemImageUrl'] ?? '',
     );
   }
 
