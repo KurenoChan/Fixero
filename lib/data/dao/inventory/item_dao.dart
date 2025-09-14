@@ -25,4 +25,9 @@ class ItemDAO {
     final items = await _repo.fetchAllItems();
     return items.where((item) => item.itemCategory == category).toList();
   }
+
+  Future<List<Item>> getItemsBySubcategory(String category, String subcategory) async {
+    final items = await _repo.fetchAllItems();
+    return items.where((item) => item.itemCategory == category && item.itemSubCategory == subcategory).toList();
+  }
 }
