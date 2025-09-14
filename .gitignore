@@ -45,4 +45,8 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/app/google-services.json
-/firebase_init/
+/firebase_init/node_modules/
+firebase_init/package-lock.json
+firebase_init/package.json
+firebase_init/README.md
+firebase_init/serviceAccountKey.json
