@@ -47,6 +47,7 @@ class ItemDetailsPage extends StatelessWidget {
               ),
               child: ListView(
                 children: [
+                  // Item Name + ID
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -86,18 +87,328 @@ class ItemDetailsPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Text(item.itemDescription),
+
+                  // Item Description
+                  Text(item.itemDescription, textAlign: TextAlign.justify),
+
                   const Divider(height: 24),
-                  _buildDetailRow("Category", item.itemCategory),
-                  _buildDetailRow("Subcategory", item.itemSubCategory),
-                  _buildDetailRow(
-                    "Price",
-                    "RM${item.itemPrice.toStringAsFixed(2)} / ${item.unit}",
+
+                  // Item Price and Stock Quantity
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      Row(
+                        spacing: 10.0,
+                        children: [
+                          Icon(Icons.sell, size: 20.0),
+                          Text(
+                            "RM ${item.itemPrice.toStringAsFixed(2)}/${item.unit}",
+                            style: TextStyle(
+                              fontSize: Theme.of(
+                                context,
+                              ).textTheme.bodyLarge?.fontSize,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        spacing: 10.0,
+                        children: [
+                          Icon(
+                            Icons.inventory,
+                            size: 20.0,
+                            color: item.stockQuantity == 0
+                                ? Colors.red
+                                : (item.stockQuantity <= item.lowStockThreshold
+                                      ? Colors.orange
+                                      : Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant),
+                          ),
+                          Text(
+                            item.stockQuantity == 0
+                                ? "OUT OF STOCK"
+                                : "${item.stockQuantity} ${item.unit}",
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(
+                                  color: item.stockQuantity == 0
+                                      ? Colors.red
+                                      : (item.stockQuantity <=
+                                                item.lowStockThreshold
+                                            ? Colors.orange
+                                            : Theme.of(
+                                                context,
+                                              ).colorScheme.onSurfaceVariant),
+                                  fontSize: Theme.of(
+                                    context,
+                                  ).textTheme.bodyLarge?.fontSize,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
-                  _buildDetailRow(
-                    "Stock",
-                    "${item.stockQuantity} (Low threshold: ${item.lowStockThreshold})",
+
+                  const SizedBox(height: 20.0),
+
+                  // Classification
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'CLASSIFICATION',
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.inversePrimary.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          width: 50.0,
+                          child: Divider(
+                            height: 1.0,
+                            thickness: 1.0,
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10.0),
+
+                        Column(
+                          spacing: 5.0,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    'Category',
+                                    style: TextStyle(
+                                      fontSize: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.fontSize,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    item.itemCategory,
+                                    style: TextStyle(
+                                      fontSize: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.fontSize,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            Divider(
+                              height: 1.0,
+                              thickness: 1.0,
+                              color: Theme.of(
+                                context,
+                              ).dividerColor.withValues(alpha: 0.8),
+                            ),
+
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    'Subcategory',
+                                    style: TextStyle(
+                                      fontSize: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.fontSize,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    item.itemSubCategory,
+                                    style: TextStyle(
+                                      fontSize: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.fontSize,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Usage Overview
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'USAGE HISTORY',
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.inversePrimary.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          width: 50.0,
+                          child: Divider(
+                            height: 1.0,
+                            thickness: 1.0,
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10.0),
+
+                        // Usage History Overview / Details
+                        // Mini Tab for Overview (Graph) and Details
+
+                        // Details will display in tabular format
+                      ],
+                    ),
+                  ),
+
+                  // Restocking Details
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20.0),
+                    child: Column(
+                      children: [
+                        Text(
+                          'RESTOCKING DETAILS',
+                          style: TextStyle(
+                            fontSize: 15.0,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.inversePrimary.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 5.0),
+                          width: 50.0,
+                          child: Divider(
+                            height: 1.0,
+                            thickness: 1.0,
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.8),
+                          ),
+                        ),
+
+                        const SizedBox(height: 10.0),
+
+                        Column(
+                          spacing: 20.0,
+                          children: [
+                            Table(
+                              defaultVerticalAlignment:
+                                  TableCellVerticalAlignment.middle,
+                              border: TableBorder.all(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .inversePrimary
+                                    .withValues(alpha: 0.8),
+                                width: 1,
+                              ),
+                              children: [
+                                TableRow(
+                                  children: [
+                                    TableCell(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: const Text(
+                                          'Supplier',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    TableCell(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: const Text(
+                                          'Restocked By',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    TableCell(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(8.0),
+                                        child: Text(
+                                          'Quantity (${item.unit})',
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+
+                            // if more than 3 restock records
+                            // ElevatedButton(
+                            //   onPressed: () {},
+                            //   style: ElevatedButton.styleFrom(
+                            //     backgroundColor: Theme.of(
+                            //       context,
+                            //     ).colorScheme.inversePrimary.withAlpha(50),
+                            //   ),
+                            //   child: const Text(
+                            //     'View More',
+                            //     style: TextStyle(fontWeight: FontWeight.normal),
+                            //   ),
+                            // ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 174, 12, 0),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 10.0,
+                      children: [Icon(Icons.delete), Text('Delete')],
+                    ),
                   ),
                 ],
               ),
@@ -177,19 +488,6 @@ class ItemDetailsPage extends StatelessWidget {
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("$label: ", style: const TextStyle(fontWeight: FontWeight.bold)),
-          Expanded(child: Text(value)),
         ],
       ),
     );

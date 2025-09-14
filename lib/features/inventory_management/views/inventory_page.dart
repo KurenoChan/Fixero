@@ -110,6 +110,7 @@ class _InventoryPageState extends State<InventoryPage> {
         fit: StackFit.passthrough,
         children: [
           Card(
+            elevation: 0,
             color: theme.colorScheme.primary.withValues(alpha: 0.35),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
