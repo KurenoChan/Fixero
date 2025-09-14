@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:fixero/features/authentication/views/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -97,6 +98,11 @@ class AuthHandler {
 
       if (!context.mounted) return;
 
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Registration successful!')));
@@ -108,25 +114,6 @@ class AuthHandler {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
-
-  // static Future<void> handleGoogleLogin(BuildContext context) async {
-  //   try {
-  //     await AuthService.loginWithGoogle();
-
-  //     if (context.mounted) {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const HomePage()),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     if (context.mounted) {
-  //       ScaffoldMessenger.of(
-  //         context,
-  //       ).showSnackBar(SnackBar(content: Text(e.toString())));
-  //     }
-  //   }
-  // }
 
   static Future<void> handleGoogleLogin(BuildContext context) async {
     try {
@@ -143,7 +130,6 @@ class AuthHandler {
       }
 
       if (!context.mounted) return;
-
 
       final user = userCredential.user!;
       final uid = user.uid;
