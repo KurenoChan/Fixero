@@ -11,7 +11,7 @@ This document explains how our team will collaborate on the Fixero Flutter proje
 3. Install these VS Code extensions:
 
    * **GitHub Repositories**
-   * **GitHub Pull Requests and Issues**
+   * **GitHub Pull Requests**
 
 ---
 
@@ -32,7 +32,7 @@ We use feature branches so everyone works separately before merging to `main`.
 1. Look at the **bottom-left corner** of VS Code where the current branch name is displayed.
 2. Make sure you are on `main`.
 3. Click the branch name → select **"Create New Branch from..."**.
-4. Name your branch using your own name or feature (e.g., `KohZhengHong` or `InventoryManagement`).
+4. Name your branch using your own name or feature (e.g., `CRM` or `InventoryManagement`).
 5. Click **"Publish Branch"** (this uploads your branch to GitHub).
 
 ---
@@ -75,13 +75,24 @@ Firebase requires confidential keys, so these files are **not uploaded to GitHub
 
    * `firebase_init` folder → contains **`serviceAccountKey.json`**
      (Place this folder in your **project root**)
-   * `google_services.json` → Android configuration file
+   * `google-services.json` → Android configuration file
      (Place this file inside **`/android/app/`**)
+
 2. Open a terminal and run:
 
    ```bash
    cd firebase_init
    npm init -y
    ```
+
+3. Make sure the `node_modules` folder is generated in the `firebase_init` folder.
+
+4. To initialize Firebase, run:
+
+   ```bash
+   node firebase_init/initFirebase.js
+   ```
+
+   *If you are running the command from outside the `firebase_init` folder, adjust the path accordingly.*
 
 ⚠️ **Do NOT upload these files or folders to GitHub.**
