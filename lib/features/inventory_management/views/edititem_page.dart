@@ -65,45 +65,6 @@ class _EditItemPageState extends State<EditItemPage> {
         ? controller.getSubCategoriesSync(selectedCategory!)
         : <String>[];
 
-    // Helper to check if there are unsaved changes
-    bool hasUnsavedChanges() {
-      return _itemNameController.text.trim() != widget.item.itemName ||
-          _itemDescriptionController.text.trim() !=
-              widget.item.itemDescription ||
-          _itemPriceController.text.trim() !=
-              widget.item.itemPrice.toString() ||
-          _itemUnitController.text.trim() != widget.item.unit ||
-          _lowStockThresholdController.text.trim() !=
-              widget.item.lowStockThreshold.toString() ||
-          selectedCategory != widget.item.itemCategory ||
-          selectedSubcategory != widget.item.itemSubCategory;
-    }
-
-    // Intercept back button
-    Future<bool> _onWillPop() async {
-      if (!hasUnsavedChanges()) return true; // No changes, just pop
-      final confirm = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Discard Changes?'),
-          content: const Text(
-            'You have unsaved changes. Are you sure you want to leave?',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('Discard'),
-            ),
-          ],
-        ),
-      );
-      return confirm ?? false; // return false if dialog dismissed
-    }
-
     return Scaffold(
       appBar: FixeroSubAppBar(title: "Edit Item", showBackButton: false,),
       body: Padding(
