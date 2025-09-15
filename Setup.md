@@ -77,16 +77,13 @@ Firebase requires confidential keys, so these files are **not uploaded to GitHub
      (Place this folder in your **project root**)
    * `google-services.json` → Android configuration file
      (Place this file inside **`/android/app/`**)
-
 2. Open a terminal and run:
 
    ```bash
    cd firebase_init
-   npm init -y
+   npm install
    ```
-
 3. Make sure the `node_modules` folder is generated in the `firebase_init` folder.
-
 4. To initialize Firebase, run:
 
    ```bash
