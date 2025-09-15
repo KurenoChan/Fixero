@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../models/item_model.dart';
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
 import '../controllers/inventory_controller.dart';
@@ -87,7 +88,10 @@ class InventoryListPage<T> extends StatelessWidget {
 
                     // 🔹 SubCategory cards (use first item’s image)
                     if (isSubCategory && item is String) {
-                      final controller = InventoryController();
+                      final controller = Provider.of<InventoryController>(
+                        context,
+                        listen: false,
+                      );
                       return FutureBuilder<Item?>(
                         future: controller.getFirstItemBySubCategory(item),
                         builder: (context, snap) {
@@ -286,215 +290,76 @@ class InventoryListPage<T> extends StatelessWidget {
   }
 }
 
-class BrowseInventoryPage extends StatelessWidget {
+class BrowseInventoryPage extends StatefulWidget {
   const BrowseInventoryPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final controller = InventoryController();
+  State<BrowseInventoryPage> createState() => _BrowseInventoryPageState();
+}
 
-    return InventoryListPage<String>(
-      title: "Categories",
-      isCategory: true,
-      fetchData: controller.getCategories,
-      onTap: (context, category) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => InventoryListPage<String>(
-              title: category,
-              isSubCategory: true,
-              fetchData: () => controller.getSubCategories(category),
-              onTap: (context, subCategory) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => InventoryListPage<Item>(
-                      title: subCategory,
-                      fetchData: () => controller.getItems(subCategory),
-                      onTap: (context, item) {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ItemDetailsPage(item: item),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
+class _BrowseInventoryPageState extends State<BrowseInventoryPage> {
+  late InventoryController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Provider.of<InventoryController>(context, listen: false);
+
+    // Schedule loadItems after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadItems();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<InventoryController>(
+      builder: (context, controller, child) {
+        if (controller.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return InventoryListPage<String>(
+          title: "Categories",
+          isCategory: true,
+          fetchData: () => Future.value(controller.getCategories()),
+          onTap: (context, category) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => InventoryListPage<String>(
+                  title: category,
+                  isSubCategory: true,
+                  fetchData: () =>
+                      Future.value(controller.getSubCategories(category)),
+                  onTap: (context, subCategory) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => InventoryListPage<Item>(
+                          title: subCategory,
+                          fetchData: () =>
+                              Future.value(controller.getItems(subCategory)),
+                          onTap: (context, item) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ItemDetailsPage(item: item),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
         );
       },
     );
   }
 }
-
-
-
-// import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
-// import 'package:fixero/common/widgets/tools/fixero_searchbar.dart';
-// import 'package:flutter/material.dart';
-
-// class BrowseInventoryPage extends StatefulWidget {
-//   const BrowseInventoryPage({super.key});
-
-//   @override
-//   State<BrowseInventoryPage> createState() => _BrowseInventoryPageState();
-// }
-
-// class _BrowseInventoryPageState extends State<BrowseInventoryPage> {
-//   final List<Map<String, dynamic>> _itemCategories = [
-//     {"name": "Spare Parts", "icon": Icons.precision_manufacturing},
-//     {"name": "Tools & Equipments", "icon": Icons.build},
-//     {"name": "Fluids & Lubricants", "icon": Icons.water_drop},
-//   ];
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: FixeroSubAppBar(title: "Browse Inventory"),
-//       body: Padding(
-//         padding: const EdgeInsets.all(15.0),
-//         child: CustomScrollView(
-//           slivers: <Widget>[
-//             // Search bar
-//             SliverToBoxAdapter(
-//               child: FixeroSearchBar(
-//                 searchHints: ["Spare Parts", "Tools"],
-//                 searchTerms: [],
-//                 // onSearch: (text) {
-//                 //   setState(() {
-//                 //     _query = text;
-//                 //   });
-//                 // },
-//               ),
-//             ),
-
-//             // Title
-//             SliverToBoxAdapter(
-//               child: Padding(
-//                 padding: const EdgeInsets.symmetric(vertical: 20),
-//                 child: Text(
-//                   "Category",
-//                   style: TextStyle(
-//                     fontSize: Theme.of(context).textTheme.titleLarge?.fontSize,
-//                     color: Theme.of(
-//                       context,
-//                     ).colorScheme.inversePrimary.withValues(alpha: 0.5),
-//                   ),
-//                 ),
-//               ),
-//             ),
-
-//             _itemCategories.isEmpty
-//                 ? SliverToBoxAdapter(
-//                     child: Center(
-//                       child: Padding(
-//                         padding: const EdgeInsets.symmetric(vertical: 10),
-//                         child: Text(
-//                           "No categories available.",
-//                           style: TextStyle(
-//                             fontSize: Theme.of(
-//                               context,
-//                             ).textTheme.bodyLarge?.fontSize,
-//                             color: Theme.of(
-//                               context,
-//                             ).colorScheme.onSurface.withValues(alpha: 0.5),
-//                           ),
-//                         ),
-//                       ),
-//                     ),
-//                   )
-//                 : SliverList(
-//                     delegate: SliverChildBuilderDelegate((
-//                       BuildContext context,
-//                       int index,
-//                     ) {
-//                       final category = _itemCategories[index];
-//                       return Padding(
-//                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-//                         child: _itemCategoryCard(
-//                           context,
-//                           category["name"]!,
-//                           category["icon"]!,
-//                         ),
-//                       );
-//                     }, childCount: _itemCategories.length),
-//                   ),
-
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
-
-// Widget _itemCategoryCard(
-//   BuildContext context,
-//   String categoryName,
-//   IconData icon,
-// ) {
-//   return GestureDetector(
-//     onTap: () => {
-//       // handle on tap
-//     },
-
-//     child: Container(
-//       padding: const EdgeInsets.all(10),
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
-//         borderRadius: BorderRadius.circular(10.0),
-//       ),
-//       child: Column(
-//         children: [
-//           // Icon
-//           Icon(icon, size: 50, color: Theme.of(context).colorScheme.primary),
-//           // Category Name
-//           Text(
-//             categoryName,
-//             style: TextStyle(
-//               fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize,
-//               fontWeight: FontWeight.bold,
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//   );
-// }
-
-
-// /// Simple reusable card
-// Widget _inventoryCard(
-//   BuildContext context,
-//   String name,
-//   IconData? icon,
-//   VoidCallback onTap,
-// ) {
-//   return GestureDetector(
-//     onTap: onTap,
-//     child: Container(
-//       padding: const EdgeInsets.all(10),
-//       decoration: BoxDecoration(
-//         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.35),
-//         borderRadius: BorderRadius.circular(10.0),
-//       ),
-//       child: Column(
-//         children: [
-//           if (icon != null)
-//             Icon(icon, size: 50, color: Theme.of(context).colorScheme.primary),
-//           Text(
-//             name,
-//             style: TextStyle(
-//               fontSize: Theme.of(context).textTheme.bodyLarge?.fontSize,
-//               fontWeight: FontWeight.bold,
-//             ),
-//           ),
-//         ],
-//       ),
-//     ),
-//   );
-// }
