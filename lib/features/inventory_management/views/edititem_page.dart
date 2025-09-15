@@ -1,6 +1,6 @@
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
-import 'package:fixero/features/inventory_management/controllers/inventory_controller.dart';
-import 'package:fixero/features/inventory_management/models/item_model.dart';
+import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
+import 'package:fixero/features/inventory_management/models/item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';

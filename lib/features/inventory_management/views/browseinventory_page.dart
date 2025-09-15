@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/item_model.dart';
+import '../models/item.dart';
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
-import '../controllers/inventory_controller.dart';
+import '../controllers/item_controller.dart';
 import 'itemdetails_page.dart';
 
 class BrowseInventoryPage extends StatefulWidget {

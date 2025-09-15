@@ -1,4 +1,4 @@
-import '../../../features/inventory_management/models/item_model.dart';
+import '../../../features/inventory_management/models/item.dart';
 import '../../repositories/inventory/item_repository.dart';
 
 /*

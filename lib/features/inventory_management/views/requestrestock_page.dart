@@ -1,6 +1,15 @@
+import 'package:fixero/data/dao/inventory/requesteditem_dao.dart';
+import 'package:fixero/data/dao/inventory/restockrequest_dao.dart';
+import 'package:fixero/features/authentication/controllers/manager_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requesteditem_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/restockrequest_controller.dart';
+import 'package:fixero/features/inventory_management/models/requested_item.dart';
+import 'package:fixero/features/inventory_management/models/restock_request.dart';
+import 'package:fixero/utils/generators/id_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
-import 'package:fixero/features/inventory_management/models/item_model.dart';
+import 'package:fixero/features/inventory_management/models/item.dart';
+import 'package:provider/provider.dart';
 
 class RequestRestockPage extends StatefulWidget {
   final Item item;
@@ -46,16 +55,68 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
     );
   }
 
-  void _submit() {
+  void _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    // may need controller, dao, repo, and model class to add the request to RTDB
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Restock request submitted for ${widget.item.itemName}"),
-      ),
+    // ✅ Capture synchronous values first
+    final managerFuture = ManagerController.getCurrentManager();
+    final restockController = context.read<RestockRequestController>();
+    final itemController = context.read<RequestedItemController>();
+
+    // Await async work
+    final manager = await managerFuture;
+    if (manager == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to identify current manager")),
+      );
+      return;
+    }
+
+    final restockRequestId = IDGenerator.generateRestockRequestID();
+    final requestedItemId = IDGenerator.generateRequestedItemID();
+
+    print("\n\nGenerated RestockRequest ID: $restockRequestId");
+    print("Generated RequestedItem ID: $requestedItemId\n\n");
+
+    final restockRequest = RestockRequest(
+      requestId: restockRequestId,
+      requestDateTime: DateTime.now(),
+      requestBy: manager.id,
     );
-    Navigator.pop(context);
+
+    final requestedItem = RequestedItem(
+      requestItemId: requestedItemId,
+      requestId: restockRequestId,
+      itemId: widget.item.itemId,
+      quantityRequested: int.parse(_quantityController.text),
+      remark: _notesController.text.isEmpty ? null : _notesController.text,
+    );
+
+    try {
+      // ✅ Save to RTDB
+      await RestockRequestDAO().createRequest(restockRequest);
+      await RequestedItemDAO().createItem(requestedItem);
+
+      // ✅ Update provider/controllers
+      await restockController.createRequest(restockRequest);
+      await itemController.createItem(requestedItem);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Restock request has been successfully submitted"),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
+    }
   }
 
   @override

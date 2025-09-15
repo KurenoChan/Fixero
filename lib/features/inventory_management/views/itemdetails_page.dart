@@ -1,7 +1,7 @@
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/authentication/models/manager.dart';
-import 'package:fixero/features/inventory_management/controllers/inventory_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/views/edititem_page.dart';
 import 'package:fixero/features/inventory_management/views/requestrestock_page.dart';
 import 'package:flutter/material.dart';

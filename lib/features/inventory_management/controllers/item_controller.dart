@@ -1,6 +1,6 @@
 import 'package:fixero/data/dao/inventory/item_dao.dart';
 import 'package:flutter/foundation.dart';
-import '../models/item_model.dart';
+import '../models/item.dart';
 
 class InventoryController extends ChangeNotifier {
   final ItemDAO _dao = ItemDAO();
