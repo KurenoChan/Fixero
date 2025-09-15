@@ -94,6 +94,7 @@ class AuthHandler {
           "managerName": username,
           "managerPassword": password,
           "managerEmail": email,
+          "managerRole": "Workshop Manager",
         });
       }
 
@@ -154,6 +155,7 @@ class AuthHandler {
           "managerName": user.displayName ?? "Manager",
           "managerEmail": user.email ?? "",
           "managerPassword": "", // Google login → no password stored
+          "managerRole": "Workshop Manager",
         });
       }
     } catch (e) {
@@ -163,5 +165,14 @@ class AuthHandler {
         ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
+  }
+
+  static Future<void> handleSignOut(BuildContext context) async {
+    await AuthService.signOut();
+    if (!context.mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 }

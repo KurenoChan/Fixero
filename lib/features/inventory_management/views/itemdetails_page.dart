@@ -1,27 +1,51 @@
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/features/authentication/controllers/manager_controller.dart';
+import 'package:fixero/features/authentication/models/manager.dart';
 import 'package:fixero/features/inventory_management/controllers/inventory_controller.dart';
 import 'package:fixero/features/inventory_management/views/edititem_page.dart';
+import 'package:fixero/features/inventory_management/views/requestrestock_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class ItemDetailsPage extends StatelessWidget {
+class ItemDetailsPage extends StatefulWidget {
   final String itemId; // use ID instead of full Item
   const ItemDetailsPage({super.key, required this.itemId});
 
   @override
+  State<ItemDetailsPage> createState() => _ItemDetailsPageState();
+}
+
+class _ItemDetailsPageState extends State<ItemDetailsPage> {
+  Manager? currentManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentManager();
+  }
+
+  Future<void> _loadCurrentManager() async {
+    final manager = await ManagerController.getCurrentManager();
+    if (!mounted) return;
+    setState(() {
+      currentManager = manager;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = context.watch<InventoryController>();
-    final item = controller.getItemById(itemId); // reactive
+    final item = controller.getItemById(widget.itemId); // reactive
 
     if (item == null) {
       return Scaffold(
-        appBar: FixeroSubAppBar(title: "Item Details", showBackButton: true,),
+        appBar: FixeroSubAppBar(title: "Item Details", showBackButton: true),
         body: const Center(child: Text("Item not found")),
       );
     }
-    
+
     return Scaffold(
-      appBar: FixeroSubAppBar(title: item.itemName, showBackButton: true,),
+      appBar: FixeroSubAppBar(title: item.itemName, showBackButton: true),
       body: Column(
         children: [
           // 🔹 Image stays at the top
@@ -411,17 +435,22 @@ class ItemDetailsPage extends StatelessWidget {
                     ),
                   ),
 
-                  ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 174, 12, 0),
+                  // 🔹 Inside ListView before the closing bracket
+                  if (currentManager?.role == "Inventory Manager") ...[
+                    ElevatedButton(
+                      onPressed: () {
+                        // Delete logic
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color.fromARGB(255, 174, 12, 0),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 10.0,
+                        children: [Icon(Icons.delete), Text('Delete')],
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      spacing: 10.0,
-                      children: [Icon(Icons.delete), Text('Delete')],
-                    ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -445,65 +474,114 @@ class ItemDetailsPage extends StatelessWidget {
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              spacing: 10.0,
               children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => EditItemPage(item: item),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0,
-                      vertical: 15.0,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    spacing: 10.0,
-                    children: [
-                      const Icon(Icons.edit, size: 25),
-                      Text(
-                        'Edit Info',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.fontSize,
+                if (currentManager?.role == "Inventory Manager") ...[
+                  // 🔹 Edit Info Button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditItemPage(item: item),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0,
+                          vertical: 15.0,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () {},
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0,
-                      vertical: 15.0,
-                    ),
-                    backgroundColor: Colors.deepPurpleAccent,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    spacing: 10.0,
-                    children: [
-                      const Icon(Icons.inventory_outlined, size: 25),
-                      Text(
-                        'Restock',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: Theme.of(
-                            context,
-                          ).textTheme.titleMedium?.fontSize,
-                        ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        spacing: 5.0,
+                        children: [
+                          const Icon(Icons.edit, size: 25),
+                          Text(
+                            'Edit Info',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.fontSize,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0,
+                          vertical: 15.0,
+                        ),
+                        backgroundColor: Colors.deepPurpleAccent,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        spacing: 5.0,
+                        children: [
+                          const Icon(Icons.inventory_outlined, size: 25),
+                          Text(
+                            'Restock',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.fontSize,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+
+                if (currentManager?.role == "Workshop Manager") ...[
+                  // 🔹 Request Button
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) =>
+                                RequestRestockPage(item: item),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20.0,
+                          vertical: 15.0,
+                        ),
+                        backgroundColor: Colors.deepPurpleAccent,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        spacing: 10.0,
+                        children: [
+                          const Icon(Icons.inventory_outlined, size: 25),
+                          Text(
+                            'Request Restock',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: Theme.of(
+                                context,
+                              ).textTheme.titleMedium?.fontSize,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
