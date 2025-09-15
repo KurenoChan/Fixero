@@ -1,4 +1,5 @@
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/features/inventory_management/views/edititem_page.dart';
 import 'package:flutter/material.dart';
 import '../models/item_model.dart';
 
@@ -435,7 +436,20 @@ class ItemDetailsPage extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => EditItemPage(item: item),
+                      ),
+                    );
+
+                    // showModalBottomSheet(
+                    //   context: context,
+                    //   isScrollControlled: true,
+                    //   builder: (_) => EditItemPage(item: item),
+                    // );
+                  },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 20.0,

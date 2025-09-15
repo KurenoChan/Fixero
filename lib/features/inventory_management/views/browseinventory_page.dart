@@ -5,6 +5,80 @@ import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
 import '../controllers/inventory_controller.dart';
 import 'itemdetails_page.dart';
 
+class BrowseInventoryPage extends StatefulWidget {
+  const BrowseInventoryPage({super.key});
+
+  @override
+  State<BrowseInventoryPage> createState() => _BrowseInventoryPageState();
+}
+
+class _BrowseInventoryPageState extends State<BrowseInventoryPage> {
+  late InventoryController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = Provider.of<InventoryController>(context, listen: false);
+
+    // Schedule loadItems after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.loadItems();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<InventoryController>(
+      builder: (context, controller, child) {
+        if (controller.isLoading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        return InventoryListPage<String>(
+          title: "Categories",
+          isCategory: true,
+          fetchData: () => Future.value(controller.getCategories()),
+          onTap: (context, category) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => InventoryListPage<String>(
+                  title: category,
+                  isSubCategory: true,
+                  fetchData: () =>
+                      Future.value(controller.getSubCategories(category)),
+                  onTap: (context, subCategory) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => InventoryListPage<Item>(
+                          title: subCategory,
+                          fetchData: () =>
+                              Future.value(controller.getItems(subCategory)),
+                          onTap: (context, item) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ItemDetailsPage(item: item),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
 class InventoryListPage<T> extends StatelessWidget {
   final String title;
   final Future<List<T>> Function() fetchData;
@@ -286,80 +360,6 @@ class InventoryListPage<T> extends StatelessWidget {
           );
         },
       ),
-    );
-  }
-}
-
-class BrowseInventoryPage extends StatefulWidget {
-  const BrowseInventoryPage({super.key});
-
-  @override
-  State<BrowseInventoryPage> createState() => _BrowseInventoryPageState();
-}
-
-class _BrowseInventoryPageState extends State<BrowseInventoryPage> {
-  late InventoryController controller;
-
-  @override
-  void initState() {
-    super.initState();
-    controller = Provider.of<InventoryController>(context, listen: false);
-
-    // Schedule loadItems after first frame
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.loadItems();
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Consumer<InventoryController>(
-      builder: (context, controller, child) {
-        if (controller.isLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        return InventoryListPage<String>(
-          title: "Categories",
-          isCategory: true,
-          fetchData: () => Future.value(controller.getCategories()),
-          onTap: (context, category) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => InventoryListPage<String>(
-                  title: category,
-                  isSubCategory: true,
-                  fetchData: () =>
-                      Future.value(controller.getSubCategories(category)),
-                  onTap: (context, subCategory) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => InventoryListPage<Item>(
-                          title: subCategory,
-                          fetchData: () =>
-                              Future.value(controller.getItems(subCategory)),
-                          onTap: (context, item) {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ItemDetailsPage(item: item),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-        );
-      },
     );
   }
 }
