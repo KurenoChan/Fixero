@@ -13,7 +13,7 @@ class InventoryController extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  // Load all items from Firebase once
+  /// 🔹 Load all items from Firebase once
   Future<void> loadItems() async {
     _isLoading = true;
     notifyListeners();
@@ -29,56 +29,62 @@ class InventoryController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Category list
- Future<List<String>> getCategories() async {
-    return Future.value(_items.map((e) => e.itemCategory).toSet().toList());
+  /// 🔹 Sync methods for UI to read cached items
+  List<String> getCategoriesSync() {
+    return _items.map((e) => e.itemCategory).toSet().toList();
   }
 
-  Future<List<String>> getSubCategories(String category) async {
-    final subCats = _items
+  List<String> getSubCategoriesSync(String category) {
+    return _items
         .where((e) => e.itemCategory == category)
         .map((e) => e.itemSubCategory)
         .toSet()
         .toList();
-    return Future.value(subCats);
   }
 
-  Future<List<Item>> getItems(String subCategory) async {
-    final items = _items.where((e) => e.itemSubCategory == subCategory).toList();
-    return Future.value(items);
+  List<Item> getItemsSync(String subCategory) {
+    return _items.where((e) => e.itemSubCategory == subCategory).toList();
   }
 
-  Future<Item?> getFirstItemBySubCategory(String subCategory) async {
+  Item? getFirstItemBySubCategorySync(String subCategory) {
     try {
-      final item = _items.firstWhere((e) => e.itemSubCategory == subCategory);
-      return Future.value(item);
+      return _items.firstWhere((e) => e.itemSubCategory == subCategory);
     } catch (e) {
-      return Future.value(null);
+      return null;
     }
   }
 
-  // Low stock items
+  /// 🔹 Low stock items
   List<Item> get lowStockItems =>
       _items.where((e) => e.stockQuantity <= e.lowStockThreshold).toList();
 
-  // Future<List<String>> getCategories() async {
-  //   final items = await _dao.getAllItems();
-  //   return items.map((e) => e.itemCategory).toSet().toList();
-  // }
+  /// 🔹 Update item
+  Future<void> updateItem(Item updatedItem) async {
+    try {
+      await _dao.updateItem(updatedItem);
 
-  // Future<List<String>> getSubCategories(String category) async {
-  //   final items = await _dao.getItemsByCategory(category);
-  //   return items.map((e) => e.itemSubCategory).toSet().toList();
-  // }
+      final index = _items.indexWhere((i) => i.itemId == updatedItem.itemId);
+      if (index != -1) {
+        _items[index] = updatedItem;
+      } else {
+        _items.add(updatedItem);
+      }
 
-  // Future<List<Item>> getItems(String subCategory) async {
-  //   final items = await _dao.getAllItems();
-  //   return items.where((e) => e.itemSubCategory == subCategory).toList();
-  // }
+      _errorMessage = null;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
 
-  // /// 🔹 NEW: get first item in subcategory for preview image
-  // Future<Item?> getFirstItemBySubCategory(String subCategory) async {
-  //   final items = await getItems(subCategory);
-  //   return items.isNotEmpty ? items.first : null;
-  // }
+  /// 🔹 Get item by ID
+  Item? getItemById(String id) {
+    try {
+      return _items.firstWhere((item) => item.itemId == id);
+    } catch (e) {
+      return null;
+    }
+  }
 }

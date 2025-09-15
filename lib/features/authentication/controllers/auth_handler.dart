@@ -125,62 +125,6 @@ class AuthHandler {
     }
   }
 
-  // static Future<void> handleEmailAndPasswordRegister(
-  //   BuildContext context,
-  //   String username,
-  //   String email,
-  //   String password,
-  //   String confirmPassword,
-  // ) async {
-  //   if (password != confirmPassword) {
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
-  //     return;
-  //   }
-
-  //   try {
-  //     // Step 1: Create Auth user
-  //     final userCredential = await AuthService.registerWithEmailAndPassword(
-  //       email,
-  //       password,
-  //     );
-
-  //     final uid = userCredential.user?.uid;
-
-  //     if (uid != null) {
-  //       final db = FirebaseDatabase.instance.ref("users/managers/$uid");
-
-  //       await db.set({
-  //         "managerName": username,
-  //         "managerPassword": password,
-  //         "managerEmail": email,
-  //       });
-  //     }
-
-  //     if (!context.mounted) return;
-
-  //     // Show snackbar first
-  //     ScaffoldMessenger.of(
-  //       context,
-  //     ).showSnackBar(const SnackBar(content: Text('Registration successful!')));
-
-  //     // Delay a tiny bit to allow snackbar to show
-  //     await Future.delayed(const Duration(milliseconds: 300));
-
-  //     Navigator.pushReplacement(
-  //       context,
-  //       MaterialPageRoute(builder: (context) => const LoginPage()),
-  //     );
-  //   } on FirebaseAuthException catch (e) {
-  //     final msg = e.code == 'email-already-in-use'
-  //         ? 'Email already in use.'
-  //         : 'Registration failed.';
-
-  //     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-  //   }
-  // }
-
   static Future<void> handleGoogleLogin(BuildContext context) async {
     try {
       final userCredential = await AuthService.loginWithGoogle();

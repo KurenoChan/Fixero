@@ -27,13 +27,15 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
   Widget build(BuildContext context) {
     final filteredItems = _items.where((item) {
       final matchesFilter = _filter == "All" || item["status"] == _filter;
-      final matchesSearch = item["name"]!.toLowerCase().contains(_query.toLowerCase());
+      final matchesSearch = item["name"]!.toLowerCase().contains(
+        _query.toLowerCase(),
+      );
       return matchesFilter && matchesSearch;
     }).toList();
 
     return SafeArea(
       child: Scaffold(
-        appBar: FixeroSubAppBar(title: "Stock Alerts"),
+        appBar: FixeroSubAppBar(title: "Stock Alerts", showBackButton: true),
         body: Padding(
           padding: const EdgeInsets.all(15.0),
           child: CustomScrollView(
@@ -82,21 +84,21 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
 
               // Stock list
               SliverList(
-                delegate: SliverChildBuilderDelegate(
-                      (BuildContext context, int index) {
-                    final item = filteredItems[index];
-                    return ListTile(
-                      title: Text(item["name"]!),
-                      subtitle: Text(item["status"]!),
-                      leading: const Icon(Icons.inventory_2_rounded),
-                      trailing: const Icon(Icons.chevron_right),
-                      onTap: () {
-                        // Handle item tap
-                      },
-                    );
-                  },
-                  childCount: filteredItems.length,
-                ),
+                delegate: SliverChildBuilderDelegate((
+                  BuildContext context,
+                  int index,
+                ) {
+                  final item = filteredItems[index];
+                  return ListTile(
+                    title: Text(item["name"]!),
+                    subtitle: Text(item["status"]!),
+                    leading: const Icon(Icons.inventory_2_rounded),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () {
+                      // Handle item tap
+                    },
+                  );
+                }, childCount: filteredItems.length),
               ),
             ],
           ),

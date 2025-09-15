@@ -1,16 +1,27 @@
 import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/features/inventory_management/controllers/inventory_controller.dart';
 import 'package:fixero/features/inventory_management/views/edititem_page.dart';
 import 'package:flutter/material.dart';
-import '../models/item_model.dart';
+import 'package:provider/provider.dart';
 
 class ItemDetailsPage extends StatelessWidget {
-  final Item item;
-  const ItemDetailsPage({super.key, required this.item});
+  final String itemId; // use ID instead of full Item
+  const ItemDetailsPage({super.key, required this.itemId});
 
   @override
   Widget build(BuildContext context) {
+    final controller = context.watch<InventoryController>();
+    final item = controller.getItemById(itemId); // reactive
+
+    if (item == null) {
+      return Scaffold(
+        appBar: FixeroSubAppBar(title: "Item Details", showBackButton: true,),
+        body: const Center(child: Text("Item not found")),
+      );
+    }
+    
     return Scaffold(
-      appBar: FixeroSubAppBar(title: item.itemName),
+      appBar: FixeroSubAppBar(title: item.itemName, showBackButton: true,),
       body: Column(
         children: [
           // 🔹 Image stays at the top
@@ -443,12 +454,6 @@ class ItemDetailsPage extends StatelessWidget {
                         builder: (context) => EditItemPage(item: item),
                       ),
                     );
-
-                    // showModalBottomSheet(
-                    //   context: context,
-                    //   isScrollControlled: true,
-                    //   builder: (_) => EditItemPage(item: item),
-                    // );
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(

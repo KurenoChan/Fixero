@@ -24,7 +24,7 @@ void main() async {
   // TODO: REMOVE THIS LATER
   // ************************
   // Force logout for testing
-  await FirebaseAuth.instance.signOut();
+  // await FirebaseAuth.instance.signOut();
 
   // Read intro flag once
   final prefs = await SharedPreferences.getInstance();
