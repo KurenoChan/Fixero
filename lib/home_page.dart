@@ -3,14 +3,14 @@ import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 
-import 'common/widgets/bars/fixero_bottomappbar.dart';
-import 'common/widgets/bars/fixero_homeappbar.dart';
+import 'common/widgets/bars/fixero_bottom_appbar.dart';
+import 'common/widgets/bars/fixero_home_appbar.dart';
 import 'common/widgets/charts/fixero_barchart.dart';
 import 'common/widgets/charts/fixero_linechart.dart';
 import 'common/widgets/charts/fixero_piechart.dart';
 import 'common/widgets/fixero_dropdown.dart';
 import 'data/dao/income_dao.dart';
-import 'data/dao/jobdemand_dao.dart';
+import 'data/dao/job_demand_dao.dart';
 import 'data/dao/service_dao.dart';
 
 class HomePage extends StatefulWidget {

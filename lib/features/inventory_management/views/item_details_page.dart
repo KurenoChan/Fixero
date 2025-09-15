@@ -1,9 +1,10 @@
-import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/authentication/models/manager.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
-import 'package:fixero/features/inventory_management/views/edititem_page.dart';
-import 'package:fixero/features/inventory_management/views/requestrestock_page.dart';
+import 'package:fixero/features/inventory_management/views/edit_item_page.dart';
+import 'package:fixero/features/inventory_management/views/request_restock_page.dart';
+import 'package:fixero/features/inventory_management/views/restock_item_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -34,7 +35,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<InventoryController>();
+    final controller = context.watch<ItemController>();
     final item = controller.getItemById(widget.itemId); // reactive
 
     if (item == null) {
@@ -515,7 +516,14 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RestockItemPage(item: item),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20.0,

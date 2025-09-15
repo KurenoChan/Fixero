@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:fixero/features/authentication/views/forgotpassword_page.dart';
+import 'package:fixero/features/authentication/views/forgot_password_page.dart';
 import 'package:fixero/features/authentication/views/register_page.dart';
 import 'package:flutter/material.dart';
 import 'package:sign_in_button/sign_in_button.dart';

@@ -1,12 +1,12 @@
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/authentication/models/manager.dart';
-import 'package:fixero/features/inventory_management/views/browseinventory_page.dart';
-import 'package:fixero/features/inventory_management/views/restockorders_page.dart';
-import 'package:fixero/features/inventory_management/views/stockalerts_page.dart';
+import 'package:fixero/features/inventory_management/views/browse_inventory_page.dart';
+import 'package:fixero/features/inventory_management/views/restock_orders_page.dart';
+import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
 import 'package:flutter/material.dart';
 
-import '../../../common/widgets/bars/fixero_bottomappbar.dart';
-import '../../../common/widgets/bars/fixero_mainappbar.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import '../../../common/widgets/bars/fixero_main_appbar.dart';
 
 class InventoryPage extends StatefulWidget {
   static const routeName = '/inventory';

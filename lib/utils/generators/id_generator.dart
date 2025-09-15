@@ -59,4 +59,9 @@ class IDGenerator {
   static String generateRequestedItemID() {
     return _generateTimeBasedID("REQI");
   }
+
+  /// Requested Item IDs → REQI-HHMMSS-DDMMYYYY-9999
+  static String generateOrderNo() {
+    return _generateTimeBasedID("ORD");
+  }
 }

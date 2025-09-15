@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/item.dart';
-import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import '../controllers/item_controller.dart';
-import 'itemdetails_page.dart';
+import 'item_details_page.dart';
 
 class BrowseInventoryPage extends StatefulWidget {
   const BrowseInventoryPage({super.key});
@@ -13,18 +13,18 @@ class BrowseInventoryPage extends StatefulWidget {
 }
 
 class _BrowseInventoryPageState extends State<BrowseInventoryPage> {
-  late InventoryController controller;
+  late ItemController controller;
 
   @override
   void initState() {
     super.initState();
-    controller = Provider.of<InventoryController>(context, listen: false);
+    controller = Provider.of<ItemController>(context, listen: false);
     WidgetsBinding.instance.addPostFrameCallback((_) => controller.loadItems());
   }
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<InventoryController>(
+    return Consumer<ItemController>(
       builder: (context, controller, child) {
         if (controller.isLoading) {
           return const Scaffold(
@@ -94,7 +94,7 @@ class InventoryListPage<T> extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FixeroSubAppBar(title: title, showBackButton: true,),
-      body: Consumer<InventoryController>(
+      body: Consumer<ItemController>(
         builder: (context, controller, child) {
           final items = fetchData();
 
@@ -396,7 +396,7 @@ class InventoryListPage<T> extends StatelessWidget {
 
 //               // 🔹 SubCategory card
 //               if (isSubCategory && item is String) {
-//                 final controller = Provider.of<InventoryController>(
+//                 final controller = Provider.of<ItemController>(
 //                   context,
 //                   listen: false,
 //                 );

@@ -2,8 +2,10 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
-import 'package:fixero/features/inventory_management/controllers/requesteditem_controller.dart';
-import 'package:fixero/features/inventory_management/controllers/restockrequest_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -35,9 +37,11 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => InventoryController()),
+        ChangeNotifierProvider(create: (_) => ItemController()),
         ChangeNotifierProvider(create: (_) => RequestedItemController()),
         ChangeNotifierProvider(create: (_) => RestockRequestController()),
+        ChangeNotifierProvider(create: (_) => SupplierController()),
+        ChangeNotifierProvider(create: (_) => OrderController()),
       ],
       child: MainApp(seenIntro: seenIntro),
     ),

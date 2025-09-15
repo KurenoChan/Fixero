@@ -1,4 +1,4 @@
-import 'package:fixero/data/repositories/inventory/restockrequest_repository.dart';
+import 'package:fixero/data/repositories/inventory/restock_request_repository.dart';
 import 'package:fixero/features/inventory_management/models/restock_request.dart';
 
 class RestockRequestDAO {

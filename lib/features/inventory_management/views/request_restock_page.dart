@@ -1,13 +1,13 @@
-import 'package:fixero/data/dao/inventory/requesteditem_dao.dart';
-import 'package:fixero/data/dao/inventory/restockrequest_dao.dart';
+import 'package:fixero/data/dao/inventory/requested_item_dao.dart';
+import 'package:fixero/data/dao/inventory/restock_request_dao.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
-import 'package:fixero/features/inventory_management/controllers/requesteditem_controller.dart';
-import 'package:fixero/features/inventory_management/controllers/restockrequest_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 import 'package:fixero/features/inventory_management/models/restock_request.dart';
 import 'package:fixero/utils/generators/id_generator.dart';
 import 'package:flutter/material.dart';
-import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/inventory_management/models/item.dart';
 import 'package:provider/provider.dart';
 

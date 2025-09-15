@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../common/widgets/bars/fixero_subappbar.dart';
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 
 class RestockOrdersPage extends StatefulWidget {
   const RestockOrdersPage({super.key});

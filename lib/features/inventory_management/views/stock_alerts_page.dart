@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../common/widgets/bars/fixero_subappbar.dart';
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/tools/fixero_searchbar.dart';
 
 class StockAlertsPage extends StatefulWidget {

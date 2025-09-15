@@ -1,4 +1,4 @@
-import 'package:fixero/common/widgets/bars/fixero_subappbar.dart';
+import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/models/item.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +59,7 @@ class _EditItemPageState extends State<EditItemPage> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.read<InventoryController>();
+    final controller = context.read<ItemController>();
     final categories = controller.getCategoriesSync();
     final subcategories = selectedCategory != null
         ? controller.getSubCategoriesSync(selectedCategory!)

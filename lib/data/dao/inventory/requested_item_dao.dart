@@ -1,4 +1,4 @@
-import 'package:fixero/data/repositories/inventory/requesteditem_repository.dart';
+import 'package:fixero/data/repositories/inventory/requested_item_repository.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 
 class RequestedItemDAO {

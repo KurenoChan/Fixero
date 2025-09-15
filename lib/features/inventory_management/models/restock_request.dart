@@ -7,6 +7,7 @@ class RestockRequest {
   final String? cancelledBy;
   final DateTime? approvedDate;
   final DateTime? cancelledDate;
+  final String? orderNo;
 
   RestockRequest({
     required this.requestId,
@@ -17,6 +18,7 @@ class RestockRequest {
     this.cancelledBy,
     this.approvedDate,
     this.cancelledDate,
+    this.orderNo,
   });
 
   // To convert Firebase JSON into Item
@@ -43,6 +45,7 @@ class RestockRequest {
       cancelledDate: map["cancelledDate"] != null
           ? DateTime.tryParse(map["cancelledDate"])
           : null,
+      orderNo: map["orderNo"],
     );
   }
 
@@ -62,6 +65,7 @@ class RestockRequest {
       "cancelledBy": cancelledBy,
       "approvedDate": approvedDate?.toIso8601String(),
       "cancelledDate": cancelledDate?.toIso8601String(),
+      "orderNo": orderNo,
     };
   }
 }

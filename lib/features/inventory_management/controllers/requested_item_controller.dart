@@ -1,4 +1,4 @@
-import 'package:fixero/data/dao/inventory/requesteditem_dao.dart';
+import 'package:fixero/data/dao/inventory/requested_item_dao.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 import 'package:flutter/foundation.dart';
 
