@@ -2,7 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'common/styles/dark_mode.dart';
 import 'common/styles/light_mode.dart';
 import 'features/authentication/views/login_page.dart';
@@ -19,6 +19,20 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+// Use Firestore here
+  final customersSnapshot = await FirebaseFirestore.instance
+      .collection('users')
+      .doc('customers')
+      .collection('list') // <-- if customers is a subcollection, give exact name
+      .get();
+
+  for (var customer in customersSnapshot.docs) {
+    print("Customer: ${customer.id}, data: ${customer.data()}");
+  }
 
   // ************************
   // TODO: REMOVE THIS LATER

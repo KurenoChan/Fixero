@@ -77,4 +77,5 @@ class DefaultFirebaseOptions {
     iosClientId: '432176160698-gnsfhej6kbj3ot8p0dse0tkrqip0irbu.apps.googleusercontent.com',
     iosBundleId: 'com.fixero.fixero',
   );
+
 }
