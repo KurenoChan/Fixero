@@ -1,8 +1,15 @@
 import 'package:fixero/data/dao/inventory/requested_item_dao.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
+import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
+import 'package:fixero/features/inventory_management/models/order.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
+import 'package:fixero/features/inventory_management/models/restock_request.dart';
+import 'package:fixero/features/inventory_management/views/create_order_sheet.dart';
+import 'package:fixero/features/inventory_management/views/order_details_sheet.dart';
 import 'package:fixero/features/inventory_management/views/request_details_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,22 +31,280 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
     Tab(text: 'Pending Orders'),
   ];
 
+  Future<void> _rejectRequest(
+    BuildContext context,
+    RestockRequest request,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Reject request'),
+        content: const Text('Are you sure you want to reject this request?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 184, 13, 1),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Reject'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (!context.mounted) return;
+      // 👇 Second dialog to enter remark
+      final TextEditingController remarkController = TextEditingController();
+      final remark = await showDialog<String>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Rejection Remark'),
+          content: TextField(
+            controller: remarkController,
+            decoration: const InputDecoration(
+              labelText: "Reason for rejection",
+              hintText: "Enter remark...",
+            ),
+            maxLines: 2,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, null),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 184, 13, 1),
+              ),
+              onPressed: () =>
+                  Navigator.pop(context, remarkController.text.trim()),
+              child: const Text('Submit'),
+            ),
+          ],
+        ),
+      );
+
+      if (remark == null) return; // user cancelled
+
+      final manager = await ManagerController.getCurrentManager();
+
+      if (manager == null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Failed to fetch manager info.")),
+        );
+        return;
+      }
+
+      if (!context.mounted) return;
+
+      // 1️⃣ Reject the request itself
+      await context.read<RestockRequestController>().rejectRequest(
+        request,
+        manager.id,
+      );
+
+      // 2️⃣ Update all requested items with remark
+      final itemDAO = RequestedItemDAO();
+      final requestedItems = await itemDAO.getItemsByRequestId(
+        request.requestId,
+      );
+
+      for (final item in requestedItems) {
+        final updatedItem = item.copyWith(
+          status: "Not Processed",
+          remark: remark.isNotEmpty ? remark : "Request rejected",
+        );
+        await itemDAO.updateItem(updatedItem);
+      }
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Request rejected successfully.")),
+      );
+    }
+  }
+
+  Future<void> _approveRequest(
+    BuildContext context,
+    RestockRequest request,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Approve request'),
+        content: const Text('Are you sure you want to approve this request?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 0, 145, 5),
+            ),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Approve'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (!context.mounted) return;
+
+      // ✅ Open the CreateOrderSheet as a bottom sheet
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => CreateOrderSheet(approvedRequests: [request]),
+      );
+    }
+  }
+
+  Future<String> _getSupplierName(String supplierID) async {
+    final supplierController = context.read<SupplierController>();
+    final supplier = supplierController.getSupplierByIdSync(supplierID);
+    return supplier?.supplierName ?? "Unknown Supplier";
+  }
+
+  Future<void> _markOrderAsReceived(BuildContext context, Order order) async {
+    final ratingController = TextEditingController();
+    final feedbackController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Mark as Received?"),
+        content: Form(
+          key: formKey,
+          child: Column(
+            spacing: 10,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: ratingController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Rating (0-5, optional)",
+                  hintText: "Enter 0 if no rating",
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return null;
+                  final rating = int.tryParse(value);
+                  if (rating == null || rating < 0 || rating > 5) {
+                    return "Enter a number between 0 and 5";
+                  }
+                  return null;
+                },
+              ),
+              TextFormField(
+                controller: feedbackController,
+                decoration: const InputDecoration(
+                  labelText: "Feedback (optional)",
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.of(context).pop(true);
+              }
+            },
+            child: const Text("Confirm"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    final orderController = context.read<OrderController>();
+    final itemDao = RequestedItemDAO();
+    final restockController = context.read<RestockRequestController>();
+
+    try {
+      // 1️⃣ Get all requests for this order
+      final requests = await restockController.getRequestsByOrderNo(
+        order.orderNo,
+      );
+
+      // 2️⃣ Update all requested items to "Received"
+      for (var request in requests) {
+        final pendingItems = await itemDao.getPendingItems(request.requestId);
+        for (var item in pendingItems) {
+          final updatedItem = item.copyWith(status: "Received");
+          await itemDao.updateItem(updatedItem);
+        }
+      }
+
+      // 3️⃣ Update the order
+      final now = DateTime.now();
+      final updatedOrder = order.copyWith(
+        arrivalDate:
+            "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}",
+        rating: int.tryParse(ratingController.text) ?? 0,
+        feedback: feedbackController.text.isEmpty
+            ? null
+            : feedbackController.text,
+      );
+
+      await orderController.updateOrder(updatedOrder);
+
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Order marked as received!")),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Failed to mark as received: $e")));
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabs.length, vsync: this);
 
-    // Ensure ItemController loads first
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final supplierController = context.read<SupplierController>();
+      if (supplierController.suppliers.isEmpty) {
+        await supplierController.loadSuppliers();
+        if (!mounted) return;
+      }
+
+      final orderController = context.read<OrderController>();
       final itemController = context.read<ItemController>();
       final restockController = context.read<RestockRequestController>();
 
-      // Load all items first
       if (itemController.items.isEmpty) {
         await itemController.loadItems();
+        if (!mounted) return;
       }
 
-      // Then load pending requests
+      if (orderController.orders.isEmpty) {
+        await orderController.loadOrders();
+        if (!mounted) return;
+      }
+
       await restockController.loadRequests();
     });
   }
@@ -300,7 +565,9 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                               horizontal: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColorLight,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(5.0),
                             ),
                             child: Text(
@@ -315,7 +582,9 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                               horizontal: 5,
                             ),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).primaryColorLight,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(5.0),
                             ),
                             child: Text(
@@ -337,7 +606,9 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          await _rejectRequest(context, request);
+                        },
                         icon: Icon(
                           Icons.close,
                           color: const Color.fromARGB(255, 184, 13, 1),
@@ -345,7 +616,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                       ),
                       IconButton(
                         onPressed: () async {
-                          // await _approveRequest(context, request);
+                          await _approveRequest(context, request);
                         },
                         icon: Icon(
                           Icons.check,
@@ -364,24 +635,124 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
   }
 
   Widget _buildPendingOrders() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(15),
-      itemCount: 3, // Replace with your dynamic data
-      itemBuilder: (context, index) {
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: ListTile(
-            title: Text('Order #${index + 1}'),
-            subtitle: const Text('Waiting to be marked as received'),
-            trailing: IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: () {
-                // Mark order as received
-              },
-            ),
+    final orderController = context.watch<OrderController>();
+
+    if (orderController.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    final pendingOrders = orderController.orders
+        .where((order) => order.arrivalDate == null)
+        .toList();
+
+    if (pendingOrders.isEmpty) {
+      return const Center(child: Text("No pending orders"));
+    }
+
+    return CustomScrollView(
+      slivers: [
+        SliverPadding(
+          padding: const EdgeInsets.all(15),
+          sliver: SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final order = pendingOrders[index];
+
+              return GestureDetector(
+                onTap: () {
+                  // show order details bottom sheet
+                  showModalBottomSheet(
+                    context: context,
+                    isScrollControlled: true, // allows full screen
+                    backgroundColor: Colors.transparent,
+                    builder: (context) => OrderDetailsSheet(order: order),
+                  );
+                },
+                child: Card(
+                  margin: const EdgeInsets.symmetric(vertical: 8),
+                  child: ListTile(
+                    leading: const Icon(Icons.receipt_long, size: 30),
+                    title: Text(
+                      order.orderNo,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: Theme.of(
+                          context,
+                        ).textTheme.titleMedium?.fontSize,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Column(
+                      spacing: 5,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 3.0),
+                          child: Divider(
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.3),
+                            height: 1,
+                            thickness: 1,
+                          ),
+                        ),
+
+                        Row(
+                          spacing: 10.0,
+                          children: [
+                            Icon(Icons.calendar_today, size: 20),
+                            Expanded(
+                              child: Text(
+                                order.orderDate,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Row(
+                          spacing: 10.0,
+                          children: [
+                            Icon(Icons.store, size: 20),
+                            Expanded(
+                              child: FutureBuilder<String>(
+                                future: _getSupplierName(order.supplierID),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Text("Loading...");
+                                  }
+                                  if (snapshot.hasError) {
+                                    return Text("Error: ${snapshot.error}");
+                                  }
+                                  return Text(
+                                    snapshot.data ?? "Unknown Supplier",
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    trailing: IconButton(
+                      icon: const Icon(
+                        Icons.check,
+                        color: Color.fromARGB(255, 0, 145, 5),
+                      ),
+                      onPressed: () async {
+                        await _markOrderAsReceived(context, order);
+                      },
+                    ),
+                  ),
+                ),
+              );
+            }, childCount: pendingOrders.length),
           ),
-        );
-      },
+        ),
+      ],
     );
   }
 
@@ -389,7 +760,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const FixeroSubAppBar(
-        title: 'Restock & Orders',
+        title: 'Requests & Orders',
         showBackButton: true,
       ),
       body: Column(

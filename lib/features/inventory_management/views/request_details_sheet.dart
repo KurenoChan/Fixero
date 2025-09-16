@@ -11,12 +11,12 @@ import 'package:provider/provider.dart';
 
 class RequestDetailsSheet extends StatelessWidget {
   final RestockRequest request;
-  final bool isCreatingOrder;
+  final bool showApproveButton;
 
   const RequestDetailsSheet({
     super.key,
     required this.request,
-    this.isCreatingOrder = false,
+    this.showApproveButton = true,
   });
 
   Future<void> _rejectRequest(BuildContext context) async {
@@ -42,6 +42,7 @@ class RequestDetailsSheet extends StatelessWidget {
     );
 
     if (confirm == true) {
+      if (!context.mounted) return;
       // 👇 Second dialog to enter remark
       final TextEditingController remarkController = TextEditingController();
       final remark = await showDialog<String>(
@@ -115,51 +116,6 @@ class RequestDetailsSheet extends StatelessWidget {
       );
     }
   }
-
-  // Future<void> _rejectRequest(BuildContext context) async {
-  //   final confirm = await showDialog<bool>(
-  //     context: context,
-  //     builder: (context) => AlertDialog(
-  //       title: const Text('Reject request'),
-  //       content: const Text('Are you sure you want to reject this request?'),
-  //       actions: [
-  //         TextButton(
-  //           onPressed: () => Navigator.pop(context, false),
-  //           child: const Text('Cancel'),
-  //         ),
-  //         ElevatedButton(
-  //           style: ElevatedButton.styleFrom(
-  //             backgroundColor: const Color.fromARGB(255, 184, 13, 1),
-  //           ),
-  //           onPressed: () => Navigator.pop(context, true),
-  //           child: const Text('Reject'),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-
-  //   if (confirm == true) {
-  //     // ✅ Await the async call to get manager
-  //     final manager = await ManagerController.getCurrentManager();
-
-  //     if (manager == null) {
-  //       if (!context.mounted) return;
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Failed to fetch manager info.")),
-  //       );
-  //       return;
-  //     }
-
-  //     if (!context.mounted) return;
-  //     await context.read<RestockRequestController>().rejectRequest(
-  //       request,
-  //       manager.id,
-  //     );
-
-  //     if (!context.mounted) return;
-  //     Navigator.of(context).pop(); // close sheet
-  //   }
-  // }
 
   Future<void> _approveRequest(BuildContext context) async {
     final confirm = await showDialog<bool>(
@@ -315,9 +271,9 @@ class RequestDetailsSheet extends StatelessWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(request.requestDate), // e.g. "16/09/2025"
+                              Text(request.requestDate),
                               const SizedBox(width: 10),
-                              Text(request.requestTime), // e.g. "14:32:05"
+                              Text(request.requestTime),
                             ],
                           ),
 
@@ -465,7 +421,7 @@ class RequestDetailsSheet extends StatelessWidget {
 
                           const SizedBox(height: 30),
 
-                          if (!isCreatingOrder)
+                          if (showApproveButton)
                             // Bottom action buttons
                             Row(
                               spacing: 20.0,

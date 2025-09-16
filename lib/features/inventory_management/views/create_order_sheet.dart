@@ -355,6 +355,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                   ],
                 ),
               ),
+              
               const Divider(height: 1, thickness: 1),
 
               // 🔹 Scrollable content
@@ -465,7 +466,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                       backgroundColor: Colors.transparent,
                                       builder: (context) => RequestDetailsSheet(
                                         request: request,
-                                        isCreatingOrder: true,
+                                        showApproveButton: false,
                                       ),
                                     );
                                   },
@@ -531,7 +532,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                                 decoration: BoxDecoration(
                                                   color: Theme.of(
                                                     context,
-                                                  ).primaryColorLight,
+                                                  ).colorScheme.primary.withValues(alpha: 0.3),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                         5.0,

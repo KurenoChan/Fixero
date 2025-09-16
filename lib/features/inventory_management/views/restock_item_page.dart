@@ -70,14 +70,6 @@ class _RestockItemPageState extends State<RestockItemPage> {
     });
   }
 
-  Supplier? getSupplierById(String id) {
-    try {
-      return _supplierList.firstWhere((s) => s.supplierID == id);
-    } catch (_) {
-      return null;
-    }
-  }
-
   @override
   void dispose() {
     _quantityController.dispose();

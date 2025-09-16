@@ -17,7 +17,6 @@ class Order {
 
   Map<String, dynamic> toMap() {
     return {
-      "orderNo": orderNo,
       "orderDate": orderDate,
       "arrivalDate": arrivalDate,
       "rating": rating,
@@ -34,6 +33,23 @@ class Order {
       rating: map["rating"],
       feedback: map["feedback"],
       supplierID: map["supplierID"],
+    );
+  }
+  Order copyWith({
+    String? orderNo,
+    String? orderDate,
+    String? arrivalDate,
+    int? rating,
+    String? feedback,
+    String? supplierID,
+  }) {
+    return Order(
+      orderNo: orderNo ?? this.orderNo,
+      orderDate: orderDate ?? this.orderDate,
+      arrivalDate: arrivalDate ?? this.arrivalDate,
+      rating: rating ?? this.rating,
+      feedback: feedback ?? this.feedback,
+      supplierID: supplierID ?? this.supplierID,
     );
   }
 }

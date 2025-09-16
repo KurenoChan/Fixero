@@ -110,6 +110,17 @@ class RestockRequestController extends ChangeNotifier {
     }
   }
 
+  Future<List<RestockRequest>> getRequestsByOrderNo(String orderNo) async {
+    try {
+      final requests = await _dao.getRequestsByOrderNo(orderNo);
+      return requests;
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      return [];
+    }
+  }
+
   /// 🔹 Filter helpers
   List<RestockRequest> get pendingRequests =>
       _requests.where((r) => r.status == "Pending").toList();
