@@ -5,6 +5,7 @@ import 'package:fixero/features/inventory_management/controllers/requested_item_
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 import 'package:fixero/features/inventory_management/models/restock_request.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:fixero/utils/generators/id_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
@@ -76,12 +77,13 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
     final restockRequestId = IDGenerator.generateRestockRequestID();
     final requestedItemId = IDGenerator.generateRequestedItemID();
 
-    print("\n\nGenerated RestockRequest ID: $restockRequestId");
-    print("Generated RequestedItem ID: $requestedItemId\n\n");
+    debugPrint("\n\nGenerated RestockRequest ID: $restockRequestId");
+    debugPrint("Generated RequestedItem ID: $requestedItemId\n\n");
 
     final restockRequest = RestockRequest(
       requestId: restockRequestId,
-      requestDateTime: DateTime.now(),
+      requestDate: Formatter.today(),
+      requestTime: Formatter.today(),
       requestBy: manager.id,
     );
 

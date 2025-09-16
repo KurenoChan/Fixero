@@ -3,7 +3,7 @@ class RequestedItem {
   final String requestId;
   final String itemId;
   final int quantityRequested;
-  final String status; // "Pending" | "Approved" | "Cancelled"
+  final String status; // "Pending" | "Received" | "Not Processed"
   final String? remark;
 
   RequestedItem({
@@ -15,10 +15,27 @@ class RequestedItem {
     this.remark,
   });
 
-  factory RequestedItem.fromMap(
-    Map<String, dynamic> map,
-    String requestItemId,
-  ) {
+  // ✅ copyWith method
+  RequestedItem copyWith({
+    String? requestItemId,
+    String? requestId,
+    String? itemId,
+    int? quantityRequested,
+    String? status,
+    String? remark,
+  }) {
+    return RequestedItem(
+      requestItemId: requestItemId ?? this.requestItemId,
+      requestId: requestId ?? this.requestId,
+      itemId: itemId ?? this.itemId,
+      quantityRequested: quantityRequested ?? this.quantityRequested,
+      status: status ?? this.status,
+      remark: remark ?? this.remark,
+    );
+  }
+
+  // ✅ fromMap
+  factory RequestedItem.fromMap(Map<String, dynamic> map, String requestItemId) {
     return RequestedItem(
       requestItemId: requestItemId,
       requestId: map["requestID"] ?? "",
@@ -31,6 +48,7 @@ class RequestedItem {
     );
   }
 
+  // ✅ toMap
   Map<String, dynamic> toMap() {
     return {
       "requestID": requestId,

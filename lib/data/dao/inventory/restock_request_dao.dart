@@ -30,4 +30,9 @@ class RestockRequestDAO {
     final all = await _repo.fetchAllRequests();
     return all.where((r) => r.status == "Approved").toList();
   }
+
+  Future<List<RestockRequest>> getRequestsByOrderNo(String orderNo) async {
+    final allRequests = await _repo.fetchAllRequests();
+    return allRequests.where((r) => r.orderNo == orderNo).toList();
+  }
 }

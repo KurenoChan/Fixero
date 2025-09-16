@@ -24,12 +24,6 @@ void main() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // ************************
-  // TODO: REMOVE THIS LATER
-  // ************************
-  // Force logout for testing
-  // await FirebaseAuth.instance.signOut();
-
   // Read intro flag once
   final prefs = await SharedPreferences.getInstance();
   final seenIntro = prefs.getBool('seenIntro') ?? false;

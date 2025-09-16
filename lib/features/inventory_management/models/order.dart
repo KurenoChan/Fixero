@@ -1,9 +1,9 @@
 class Order {
   final String orderNo;
-  final DateTime orderDate;
-  final DateTime? arrivalDate;
-  final int? rating;      // optional, 1-5
-  final String? feedback; // optional
+  final String orderDate;
+  final String? arrivalDate;
+  final int? rating;
+  final String? feedback;
   final String supplierID;
 
   Order({
@@ -17,11 +17,10 @@ class Order {
 
   Map<String, dynamic> toMap() {
     return {
-      "orderNo": orderNo,
-      "orderDate": orderDate.toIso8601String(),
-      "arrivalDate": arrivalDate?.toIso8601String(),
+      "orderDate": orderDate,
+      "arrivalDate": arrivalDate,
       "rating": rating,
-      "feedback": feedback ?? "",
+      "feedback": feedback,
       "supplierID": supplierID,
     };
   }
@@ -29,11 +28,28 @@ class Order {
   factory Order.fromMap(Map<dynamic, dynamic> map, String id) {
     return Order(
       orderNo: id,
-      orderDate: DateTime.parse(map["orderDate"] ?? DateTime.now().toIso8601String()),
-      arrivalDate: map["arrivalDate"] != null ? DateTime.parse(map["arrivalDate"]) : null,
+      orderDate: map["orderDate"],
+      arrivalDate: map["arrivalDate"],
       rating: map["rating"],
       feedback: map["feedback"],
-      supplierID: map["supplierID"] ?? "",
+      supplierID: map["supplierID"],
+    );
+  }
+  Order copyWith({
+    String? orderNo,
+    String? orderDate,
+    String? arrivalDate,
+    int? rating,
+    String? feedback,
+    String? supplierID,
+  }) {
+    return Order(
+      orderNo: orderNo ?? this.orderNo,
+      orderDate: orderDate ?? this.orderDate,
+      arrivalDate: arrivalDate ?? this.arrivalDate,
+      rating: rating ?? this.rating,
+      feedback: feedback ?? this.feedback,
+      supplierID: supplierID ?? this.supplierID,
     );
   }
 }

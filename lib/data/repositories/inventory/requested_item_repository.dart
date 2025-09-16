@@ -2,12 +2,16 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 
 class RequestedItemRepository {
-  final DatabaseReference _db =
-      FirebaseDatabase.instance.ref("inventory/requestedItems");
+  final DatabaseReference _db = FirebaseDatabase.instance.ref(
+    "inventory/requestedItems",
+  );
 
   /// Fetch all items linked to a specific restock request
   Future<List<RequestedItem>> fetchItemsByRequestId(String requestId) async {
-    final snapshot = await _db.orderByChild("requestID").equalTo(requestId).get();
+    final snapshot = await _db
+        .orderByChild("requestID")
+        .equalTo(requestId)
+        .get();
 
     if (!snapshot.exists) return [];
 

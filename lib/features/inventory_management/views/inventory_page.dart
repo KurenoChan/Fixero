@@ -1,7 +1,7 @@
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/authentication/models/manager.dart';
 import 'package:fixero/features/inventory_management/views/browse_inventory_page.dart';
-import 'package:fixero/features/inventory_management/views/restock_orders_page.dart';
+import 'package:fixero/features/inventory_management/views/requests_orders_page.dart';
 import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
 import 'package:flutter/material.dart';
 
@@ -113,12 +113,12 @@ class _InventoryPageState extends State<InventoryPage> {
               _buildInventoryOptionCard(
                 theme: theme,
                 icon: Icons.inventory_2,
-                title: "Restock & Orders",
+                title: "Requests & Orders",
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => const RestockOrdersPage(),
+                      builder: (context) => const RequestsOrdersPage(),
                     ),
                   );
                 },

@@ -45,8 +45,7 @@ class _HomePageState extends State<HomePage> {
         setState(() {
           _managerName = manager.name;
           _profileImgUrl =
-              manager.profileImgUrl ??
-              "https://cdn-icons-png.flaticon.com/512/3237/3237476.png";
+              manager.profileImgUrl;
         });
       }
     }
