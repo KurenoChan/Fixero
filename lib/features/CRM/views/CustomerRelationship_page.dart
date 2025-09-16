@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/bars/fixero_bottomappbar.dart';
 import '../../../common/widgets/bars/fixero_mainappbar.dart';
 import 'package:fixero/features/CRM/views/CusDirectory.dart';
+import 'package:fixero/features/CRM/views/communicationHistoy.dart';
 class CrmHomePage extends StatefulWidget {
   static const routeName = '/crm';
 
@@ -37,7 +38,6 @@ class _CrmHomePageState extends State<CrmHomePage> {
               icon: Icons.people,
               title: "Customer Directory",
               onTap: () {
-                // Handle Stock Alert tap
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -50,7 +50,6 @@ class _CrmHomePageState extends State<CrmHomePage> {
             const SizedBox(height: 10),
 
             Row(
-              spacing: 10.0,
               children: [
                 // Communication History
                 Expanded(
@@ -59,10 +58,18 @@ class _CrmHomePageState extends State<CrmHomePage> {
                     icon: Icons.phone_in_talk,
                     title: "Communication History",
                     onTap: () {
-                      // TODO: Navigate to Communication History page
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                          const CommunicationHistoryPage(),
+                        ),
+                      );
                     },
                   ),
                 ),
+
+                const SizedBox(width: 10),
 
                 // Customer Feedback
                 Expanded(
