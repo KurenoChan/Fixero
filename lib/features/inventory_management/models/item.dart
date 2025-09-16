@@ -50,7 +50,7 @@ class Item {
       'stockQuantity': stockQuantity,
       'unit': unit,
       'lowStockThreshold': lowStockThreshold,
-      'imageUrl': imageUrl,
+      'itemImageUrl': imageUrl,
     };
   }
 }

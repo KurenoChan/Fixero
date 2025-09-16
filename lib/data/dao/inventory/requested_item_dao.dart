@@ -26,8 +26,8 @@ class RequestedItemDAO {
     return all.where((i) => i.status == "Pending").toList();
   }
 
-  Future<List<RequestedItem>> getApprovedItems(String requestId) async {
+  Future<List<RequestedItem>> getReceivedItems(String requestId) async {
     final all = await _repo.fetchItemsByRequestId(requestId);
-    return all.where((i) => i.status == "Approved").toList();
+    return all.where((i) => i.status == "Received").toList();
   }
 }

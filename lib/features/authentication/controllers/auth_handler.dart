@@ -51,7 +51,7 @@ class AuthHandler {
           message = 'Invalid email or password.';
           break;
         default:
-          print('Unknown login error: $e');
+          debugPrint('Unknown login error: $e');
           message = 'Login failed. Please try again later.';
       }
 
@@ -95,6 +95,8 @@ class AuthHandler {
           "managerPassword": password,
           "managerEmail": email,
           "managerRole": "Workshop Manager",
+          "profileImgUrl":
+              "https://cdn-icons-png.flaticon.com/512/8847/8847419.png",
         });
       }
 
@@ -156,6 +158,9 @@ class AuthHandler {
           "managerEmail": user.email ?? "",
           "managerPassword": "", // Google login → no password stored
           "managerRole": "Workshop Manager",
+          "profileImgUrl":
+              user.photoURL ??
+              "https://cdn-icons-png.flaticon.com/512/8847/8847419.png",
         });
       }
     } catch (e) {

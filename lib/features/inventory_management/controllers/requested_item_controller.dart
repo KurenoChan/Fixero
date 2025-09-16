@@ -47,7 +47,9 @@ class RequestedItemController extends ChangeNotifier {
     try {
       await _dao.updateItem(item);
 
-      final index = _items.indexWhere((i) => i.requestItemId == item.requestItemId);
+      final index = _items.indexWhere(
+        (i) => i.requestItemId == item.requestItemId,
+      );
       if (index != -1) {
         _items[index] = item;
       }
@@ -72,10 +74,26 @@ class RequestedItemController extends ChangeNotifier {
     }
   }
 
+  Future<void> updateItemsStatusByRequestId(
+    String requestId,
+    String status,
+  ) async {
+    final items = await _dao.getItemsByRequestId(requestId);
+
+    for (var item in items) {
+      final updated = item.copyWith(status: status);
+      await _dao.updateItem(updated);
+    }
+
+    // If you’re storing `_items` for the current request, refresh it
+    _items = await _dao.getItemsByRequestId(requestId);
+    notifyListeners();
+  }
+
   /// 🔹 Helpers
   List<RequestedItem> get pendingItems =>
       _items.where((i) => i.status == "Pending").toList();
 
-  List<RequestedItem> get approvedItems =>
-      _items.where((i) => i.status == "Approved").toList();
+  List<RequestedItem> get receivedItems =>
+      _items.where((i) => i.status == "Received").toList();
 }

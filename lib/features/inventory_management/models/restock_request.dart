@@ -1,70 +1,82 @@
 class RestockRequest {
   final String requestId;
-  final DateTime requestDateTime;
-  final String requestBy; // Workshop Manager UID
-  final String status; // "Pending" | "Approved" | "Cancelled"
+  final String requestDate;   // yyyy-MM-dd
+  final String requestTime;   // HH:mm:ss
+  final String requestBy;     // Workshop Manager UID
+  final String status;        // "Pending" | "Approved" | "Rejected"
   final String? approvedBy;
-  final String? cancelledBy;
-  final DateTime? approvedDate;
-  final DateTime? cancelledDate;
+  final String? rejectedBy;
+  final String? approvedDate; // yyyy-MM-dd
+  final String? rejectedDate; // yyyy-MM-dd
   final String? orderNo;
 
   RestockRequest({
     required this.requestId,
-    required this.requestDateTime,
+    required this.requestDate,
+    required this.requestTime,
     required this.requestBy,
     this.status = "Pending",
     this.approvedBy,
-    this.cancelledBy,
+    this.rejectedBy,
     this.approvedDate,
-    this.cancelledDate,
+    this.rejectedDate,
     this.orderNo,
   });
 
-  // To convert Firebase JSON into Item
+  // ✅ copyWith
+  RestockRequest copyWith({
+    String? requestId,
+    String? requestDate,
+    String? requestTime,
+    String? requestBy,
+    String? status,
+    String? approvedBy,
+    String? rejectedBy,
+    String? approvedDate,
+    String? rejectedDate,
+    String? orderNo,
+  }) {
+    return RestockRequest(
+      requestId: requestId ?? this.requestId,
+      requestDate: requestDate ?? this.requestDate,
+      requestTime: requestTime ?? this.requestTime,
+      requestBy: requestBy ?? this.requestBy,
+      status: status ?? this.status,
+      approvedBy: approvedBy ?? this.approvedBy,
+      rejectedBy: rejectedBy ?? this.rejectedBy,
+      approvedDate: approvedDate ?? this.approvedDate,
+      rejectedDate: rejectedDate ?? this.rejectedDate,
+      orderNo: orderNo ?? this.orderNo,
+    );
+  }
+
+  // ✅ fromMap
   factory RestockRequest.fromMap(Map<String, dynamic> map, String requestId) {
-    final String? dateStr = map["requestDate"];
-    final String? timeStr = map["requestTime"];
-    DateTime? parsedDateTime;
-
-    if (dateStr != null && timeStr != null) {
-      // Combine date and time properly
-      parsedDateTime = DateTime.tryParse("$dateStr $timeStr");
-    }
-
     return RestockRequest(
       requestId: requestId,
-      requestDateTime: parsedDateTime ?? DateTime.now(),
+      requestDate: map["requestDate"],
+      requestTime: map["requestTime"],
       requestBy: map["requestBy"] ?? "",
       status: map["status"] ?? "Pending",
       approvedBy: map["approvedBy"],
-      cancelledBy: map["cancelledBy"],
-      approvedDate: map["approvedDate"] != null
-          ? DateTime.tryParse(map["approvedDate"])
-          : null,
-      cancelledDate: map["cancelledDate"] != null
-          ? DateTime.tryParse(map["cancelledDate"])
-          : null,
+      rejectedBy: map["rejectedBy"],
+      approvedDate: map["approvedDate"],
+      rejectedDate: map["rejectedDate"],
       orderNo: map["orderNo"],
     );
   }
 
-  // To convert Item into Firebase JSON
+  // ✅ toMap
   Map<String, dynamic> toMap() {
     return {
-      "requestDate": requestDateTime.toIso8601String().split("T").first,
-      "requestTime": requestDateTime
-          .toIso8601String()
-          .split("T")
-          .last
-          .split('.')
-          .first,
+      "requestDate": requestDate,
+      "requestTime": requestTime,
       "status": status,
       "requestBy": requestBy,
       "approvedBy": approvedBy,
-      "cancelledBy": cancelledBy,
-      "approvedDate": approvedDate?.toIso8601String(),
-      "cancelledDate": cancelledDate?.toIso8601String(),
+      "rejectedBy": rejectedBy,
+      "approvedDate": approvedDate,
+      "rejectedDate": rejectedDate,
       "orderNo": orderNo,
     };
   }
