@@ -9,8 +9,9 @@ This document explains how our team will collaborate on the Fixero Flutter proje
 1. Install **Visual Studio Code**.
 2. Install Git on your computer: [Download Git](https://git-scm.com/downloads).
 3. Install these VS Code extensions:
-   - **GitHub Repositories**
-   - **GitHub Pull Requests and Issues**
+
+   * **GitHub Repositories**
+   * **GitHub Pull Requests**
 
 ---
 
@@ -28,10 +29,10 @@ This document explains how our team will collaborate on the Fixero Flutter proje
 
 We use feature branches so everyone works separately before merging to `main`.
 
-1. In VS Code, go to the bottom-left corner where the branch name is shown.
+1. Look at the **bottom-left corner** of VS Code where the current branch name is displayed.
 2. Make sure you are on `main`.
-3. Click and select **"Create New Branch from..."**.
-4. Name your branch using your own name or feature (e.g., `KohZhengHong` or `InventoryManagement`).
+3. Click the branch name → select **"Create New Branch from..."**.
+4. Name your branch using your own name or feature (e.g., `CRM` or `InventoryManagement`).
 5. Click **"Publish Branch"** (this uploads your branch to GitHub).
 
 ---
@@ -40,10 +41,11 @@ We use feature branches so everyone works separately before merging to `main`.
 
 1. Work on your feature in your own branch.
 2. After making changes:
-   - Go to **Source Control** panel in VS Code (`Ctrl+Shift+G`).
-   - Write a commit message (describe your changes).
-   - Click **Commit**.
-   - Then click **Sync Changes** (this will push your commits to GitHub).
+
+   * Go to **Source Control** panel in VS Code (`Ctrl+Shift+G`).
+   * Write a commit message describing your changes.
+   * Click **Commit**.
+   * Click **Sync Changes** to push your commits to GitHub.
 
 ---
 
@@ -59,24 +61,35 @@ We use feature branches so everyone works separately before merging to `main`.
 
 ## 👀 Testing Different Branches
 
-- You can switch branches (bottom-left corner of VS Code).
-- Run the project on each branch to check differences.
-- Report any issues on the Pull Request page.
+* You can switch branches using the **bottom-left corner** branch name display.
+* Run the project on each branch to check differences.
+* Report any issues on the Pull Request page.
 
 ---
 
-## 🔐 Firebase Init Setup
+## 🔐 Firebase Setup
 
-Since Firebase requires confidential keys, the `firebase_init` folder is **not uploaded to GitHub**.Follow these steps:
+Firebase requires confidential keys, so these files are **not uploaded to GitHub**. Follow these steps:
 
-1. Download the **`firebase_init`** folder from our shared **Google Drive**.
+1. Download the following from our shared **Google Drive**:
 
-   - This folder contains the **`serviceAccountKey.json`** (confidential).
-   - ⚠️ **Do NOT upload this folder to GitHub**.
-2. Place the folder inside your local project root.
-3. Open terminal and run:
+   * `firebase_init` folder → contains **`serviceAccountKey.json`**
+     (Place this folder in your **project root**)
+   * `google-services.json` → Android configuration file
+     (Place this file inside **`/android/app/`**)
+2. Open a terminal and run:
 
    ```bash
    cd firebase_init
-   npm init -y
+   npm install
    ```
+3. Make sure the `node_modules` folder is generated in the `firebase_init` folder.
+4. To initialize Firebase, run:
+
+   ```bash
+   node firebase_init/initFirebase.js
+   ```
+
+   *If you are running the command from outside the `firebase_init` folder, adjust the path accordingly.*
+
+⚠️ **Do NOT upload these files or folders to GitHub.**

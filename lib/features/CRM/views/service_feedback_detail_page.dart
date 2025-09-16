@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../../../common/widgets/bars/fixero_mainappbar.dart';
+import '../../../common/widgets/bars/fixero_main_appbar.dart';
 
 class ServiceFeedbackDetailPage extends StatefulWidget {
   final Map<String, dynamic> feedback;

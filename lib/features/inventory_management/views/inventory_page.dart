@@ -1,9 +1,12 @@
-import 'package:fixero/features/inventory_management/views/browseinventory_page.dart';
-import 'package:fixero/features/inventory_management/views/stockalerts_page.dart';
+import 'package:fixero/features/authentication/controllers/manager_controller.dart';
+import 'package:fixero/features/authentication/models/manager.dart';
+import 'package:fixero/features/inventory_management/views/browse_inventory_page.dart';
+import 'package:fixero/features/inventory_management/views/restock_orders_page.dart';
+import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
 import 'package:flutter/material.dart';
 
-import '../../../common/widgets/bars/fixero_bottomappbar.dart';
-import '../../../common/widgets/bars/fixero_mainappbar.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import '../../../common/widgets/bars/fixero_main_appbar.dart';
 
 class InventoryPage extends StatefulWidget {
   static const routeName = '/inventory';
@@ -15,7 +18,21 @@ class InventoryPage extends StatefulWidget {
 }
 
 class _InventoryPageState extends State<InventoryPage> {
-  //
+  Manager? currentManager;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCurrentManager();
+  }
+
+  Future<void> _loadCurrentManager() async {
+    final manager = await ManagerController.getCurrentManager();
+    if (!mounted) return;
+    setState(() {
+      currentManager = manager;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,6 +106,24 @@ class _InventoryPageState extends State<InventoryPage> {
                 ),
               ],
             ),
+
+            const SizedBox(height: 10),
+
+            if (currentManager?.role == "Inventory Manager") ...[
+              _buildInventoryOptionCard(
+                theme: theme,
+                icon: Icons.inventory_2,
+                title: "Restock & Orders",
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RestockOrdersPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
           ],
         ),
         bottomNavigationBar: FixeroBottomAppBar(),
@@ -110,6 +145,7 @@ class _InventoryPageState extends State<InventoryPage> {
         fit: StackFit.passthrough,
         children: [
           Card(
+            elevation: 0,
             color: theme.colorScheme.primary.withValues(alpha: 0.35),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),

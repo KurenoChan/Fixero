@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../common/widgets/bars/fixero_bottomappbar.dart';
-import '../../../common/widgets/bars/fixero_mainappbar.dart';
-import 'package:fixero/features/CRM/views/CusDirectory.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import '../../../common/widgets/bars/fixero_main_appbar.dart';
+import 'package:fixero/features/CRM/views/cusDirectory.dart';
 import 'package:fixero/features/CRM/views/communicationHistoy.dart';
 class CrmHomePage extends StatefulWidget {
   static const routeName = '/crm';

@@ -22,6 +22,23 @@ class IDGenerator {
     return _random.nextInt(max).toString().padLeft(length, '0');
   }
 
+  /// Generates a datetime-based ID with the given [prefix].
+  /// Format: PREFIX-HHMMSS-DDMMYYYY-9999
+  static String _generateTimeBasedID(String prefix) {
+    final now = DateTime.now();
+    final hhmmss =
+        "${now.hour.toString().padLeft(2, '0')}"
+        "${now.minute.toString().padLeft(2, '0')}"
+        "${now.second.toString().padLeft(2, '0')}";
+    final ddmmyyyy =
+        "${now.day.toString().padLeft(2, '0')}"
+        "${now.month.toString().padLeft(2, '0')}"
+        "${now.year}";
+    final randomNum = _generateNumber(4);
+
+    return "$prefix-$hhmmss-$ddmmyyyy-$randomNum";
+  }
+
   // ==========================
   // Flexible ID generators
   // ==========================
@@ -31,5 +48,20 @@ class IDGenerator {
     String randomPart = _generateAlphanumeric(6);
     String numberPart = _generateNumber(4);
     return "ITM-$randomPart-$numberPart";
+  }
+
+  /// Request Restock IDs → REQ-HHMMSS-DDMMYYYY-9999
+  static String generateRestockRequestID() {
+    return _generateTimeBasedID("REQ");
+  }
+
+  /// Requested Item IDs → REQI-HHMMSS-DDMMYYYY-9999
+  static String generateRequestedItemID() {
+    return _generateTimeBasedID("REQI");
+  }
+
+  /// Requested Item IDs → REQI-HHMMSS-DDMMYYYY-9999
+  static String generateOrderNo() {
+    return _generateTimeBasedID("ORD");
   }
 }

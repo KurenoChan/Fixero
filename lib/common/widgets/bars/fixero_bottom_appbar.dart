@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../features/CRM/views/CustomerRelationship_page.dart';
+import '../../../features/CRM/views/customerRelationship_page.dart';
 import '../../../features/inventory_management/views/inventory_page.dart';
 import '../../../home_page.dart';
 

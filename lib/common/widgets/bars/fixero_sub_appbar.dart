@@ -4,8 +4,13 @@ import '../../../utils/formatters/formatter.dart';
 
 class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
+  final bool showBackButton;
 
-  const FixeroSubAppBar({super.key, required this.title});
+  const FixeroSubAppBar({
+    super.key,
+    required this.title,
+    required this.showBackButton,
+  });
 
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight + 20); // Added height
@@ -19,10 +24,16 @@ class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
       backgroundColor: theme.colorScheme.inversePrimary,
       elevation: 0,
       toolbarHeight: 150,
-      leading: IconButton(
-        icon: Icon(Icons.chevron_left, color: theme.colorScheme.onPrimary, size: 30),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
+      leading: showBackButton
+          ? IconButton(
+              icon: Icon(
+                Icons.chevron_left,
+                color: theme.colorScheme.onPrimary,
+                size: 30,
+              ),
+              onPressed: () => Navigator.of(context).pop(),
+            )
+          : null,
       title: Text(
         // capitalize
         Formatter.capitalize(title),
@@ -35,9 +46,7 @@ class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
       centerTitle: true,
 
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(20),
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
 
       // flexibleSpace: Padding(

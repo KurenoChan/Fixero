@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:fixero/features/authentication/views/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -70,6 +71,7 @@ class AuthHandler {
     String confirmPassword,
   ) async {
     if (password != confirmPassword) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Passwords do not match')));
@@ -92,15 +94,30 @@ class AuthHandler {
           "managerName": username,
           "managerPassword": password,
           "managerEmail": email,
+          "managerRole": "Workshop Manager",
         });
       }
 
+      // ✅ Use context safely after async
       if (!context.mounted) return;
 
+      // Show the SnackBar first
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Registration successful!')));
+
+      // Optional: delay a tiny bit to let snackbar appear before navigating
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (!context.mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
     } on FirebaseAuthException catch (e) {
+      if (!context.mounted) return;
+
       final msg = e.code == 'email-already-in-use'
           ? 'Email already in use.'
           : 'Registration failed.';
@@ -108,25 +125,6 @@ class AuthHandler {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     }
   }
-
-  // static Future<void> handleGoogleLogin(BuildContext context) async {
-  //   try {
-  //     await AuthService.loginWithGoogle();
-
-  //     if (context.mounted) {
-  //       Navigator.pushReplacement(
-  //         context,
-  //         MaterialPageRoute(builder: (context) => const HomePage()),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     if (context.mounted) {
-  //       ScaffoldMessenger.of(
-  //         context,
-  //       ).showSnackBar(SnackBar(content: Text(e.toString())));
-  //     }
-  //   }
-  // }
 
   static Future<void> handleGoogleLogin(BuildContext context) async {
     try {
@@ -144,7 +142,6 @@ class AuthHandler {
 
       if (!context.mounted) return;
 
-
       final user = userCredential.user!;
       final uid = user.uid;
       final dbRef = FirebaseDatabase.instance.ref("users/managers/$uid");
@@ -158,6 +155,7 @@ class AuthHandler {
           "managerName": user.displayName ?? "Manager",
           "managerEmail": user.email ?? "",
           "managerPassword": "", // Google login → no password stored
+          "managerRole": "Workshop Manager",
         });
       }
     } catch (e) {
@@ -167,5 +165,14 @@ class AuthHandler {
         ).showSnackBar(SnackBar(content: Text(e.toString())));
       }
     }
+  }
+
+  static Future<void> handleSignOut(BuildContext context) async {
+    await AuthService.signOut();
+    if (!context.mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginPage()),
+    );
   }
 }

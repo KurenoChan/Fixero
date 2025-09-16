@@ -1,6 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/utils/generators/id_generator.dart';
-import '../../../features/inventory_management/models/item_model.dart';
+import '../../../features/inventory_management/models/item.dart';
 
 /*
 ********************************************************************************

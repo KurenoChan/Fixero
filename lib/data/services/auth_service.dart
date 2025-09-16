@@ -91,8 +91,6 @@ class AuthService {
   static Future<void> signOut() async {
     await _auth.signOut();
     await GoogleSignIn.instance.signOut();
-    // final prefs = await SharedPreferences.getInstance();
-    // await prefs.setBool('isLoggedIn', false);
   }
 
   static User? get currentUser => _auth.currentUser;
