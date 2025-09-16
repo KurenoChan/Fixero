@@ -9,4 +9,19 @@ class Formatter {
         })
         .join(' ');
   }
+
+  static String todayDate() {
+    final now = DateTime.now();
+    return now.toIso8601String().split("T").first; // "2025-09-16"
+  }
+
+  static String todayTime() {
+    final now = DateTime.now();
+    return now.toIso8601String().split("T").last.split(".").first; // "14:32:05"
+  }
+
+  static String today() {
+    final now = DateTime.now();
+    return now.toIso8601String(); // full datetime "2025-09-16T14:32:05.123Z"
+  }
 }
