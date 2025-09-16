@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import '../../../common/widgets/bars/fixero_main_appbar.dart';
 
 class ServiceFeedbackDetailPage extends StatefulWidget {
   final Map<String, dynamic> feedback;
@@ -15,7 +14,6 @@ class ServiceFeedbackDetailPage extends StatefulWidget {
 class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
   List<Map<String, dynamic>> replies = [];
-  final TextEditingController _replyController = TextEditingController();
 
   @override
   void initState() {
@@ -26,7 +24,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   Future<void> _loadReplies() async {
     final fbID = widget.feedback["feedbackID"];
     final replySnap =
-    await dbRef.child("CustomerRelationship/replies/$fbID").get();
+    await dbRef.child("customerRelationship/replies/$fbID").get();
 
     if (!replySnap.exists) {
       setState(() => replies = []);
@@ -48,39 +46,35 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
     });
   }
 
-  Future<void> _addReply() async {
+  Future<void> _reopenFeedback() async {
     final fbID = widget.feedback["feedbackID"];
-    final newReplyKey =
-        "RPL-${DateTime.now().toString().replaceAll(RegExp(r'[-: ]'), '').substring(0, 12)}";
 
-    final replyData = {
-      "from": "Manager",
-      "message": _replyController.text,
-      "date": DateTime.now().toString(),
-    };
+    await dbRef.child("customerRelationship/feedbacks/$fbID").update({
+      "status": "Open",
+    });
 
-    await dbRef
-        .child("CustomerRelationship/replies/$fbID/$newReplyKey")
-        .set(replyData);
-
-    _replyController.clear();
-    _loadReplies(); // refresh replies
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Feedback has been reopened.")),
+      );
+      Navigator.pop(context, true); // ✅ return true to trigger refresh
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final fb = widget.feedback;
+    final isClosed =
+        (fb["status"] ?? "").toString().trim().toLowerCase() == "closed";
 
     return Scaffold(
-      appBar: FixeroMainAppBar(
-        title: "Feedback Detail",
-        searchHints: ["Customer Name", "Vehicle Plate", "Phone Number"],
-        searchTerms: [
-          "John Tan",
-          "Toyota Vios",
-          "0123456789",
-          "Service Feedback",
-        ],
+      appBar: AppBar(
+        title: const Text("Feedback Detail"),
+        backgroundColor: Colors.blue,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context, false),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -88,7 +82,8 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
           children: [
             // 🔹 Customer & Service Info
             Text("Customer: ${fb['customerName']} (${fb['customerID']})",
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                style:
+                const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text("Car Model: ${fb['carModel']}"),
             Text("Service Type: ${fb['serviceType']}"),
             Text("Service Date: ${fb['serviceDate']}"),
@@ -103,38 +98,35 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
             Text("Engineering Attitude: ${fb['engineeringAttitude']}"),
             const SizedBox(height: 10),
             Text("Comment: ${fb['comment']}"),
+            Text("Status: ${fb['status']}"),
             const Divider(height: 30),
 
             // 🔹 Replies
             const Text("Replies",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             replies.isEmpty
-                ? const Text("No replies yet.")
+                ? const Text("No replies available.")
                 : Column(
-              children: replies
-                  .map((r) => ListTile(
-                title: Text(r["from"]),
-                subtitle: Text(r["message"]),
-                trailing: Text(r["date"]),
-              ))
-                  .toList(),
+              children: replies.map((r) {
+                return ListTile(
+                  title: Text(r["from"]),
+                  subtitle: Text(r["message"]),
+                  trailing: Text(r["date"]),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 20),
 
-            // 🔹 Add reply
-            TextField(
-              controller: _replyController,
-              decoration: const InputDecoration(
-                labelText: "Your Reply",
-                border: OutlineInputBorder(),
+            // 🔹 Reopen button if feedback is closed
+            if (isClosed)
+              ElevatedButton.icon(
+                onPressed: _reopenFeedback,
+                icon: const Icon(Icons.lock_open),
+                label: const Text("Reopen Feedback"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            ElevatedButton.icon(
-              onPressed: _addReply,
-              icon: const Icon(Icons.send),
-              label: const Text("Reply"),
-            ),
           ],
         ),
       ),

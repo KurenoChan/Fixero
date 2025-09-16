@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'service_feedback_detail_page.dart';
-
-class CommunicationHistoryPage extends StatefulWidget {
-  const CommunicationHistoryPage({super.key});
+import 'package:fixero/features/CRM/views/service_feedback_reply_page.dart';
+class CustomerFeedbackPage extends StatefulWidget {
+  const CustomerFeedbackPage({super.key});
 
   @override
-  State<CommunicationHistoryPage> createState() =>
-      _CommunicationHistoryPageState();
+  State<CustomerFeedbackPage> createState() => _CustomerFeedbackPageState();
 }
 
-class _CommunicationHistoryPageState extends State<CommunicationHistoryPage> {
+class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
   bool isLoading = true;
   List<Map<String, dynamic>> feedbacks = [];
@@ -39,9 +37,9 @@ class _CommunicationHistoryPageState extends State<CommunicationHistoryPage> {
     for (final child in fbSnap.children) {
       final fbData = Map<String, dynamic>.from(child.value as Map);
 
-      // only show closed feedbacks
+      // only show open feedbacks
       final status = (fbData["status"] ?? "").toString().trim().toLowerCase();
-      if (status != "closed") continue;
+      if (status != "open") continue;
 
       final customerID = fbData["customerID"];
       final serviceID = (fbData["serviceID"] ?? "").trim();
@@ -84,7 +82,7 @@ class _CommunicationHistoryPageState extends State<CommunicationHistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Customer Relationship"),
+        title: const Text("Customer Feedback"),
         backgroundColor: Colors.blue,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -94,7 +92,7 @@ class _CommunicationHistoryPageState extends State<CommunicationHistoryPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : feedbacks.isEmpty
-          ? const Center(child: Text("No closed feedbacks found."))
+          ? const Center(child: Text("No open feedbacks found."))
           : ListView.builder(
         padding: const EdgeInsets.all(15),
         itemCount: feedbacks.length,
@@ -117,19 +115,16 @@ class _CommunicationHistoryPageState extends State<CommunicationHistoryPage> {
                 ],
               ),
               isThreeLine: true,
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+              trailing: const Icon(Icons.reply, size: 18),
               onTap: () async {
-                final reopened = await Navigator.push(
+                await Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (_) =>
-                        ServiceFeedbackDetailPage(feedback: fb),
+                        ServiceFeedbackReplyPage(feedback: fb),
                   ),
                 );
-
-                if (reopened == true) {
-                  _loadFeedbacks(); // 🔄 Refresh after reopening
-                }
+                _loadFeedbacks(); // refresh list after replying
               },
             ),
           );
