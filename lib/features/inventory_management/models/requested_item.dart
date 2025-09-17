@@ -1,7 +1,7 @@
 class RequestedItem {
   final String requestItemId;
   final String requestId;
-  final String itemId;
+  final String itemID;
   final int quantityRequested;
   final String status; // "Pending" | "Received" | "Not Processed"
   final String? remark;
@@ -9,7 +9,7 @@ class RequestedItem {
   RequestedItem({
     required this.requestItemId,
     required this.requestId,
-    required this.itemId,
+    required this.itemID,
     required this.quantityRequested,
     this.status = "Pending",
     this.remark,
@@ -19,7 +19,7 @@ class RequestedItem {
   RequestedItem copyWith({
     String? requestItemId,
     String? requestId,
-    String? itemId,
+    String? itemID,
     int? quantityRequested,
     String? status,
     String? remark,
@@ -27,7 +27,7 @@ class RequestedItem {
     return RequestedItem(
       requestItemId: requestItemId ?? this.requestItemId,
       requestId: requestId ?? this.requestId,
-      itemId: itemId ?? this.itemId,
+      itemID: itemID ?? this.itemID,
       quantityRequested: quantityRequested ?? this.quantityRequested,
       status: status ?? this.status,
       remark: remark ?? this.remark,
@@ -39,7 +39,7 @@ class RequestedItem {
     return RequestedItem(
       requestItemId: requestItemId,
       requestId: map["requestID"] ?? "",
-      itemId: map["itemID"] ?? "",
+      itemID: map["itemID"] ?? "",
       quantityRequested: map["quantityRequested"] is int
           ? map["quantityRequested"]
           : int.tryParse(map["quantityRequested"].toString()) ?? 0,
@@ -52,7 +52,7 @@ class RequestedItem {
   Map<String, dynamic> toMap() {
     return {
       "requestID": requestId,
-      "itemID": itemId,
+      "itemID": itemID,
       "quantityRequested": quantityRequested,
       "status": status,
       "remark": remark,

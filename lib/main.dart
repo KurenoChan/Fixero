@@ -2,6 +2,7 @@ import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
@@ -36,6 +37,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => RestockRequestController()),
         ChangeNotifierProvider(create: (_) => SupplierController()),
         ChangeNotifierProvider(create: (_) => OrderController()),
+        ChangeNotifierProvider(create: (_) => ItemUsageController()),
       ],
       child: MainApp(seenIntro: seenIntro),
     ),

@@ -42,7 +42,7 @@ class ItemController extends ChangeNotifier {
         .toList();
   }
 
-  List<Item> getItemsSync(String subCategory) {
+  List<Item> getItemsBySubCategorySync(String subCategory) {
     return _items.where((e) => e.itemSubCategory == subCategory).toList();
   }
 
@@ -63,7 +63,7 @@ class ItemController extends ChangeNotifier {
     try {
       await _dao.updateItem(updatedItem);
 
-      final index = _items.indexWhere((i) => i.itemId == updatedItem.itemId);
+      final index = _items.indexWhere((i) => i.itemID == updatedItem.itemID);
       if (index != -1) {
         _items[index] = updatedItem;
       } else {
@@ -82,7 +82,7 @@ class ItemController extends ChangeNotifier {
   /// 🔹 Get item by ID
   Item? getItemById(String id) {
     try {
-      return _items.firstWhere((item) => item.itemId == id);
+      return _items.firstWhere((item) => item.itemID == id);
     } catch (e) {
       return null;
     }

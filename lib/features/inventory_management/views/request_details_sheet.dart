@@ -344,7 +344,7 @@ class RequestDetailsSheet extends StatelessWidget {
                                 ],
                                 rows: requestedItems.map((item) {
                                   final actualItem = itemController.getItemById(
-                                    item.itemId,
+                                    item.itemID,
                                   );
                                   return DataRow(
                                     cells: [

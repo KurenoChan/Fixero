@@ -355,7 +355,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                   ],
                 ),
               ),
-              
+
               const Divider(height: 1, thickness: 1),
 
               // 🔹 Scrollable content
@@ -452,7 +452,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                 final itemsForGrid = requestedItems
                                     .map(
                                       (ri) =>
-                                          itemController.getItemById(ri.itemId),
+                                          itemController.getItemById(ri.itemID),
                                     )
                                     .where((item) => item != null)
                                     .take(4)
@@ -530,9 +530,10 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                                       horizontal: 5,
                                                     ),
                                                 decoration: BoxDecoration(
-                                                  color: Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary.withValues(alpha: 0.3),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withValues(alpha: 0.3),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                         5.0,

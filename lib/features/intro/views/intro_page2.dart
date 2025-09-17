@@ -18,33 +18,32 @@ class IntroPage2 extends StatelessWidget {
           ),
         ),
 
-
         SizedBox(height: 20),
 
         Text.rich(
           TextSpan(
-              children: [
-                TextSpan(
-                  text: 'Don\'t Run\n',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Poppins',
-                    fontSize: 25,
-                    height: 1.2,
-                  ),
+            children: [
+              TextSpan(
+                text: 'Don\'t Run\n',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                  fontFamily: 'Poppins',
+                  fontSize: 25,
+                  height: 1.2,
                 ),
+              ),
 
-                TextSpan(
-                  text: 'Out of Parts',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Poppins',
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
+              TextSpan(
+                text: 'Out of Parts',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                  fontFamily: 'Poppins',
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
                 ),
-              ]
+              ),
+            ],
           ),
           textAlign: TextAlign.center,
         ),
@@ -57,8 +56,10 @@ class IntroPage2 extends StatelessWidget {
             'Get low-stock alerts and manage inventory in real time.',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 20,
-                color: Colors.white54
+              fontSize: 20,
+              color: Theme.of(
+                context,
+              ).colorScheme.inverseSurface.withValues(alpha: 0.7),
             ),
           ),
         ),

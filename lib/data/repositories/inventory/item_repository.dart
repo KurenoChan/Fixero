@@ -1,5 +1,4 @@
 import 'package:firebase_database/firebase_database.dart';
-import 'package:fixero/utils/generators/id_generator.dart';
 import '../../../features/inventory_management/models/item.dart';
 
 /*
@@ -28,21 +27,18 @@ class ItemRepository {
   }
 
   Future<void> addItem(Item item) async {
-    // Generate a custom ID
-    final String newItemID = IDGenerator.generateItemID();
-
     // Save under your own ID instead of push()
-    await _db.child(newItemID).set({
+    await _db.child(item.itemID).set({
       ...item.toMap(),      // 🔹 expands the whole Item as key-value pairs
-      "itemID": newItemID,  // 🔹 explicitly adds/overrides itemID
+      "itemID": item.itemID,  // 🔹 explicitly adds/overrides itemID
     });
   }
 
-  Future<void> updateItem(String itemId, Item updatedItem) async {
-    await _db.child(itemId).update(updatedItem.toMap());
+  Future<void> updateItem(String itemID, Item updatedItem) async {
+    await _db.child(itemID).update(updatedItem.toMap());
   }
 
-  Future<void> deleteItem(String itemId) async {
-    await _db.child(itemId).remove();
+  Future<void> deleteItem(String itemID) async {
+    await _db.child(itemID).remove();
   }
 }

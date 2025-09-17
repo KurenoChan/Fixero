@@ -21,11 +21,11 @@ class ItemDAO {
   }
 
   Future<void> updateItem(Item item) async {
-    await _repo.updateItem(item.itemId, item);
+    await _repo.updateItem(item.itemID, item); // pass itemID explicitly
   }
 
-  Future<void> deleteItem(String itemId) async {
-    await _repo.deleteItem(itemId);
+  Future<void> deleteItem(String itemID) async {
+    await _repo.deleteItem(itemID);
   }
 
   // Future<List<Item>> getLowStockItems() async {

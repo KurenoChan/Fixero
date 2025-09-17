@@ -90,7 +90,7 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
     final requestedItem = RequestedItem(
       requestItemId: requestedItemId,
       requestId: restockRequestId,
-      itemId: widget.item.itemId,
+      itemID: widget.item.itemID,
       quantityRequested: int.parse(_quantityController.text),
       remark: _notesController.text.isEmpty ? null : _notesController.text,
     );
@@ -163,7 +163,7 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
               // 🔹 Item ID
               TextFormField(
                 enabled: false,
-                initialValue: item.itemId,
+                initialValue: item.itemID,
                 decoration: const InputDecoration(labelText: 'Item ID'),
               ),
 

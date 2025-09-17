@@ -61,4 +61,30 @@ class Formatter {
     final month = months[monthIndex - 1];
     return '$day-$month-$year';
   }
+
+  static String formatTime12Hour(String input, {bool showSeconds = false}) {
+    if (input.isEmpty) return input;
+
+    try {
+      final parts = input.split(':'); // [HH, mm, ss]
+      if (parts.length < 2) return input;
+
+      int hour = int.tryParse(parts[0]) ?? 0;
+      final minute = parts[1];
+      final second = parts.length > 2 ? parts[2] : '00';
+
+      final isPM = hour >= 12;
+      if (hour == 0) {
+        hour = 12; // midnight -> 12
+      } else if (hour > 12) {
+        hour -= 12; // convert 13-23 -> 1-11
+      }
+
+      return showSeconds
+          ? '$hour:$minute:$second ${isPM ? 'PM' : 'AM'}'
+          : '$hour:$minute ${isPM ? 'PM' : 'AM'}';
+    } catch (e) {
+      return input;
+    }
+  }
 }

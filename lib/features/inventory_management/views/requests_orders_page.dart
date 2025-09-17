@@ -177,10 +177,13 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
   }
 
   Future<void> _markOrderAsReceived(BuildContext context, Order order) async {
+    if (!context.mounted) return;
+
     final ratingController = TextEditingController();
     final feedbackController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
+    // 1️⃣ Confirm dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -188,7 +191,6 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
         content: Form(
           key: formKey,
           child: Column(
-            spacing: 10,
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
@@ -235,22 +237,42 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
     if (confirmed != true || !context.mounted) return;
 
+    final requestedItemController = context.read<RequestedItemController>();
+    final itemController = context.read<ItemController>();
     final orderController = context.read<OrderController>();
-    final itemController = context.read<RequestedItemController>();
     final restockController = context.read<RestockRequestController>();
 
     try {
-      // 1️⃣ Get all requests for this order
-      final requests = restockController.getRequestsByOrderNo(
-        order.orderNo,
-      );
+      // 2️⃣ Get all requests for this order
+      final requests = restockController.getRequestsByOrderNo(order.orderNo);
 
-      // 2️⃣ Update all requested items to "Received"
       for (var request in requests) {
-        final pendingItems = itemController.getPendingItems(request.requestId);
-        for (var item in pendingItems) {
-          final updatedItem = item.copyWith(status: "Received");
-          await itemController.updateRequestedItem(updatedItem);
+        // Ensure requested items are loaded
+        await requestedItemController.loadItemsByRequestId(request.requestId);
+
+        final pendingItems = requestedItemController.getPendingItems(
+          request.requestId,
+        );
+
+        for (var reqItem in pendingItems) {
+          // 🔹 Update requested item status to "Received"
+          final updatedReqItem = reqItem.copyWith(status: "Received");
+          await requestedItemController.updateRequestedItem(updatedReqItem);
+
+          // 🔹 Update actual stock quantity
+          if (itemController.items.isEmpty) {
+            await itemController.loadItems();
+          }
+
+          final item = itemController.getItemById(reqItem.itemID);
+          if (item != null) {
+            final updatedItem = item.copyWith(
+              stockQuantity: item.stockQuantity + reqItem.quantityRequested,
+            );
+            await itemController.updateItem(updatedItem);
+          } else {
+            debugPrint("⚠️ Item not found for ID: ${reqItem.itemID}");
+          }
         }
       }
 
@@ -264,16 +286,18 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
             ? null
             : feedbackController.text,
       );
-
       await orderController.updateOrder(updatedOrder);
 
       if (!context.mounted) return;
 
+      // 4️⃣ Refresh UI
+      setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Order marked as received!")),
       );
     } catch (e) {
       if (!context.mounted) return;
+      debugPrint("❌ Failed to mark order as received: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to mark as received: $e")));
@@ -364,7 +388,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
             // Map requested items to actual items, filtering invalid images
             final itemsForGrid = requestedItems
-                .map((ri) => itemController.getItemById(ri.itemId))
+                .map((ri) => itemController.getItemById(ri.itemID))
                 .where((item) => item != null)
                 .take(4) // max 4 items
                 .toList();
@@ -759,26 +783,28 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const FixeroSubAppBar(
-        title: 'Requests & Orders',
-        showBackButton: true,
-      ),
-      body: Column(
-        children: [
-          TabBar(
-            controller: _tabController,
-            tabs: _tabs,
-            labelColor: Theme.of(context).colorScheme.primary,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-          ),
-          Expanded(
-            child: TabBarView(
+    return SafeArea(
+      child: Scaffold(
+        appBar: const FixeroSubAppBar(
+          title: 'Requests & Orders',
+          showBackButton: true,
+        ),
+        body: Column(
+          children: [
+            TabBar(
               controller: _tabController,
-              children: [_buildPendingRequests(), _buildPendingOrders()],
+              tabs: _tabs,
+              labelColor: Theme.of(context).colorScheme.primary,
+              indicatorColor: Theme.of(context).colorScheme.primary,
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [_buildPendingRequests(), _buildPendingOrders()],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
