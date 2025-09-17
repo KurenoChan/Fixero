@@ -23,17 +23,17 @@ class RequestedItemRepository {
   }
 
   /// Add new requested item
-  Future<void> addItem(RequestedItem item) async {
+  Future<void> addRequestedItem(RequestedItem item) async {
     await _db.child(item.requestItemId).set(item.toMap());
   }
 
   /// Update requested item
-  Future<void> updateItem(RequestedItem item) async {
+  Future<void> updateRequestedItem(RequestedItem item) async {
     await _db.child(item.requestItemId).update(item.toMap());
   }
 
   /// Delete requested item
-  Future<void> deleteItem(String requestItemId) async {
+  Future<void> deleteRequestedItem(String requestItemId) async {
     await _db.child(requestItemId).remove();
   }
 }

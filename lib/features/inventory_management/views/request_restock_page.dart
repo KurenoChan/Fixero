@@ -97,12 +97,12 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
 
     try {
       // ✅ Save to RTDB
-      await RestockRequestDAO().createRequest(restockRequest);
-      await RequestedItemDAO().createItem(requestedItem);
+      await RestockRequestDAO().addRequest(restockRequest);
+      await RequestedItemDAO().addRequestedItem(requestedItem);
 
       // ✅ Update provider/controllers
-      await restockController.createRequest(restockRequest);
-      await itemController.createItem(requestedItem);
+      await restockController.addRequest(restockRequest);
+      await itemController.addRequestedItem(requestedItem);
 
       if (!mounted) return;
 

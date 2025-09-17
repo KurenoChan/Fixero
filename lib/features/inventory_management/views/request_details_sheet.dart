@@ -105,7 +105,7 @@ class RequestDetailsSheet extends StatelessWidget {
           status: "Not Processed",
           remark: remark.isNotEmpty ? remark : "Request rejected",
         );
-        await itemDAO.updateItem(updatedItem);
+        await itemDAO.updateRequestedItem(updatedItem);
       }
 
       if (!context.mounted) return;

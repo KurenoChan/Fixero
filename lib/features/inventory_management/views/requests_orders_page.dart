@@ -3,6 +3,7 @@ import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
 import 'package:fixero/features/inventory_management/models/order.dart';
@@ -120,7 +121,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
           status: "Not Processed",
           remark: remark.isNotEmpty ? remark : "Request rejected",
         );
-        await itemDAO.updateItem(updatedItem);
+        await itemDAO.updateRequestedItem(updatedItem);
       }
 
       if (!context.mounted) return;
@@ -235,21 +236,21 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
     if (confirmed != true || !context.mounted) return;
 
     final orderController = context.read<OrderController>();
-    final itemDao = RequestedItemDAO();
+    final itemController = context.read<RequestedItemController>();
     final restockController = context.read<RestockRequestController>();
 
     try {
       // 1️⃣ Get all requests for this order
-      final requests = await restockController.getRequestsByOrderNo(
+      final requests = restockController.getRequestsByOrderNo(
         order.orderNo,
       );
 
       // 2️⃣ Update all requested items to "Received"
       for (var request in requests) {
-        final pendingItems = await itemDao.getPendingItems(request.requestId);
+        final pendingItems = itemController.getPendingItems(request.requestId);
         for (var item in pendingItems) {
           final updatedItem = item.copyWith(status: "Received");
-          await itemDao.updateItem(updatedItem);
+          await itemController.updateRequestedItem(updatedItem);
         }
       }
 

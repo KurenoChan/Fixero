@@ -2,6 +2,7 @@ import 'package:fixero/data/dao/inventory/requested_item_dao.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/models/item.dart';
 import 'package:fixero/features/inventory_management/models/order.dart';
@@ -35,7 +36,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
       if (itemController.items.isEmpty) await itemController.loadItems();
       await restockController.loadRequests();
 
-      final orderRequests = await restockController.getRequestsByOrderNo(
+      final orderRequests = restockController.getRequestsByOrderNo(
         widget.order.orderNo,
       );
 
@@ -109,15 +110,16 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
     if (confirmed != true || !mounted) return;
 
     final orderController = context.read<OrderController>();
-    final itemDao = RequestedItemDAO();
+    // final itemDao = RequestedItemDAO();
+    final itemController = context.read<RequestedItemController>();
 
     try {
       // 2️⃣ Update all requested items to "Received"
       for (var request in _requests) {
-        final pendingItems = await itemDao.getPendingItems(request.requestId);
+        final pendingItems = itemController.getPendingItems(request.requestId);
         for (var item in pendingItems) {
           final updatedItem = item.copyWith(status: "Received");
-          await itemDao.updateItem(updatedItem);
+          await itemController.updateRequestedItem(updatedItem);
         }
       }
 

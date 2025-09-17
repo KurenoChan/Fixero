@@ -30,9 +30,9 @@ class RequestedItemController extends ChangeNotifier {
   }
 
   /// 🔹 Add new requested item
-  Future<void> createItem(RequestedItem item) async {
+  Future<void> addRequestedItem(RequestedItem item) async {
     try {
-      await _dao.createItem(item);
+      await _dao.addRequestedItem(item);
       _items.add(item);
       notifyListeners();
     } catch (e) {
@@ -43,9 +43,9 @@ class RequestedItemController extends ChangeNotifier {
   }
 
   /// 🔹 Update requested item
-  Future<void> updateItem(RequestedItem item) async {
+  Future<void> updateRequestedItem(RequestedItem item) async {
     try {
-      await _dao.updateItem(item);
+      await _dao.updateRequestedItem(item);
 
       final index = _items.indexWhere(
         (i) => i.requestItemId == item.requestItemId,
@@ -62,9 +62,9 @@ class RequestedItemController extends ChangeNotifier {
   }
 
   /// 🔹 Delete requested item
-  Future<void> deleteItem(String requestItemId) async {
+  Future<void> deleteRequestedItem(String requestItemId) async {
     try {
-      await _dao.deleteItem(requestItemId);
+      await _dao.deleteRequestedItem(requestItemId);
       _items.removeWhere((i) => i.requestItemId == requestItemId);
       notifyListeners();
     } catch (e) {
@@ -74,20 +74,57 @@ class RequestedItemController extends ChangeNotifier {
     }
   }
 
-  Future<void> updateItemsStatusByRequestId(
+  /// 🔹 Batch update status for all items of a request
+  // Future<void> updateRequestedItemsStatusByRequestId(
+  //   String requestId,
+  //   String status,
+  // ) async {
+  //   final items = await _dao.getItemsByRequestId(requestId);
+
+  //   for (var item in items) {
+  //     final updated = item.copyWith(status: status);
+  //     await _dao.updateRequestedItem(updated);
+  //   }
+
+  //   // If you’re storing `_items` for the current request, refresh it
+  //   _items = await _dao.getItemsByRequestId(requestId);
+  //   notifyListeners();
+  // }
+  Future<void> updateRequestedItemsStatusByRequestId(
     String requestId,
     String status,
   ) async {
-    final items = await _dao.getItemsByRequestId(requestId);
+    // Filter cached items for the request
+    final itemsToUpdate = _items
+        .where((i) => i.requestId == requestId)
+        .toList();
 
-    for (var item in items) {
+    for (var item in itemsToUpdate) {
       final updated = item.copyWith(status: status);
-      await _dao.updateItem(updated);
+      await _dao.updateRequestedItem(updated);
+
+      // Update cache
+      final index = _items.indexWhere(
+        (i) => i.requestItemId == item.requestItemId,
+      );
+      if (index != -1) _items[index] = updated;
     }
 
-    // If you’re storing `_items` for the current request, refresh it
-    _items = await _dao.getItemsByRequestId(requestId);
     notifyListeners();
+  }
+
+  /// 🔹 Get pending items for a specific request
+  List<RequestedItem> getPendingItems(String requestId) {
+    return _items
+        .where((i) => i.requestId == requestId && i.status == "Pending")
+        .toList();
+  }
+
+  /// 🔹 Get received items for a specific request
+  List<RequestedItem> getReceivedItems(String requestId) {
+    return _items
+        .where((i) => i.requestId == requestId && i.status == "Received")
+        .toList();
   }
 
   /// 🔹 Helpers
@@ -96,4 +133,7 @@ class RequestedItemController extends ChangeNotifier {
 
   List<RequestedItem> get receivedItems =>
       _items.where((i) => i.status == "Received").toList();
+
+  List<RequestedItem> getItemsByRequestIdSync(String requestId) =>
+      _items.where((i) => i.requestId == requestId).toList();
 }

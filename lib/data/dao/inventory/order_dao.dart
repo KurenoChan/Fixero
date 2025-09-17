@@ -14,8 +14,8 @@ class OrderDAO {
   Future<void> deleteOrder(String orderNo) async =>
       await _repo.deleteOrder(orderNo);
 
-  Future<List<Order>> getOrdersBySupplier(String supplierID) async {
-    final orders = await _repo.fetchAllOrders();
-    return orders.where((o) => o.supplierID == supplierID).toList();
-  }
+  // Future<List<Order>> getOrdersBySupplier(String supplierID) async {
+  //   final orders = await _repo.fetchAllOrders();
+  //   return orders.where((o) => o.supplierID == supplierID).toList();
+  // }
 }

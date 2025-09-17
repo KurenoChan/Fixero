@@ -30,10 +30,10 @@ class RestockRequestController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// 🔹 Create new request
-  Future<void> createRequest(RestockRequest request) async {
+  /// 🔹 Add new request
+  Future<void> addRequest(RestockRequest request) async {
     try {
-      await _dao.createRequest(request);
+      await _dao.addRequest(request);
       _requests.add(request);
       notifyListeners();
     } catch (e) {
@@ -62,22 +62,72 @@ class RestockRequestController extends ChangeNotifier {
     }
   }
 
-  Future<void> approveRequest(RestockRequest request, String managerId) async {
+  // Future<void> approveRequest(RestockRequest request, String managerId) async {
+  //   try {
+  //     final updated = request.copyWith(
+  //       status: "Approved",
+  //       approvedBy: managerId,
+  //       approvedDate: Formatter.todayDate(),
+  //     );
+
+  //     await _dao.updateRequest(updated);
+
+  //     final index = _requests.indexWhere(
+  //       (r) => r.requestId == updated.requestId,
+  //     );
+  //     if (index != -1) {
+  //       _requests[index] = updated;
+  //     }
+  //     notifyListeners();
+  //   } catch (e) {
+  //     _errorMessage = e.toString();
+  //     notifyListeners();
+  //     rethrow;
+  //   }
+  // }
+
+  // Future<void> rejectRequest(RestockRequest request, String managerId) async {
+  //   try {
+  //     final updated = request.copyWith(
+  //       status: "Rejected",
+  //       rejectedBy: managerId,
+  //       rejectedDate: Formatter.todayDate(),
+  //     );
+
+  //     await _dao.updateRequest(updated);
+
+  //     final index = _requests.indexWhere(
+  //       (r) => r.requestId == updated.requestId,
+  //     );
+  //     if (index != -1) {
+  //       _requests[index] = updated;
+  //     }
+  //     notifyListeners();
+  //   } catch (e) {
+  //     _errorMessage = e.toString();
+  //     notifyListeners();
+  //     rethrow;
+  //   }
+  // }
+
+  /// Approve / reject helpers
+  Future<void> approveRequest(RestockRequest request, String managerId) =>
+      _updateStatus(request, "Approved", managerId);
+
+  Future<void> rejectRequest(RestockRequest request, String managerId) =>
+      _updateStatus(request, "Rejected", managerId);
+
+  Future<void> _updateStatus(RestockRequest request, String status, String managerId) async {
     try {
-      final updated = request.copyWith(
-        status: "Approved",
-        approvedBy: managerId,
-        approvedDate: Formatter.todayDate(),
-      );
+      final updated = status == "Approved"
+          ? request.copyWith(status: status, approvedBy: managerId, approvedDate: Formatter.todayDate())
+          : request.copyWith(status: status, rejectedBy: managerId, rejectedDate: Formatter.todayDate());
 
       await _dao.updateRequest(updated);
 
-      final index = _requests.indexWhere(
-        (r) => r.requestId == updated.requestId,
-      );
-      if (index != -1) {
-        _requests[index] = updated;
-      }
+      final index = _requests.indexWhere((r) => r.requestId == updated.requestId);
+      if (index != -1) _requests[index] = updated;
+
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
@@ -86,40 +136,19 @@ class RestockRequestController extends ChangeNotifier {
     }
   }
 
-  Future<void> rejectRequest(RestockRequest request, String managerId) async {
-    try {
-      final updated = request.copyWith(
-        status: "Rejected",
-        rejectedBy: managerId,
-        rejectedDate: Formatter.todayDate(),
-      );
+  // Future<List<RestockRequest>> getRequestsByOrderNo(String orderNo) async {
+  //   try {
+  //     final requests = await _dao.getRequestsByOrderNo(orderNo);
+  //     return requests;
+  //   } catch (e) {
+  //     _errorMessage = e.toString();
+  //     notifyListeners();
+  //     return [];
+  //   }
+  // }
 
-      await _dao.updateRequest(updated);
-
-      final index = _requests.indexWhere(
-        (r) => r.requestId == updated.requestId,
-      );
-      if (index != -1) {
-        _requests[index] = updated;
-      }
-      notifyListeners();
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-      rethrow;
-    }
-  }
-
-  Future<List<RestockRequest>> getRequestsByOrderNo(String orderNo) async {
-    try {
-      final requests = await _dao.getRequestsByOrderNo(orderNo);
-      return requests;
-    } catch (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-      return [];
-    }
-  }
+  List<RestockRequest> getRequestsByOrderNo(String orderNo) =>
+      _requests.where((r) => r.orderNo == orderNo).toList();
 
   /// 🔹 Filter helpers
   List<RestockRequest> get pendingRequests =>

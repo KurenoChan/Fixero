@@ -167,7 +167,7 @@ class _RestockItemPageState extends State<RestockItemPage> {
         requestDate: Formatter.todayDate(),
         requestTime: Formatter.todayTime(),
       );
-      await context.read<RestockRequestController>().createRequest(
+      await context.read<RestockRequestController>().addRequest(
         restockRequest,
       );
       if (!mounted) return;
@@ -181,7 +181,7 @@ class _RestockItemPageState extends State<RestockItemPage> {
         remark: _notesController.text.isEmpty ? null : _notesController.text,
         status: "Pending",
       );
-      await context.read<RequestedItemController>().createItem(requestedItem);
+      await context.read<RequestedItemController>().addRequestedItem(requestedItem);
       if (!mounted) return;
 
       // ✅ Debug logs
