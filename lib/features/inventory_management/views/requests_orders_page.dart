@@ -349,7 +349,12 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    final pendingRequests = restockController.pendingRequests;
+    final pendingRequests = [...restockController.pendingRequests]
+      ..sort((a, b) {
+        final aDateTime = DateTime.parse("${a.requestDate} ${a.requestTime}");
+        final bDateTime = DateTime.parse("${b.requestDate} ${b.requestTime}");
+        return bDateTime.compareTo(aDateTime); // Descending: latest first
+      });
 
     if (pendingRequests.isEmpty) {
       return const Center(child: Text("No pending requests"));
@@ -670,9 +675,15 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    final pendingOrders = orderController.orders
-        .where((order) => order.arrivalDate == null)
-        .toList();
+    final pendingOrders =
+        orderController.orders
+            .where((order) => order.arrivalDate == null)
+            .toList()
+          ..sort((a, b) {
+            final aDateTime = DateTime.parse("${a.orderDate} ${a.orderTime}");
+            final bDateTime = DateTime.parse("${b.orderDate} ${b.orderTime}");
+            return bDateTime.compareTo(aDateTime); // Descending: latest first
+          });
 
     if (pendingOrders.isEmpty) {
       return const Center(child: Text("No pending orders"));

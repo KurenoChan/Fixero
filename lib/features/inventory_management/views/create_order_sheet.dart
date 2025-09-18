@@ -106,8 +106,8 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
       final newOrder = Order(
         orderNo: orderNo,
         orderDate: Formatter.todayDate(),
+        orderTime: Formatter.todayTime(),
         supplierID: supplierId,
-        // add createdBy if your model supports it
       );
 
       // 🔹 Add order (updates Firebase + Provider)

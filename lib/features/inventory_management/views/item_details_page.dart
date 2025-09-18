@@ -38,7 +38,12 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       final itemUsageController = context.read<ItemUsageController>();
-      await itemUsageController.loadItemUsagesByItemID(widget.itemID);
+
+      // Load all item usages from Firebase if not already loaded
+      if (itemUsageController.itemUsages.isEmpty) {
+        await itemUsageController.loadItemUsages();
+      }
+      setState(() {}); // Refresh to show chart after loading
     });
   }
 
@@ -54,6 +59,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       );
 
       if (!mounted) return;
+      records.sort((a, b) => b.order.orderDate.compareTo(a.order.orderDate));
 
       setState(() {
         _restockRecords = records;
@@ -416,16 +422,36 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                             builder: (context) {
                               final itemUsageController = context
                                   .watch<ItemUsageController>();
+
+                              // Filter usages for this specific item
+                              final itemUsagesForItem = itemUsageController
+                                  .getItemUsagesByItemID(widget.itemID);
+
+                              // Aggregate by month for chart
                               final itemUsageChartData =
-                                  aggregateItemUsageByMonth(
-                                    itemUsageController.itemUsages,
-                                  );
-                              debugPrint(
-                                'Chart data: $itemUsageChartData',
-                              ); // <-- DEBUG
+                                  aggregateItemUsageByMonth(itemUsagesForItem);
+
+                              // Show loading if still fetching
+                              if (itemUsageController.isLoading) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
+                              if (itemUsageChartData.isEmpty) {
+                                return const Center(
+                                  child: Text(
+                                    'No usage data available',
+                                    style: TextStyle(
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                );
+                              }
+
                               return FixeroLineChart<ItemUsageChartData>(
                                 data: itemUsageChartData,
-                                color: Colors.green,
+                                color: Theme.of(context).primaryColor,
                                 showDot: true,
                                 showGradient: true,
                               );
@@ -435,7 +461,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                       ),
                     ),
 
-                    // ------------------ RESTOCKING DETAILS REFINED ------------------
+                    // Restocking Details
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20.0),
                       child: Column(
@@ -498,8 +524,11 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                                       },
                                       children: [
                                         TableRow(
-                                          decoration: const BoxDecoration(
-                                            color: Colors.black12,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .inversePrimary
+                                                .withAlpha(30),
                                           ),
                                           children: [
                                             const Padding(

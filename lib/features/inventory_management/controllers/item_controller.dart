@@ -34,6 +34,11 @@ class ItemController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 🔹 Return all items (cached) for global search
+  List<Item> getAllItemsSync() {
+    return _items;
+  }
+
   /// 🔹 Sync methods for UI to read cached items
   List<String> getCategoriesSync() {
     return _items.map((e) => e.itemCategory).toSet().toList();

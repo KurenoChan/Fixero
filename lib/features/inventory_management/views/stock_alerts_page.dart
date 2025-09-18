@@ -1,3 +1,4 @@
+import 'package:fixero/common/widgets/tools/fixero_searchbar.dart';
 import 'package:fixero/features/inventory_management/views/item_details_page.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,6 +16,7 @@ class StockAlertsPage extends StatefulWidget {
 
 class _StockAlertsPageState extends State<StockAlertsPage> {
   String _filter = "All";
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -23,6 +25,48 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => context.read<ItemController>().loadItems(),
     );
+  }
+
+  List<Item> _applyFilterAndSearch(ItemController controller) {
+    // Filter by stock
+    List<Item> filteredItems;
+    switch (_filter) {
+      case "Low Stock":
+        filteredItems = controller.items
+            .where(
+              (item) =>
+                  item.stockQuantity > 0 &&
+                  item.stockQuantity <= item.lowStockThreshold,
+            )
+            .toList();
+        break;
+      case "Out of Stock":
+        filteredItems = controller.items
+            .where((item) => item.stockQuantity == 0)
+            .toList();
+        break;
+      default:
+        filteredItems = controller.items
+            .where(
+              (item) =>
+                  item.stockQuantity == 0 ||
+                  item.stockQuantity <= item.lowStockThreshold,
+            )
+            .toList();
+    }
+
+    // Apply search on current filtered items
+    if (_searchQuery.isNotEmpty) {
+      filteredItems = filteredItems
+          .where(
+            (item) => item.itemName.toLowerCase().contains(
+              _searchQuery.toLowerCase(),
+            ),
+          )
+          .toList();
+    }
+
+    return filteredItems;
   }
 
   @override
@@ -40,6 +84,8 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
               if (controller.isLoading) {
                 return const Center(child: CircularProgressIndicator());
               }
+
+              final filteredItems = _applyFilterAndSearch(controller);
 
               // Precompute counts
               final allCount = controller.items
@@ -60,45 +106,72 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                   .where((item) => item.stockQuantity == 0)
                   .length;
 
-              // Apply filter
-              List<Item> filteredItems;
-              switch (_filter) {
-                case "Low Stock":
-                  filteredItems = controller.items
-                      .where(
-                        (item) =>
-                            item.stockQuantity > 0 &&
-                            item.stockQuantity <= item.lowStockThreshold,
-                      )
-                      .toList();
-                  break;
-                case "Out of Stock":
-                  filteredItems = controller.items
-                      .where((item) => item.stockQuantity == 0)
-                      .toList();
-                  break;
-                default:
-                  filteredItems = controller.items
-                      .where(
-                        (item) =>
-                            item.stockQuantity == 0 ||
-                            item.stockQuantity <= item.lowStockThreshold,
-                      )
-                      .toList();
-              }
+              // // Apply filter
+              // List<Item> filteredItems;
+              // switch (_filter) {
+              //   case "Low Stock":
+              //     filteredItems = controller.items
+              //         .where(
+              //           (item) =>
+              //               item.stockQuantity > 0 &&
+              //               item.stockQuantity <= item.lowStockThreshold,
+              //         )
+              //         .toList();
+              //     break;
+              //   case "Out of Stock":
+              //     filteredItems = controller.items
+              //         .where((item) => item.stockQuantity == 0)
+              //         .toList();
+              //     break;
+              //   default:
+              //     filteredItems = controller.items
+              //         .where(
+              //           (item) =>
+              //               item.stockQuantity == 0 ||
+              //               item.stockQuantity <= item.lowStockThreshold,
+              //         )
+              //         .toList();
+              // }
 
-              if (filteredItems.isEmpty) {
-                return const Center(child: Text("No items found"));
-              }
+              // if (filteredItems.isEmpty) {
+              //   return const Center(child: Text("No items found"));
+              // }
 
               return CustomScrollView(
                 slivers: [
+                  // Search bar
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: FixeroSearchBar(
+                        searchHints: ['Items'],
+                        searchTerms: controller.items
+                            .map((e) => e.itemName)
+                            .toList(), // search current items
+                        onItemSelected: (selected) {
+                          final matchedItem = controller.items
+                              .firstWhere((e) => e.itemName == selected);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ItemDetailsPage(itemID: matchedItem.itemID),
+                            ),
+                          );
+                        },
+                        onChanged: (query) {
+                          setState(() {
+                            _searchQuery = query;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
                   // Filter chips
-                  // Replace your SliverToBoxAdapter for filter chips with:
                   SliverPersistentHeader(
                     pinned: true, // keeps it sticky
-                    floating:
-                        false, // set true if you want it to appear on scroll down
+                    floating: false,
                     delegate: _FilterHeaderDelegate(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 10),

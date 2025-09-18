@@ -51,13 +51,23 @@ class _UsageHistoryPageState extends State<UsageHistoryPage> {
 
             final itemController = context.read<ItemController>();
 
+            final itemUsages = List.of(usageController.itemUsages);
+
+            itemUsages.sort((a, b) {
+              // Parse strings to DateTime
+              final dateTimeA = DateTime.parse("${a.usageDate} ${a.usageTime}");
+              final dateTimeB = DateTime.parse("${b.usageDate} ${b.usageTime}");
+
+              return dateTimeB.compareTo(dateTimeA); // descending
+            });
+
             return CustomScrollView(
               slivers: [
                 SliverPadding(
                   padding: const EdgeInsets.all(15),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
-                      final itemUsage = usageController.itemUsages[index];
+                      final itemUsage = itemUsages[index];
                       final Item? item = itemController.getItemByID(
                         itemUsage.itemID,
                       );

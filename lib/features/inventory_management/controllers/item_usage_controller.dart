@@ -29,20 +29,10 @@ class ItemUsageController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loadItemUsagesByItemID(String itemID) async {
-    _isLoading = true;
-    notifyListeners();
+List<ItemUsage> getItemUsagesByItemID(String id) {
+  return itemUsages.where((u) => u.itemID == id).toList();
+}
 
-    try {
-      _itemUsages = await _dao.getItemUsagesByItemID(itemID);
-      _errorMessage = null;
-    } catch (e) {
-      _errorMessage = e.toString();
-    }
-
-    _isLoading = false;
-    notifyListeners();
-  }
 
   ItemUsage? getItemUsageById(String id) {
     try {

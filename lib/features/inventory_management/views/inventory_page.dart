@@ -48,13 +48,6 @@ class _InventoryPageState extends State<InventoryPage> {
       child: Scaffold(
         appBar: FixeroMainAppBar(
           title: "Inventory",
-          searchHints: ["Spare Parts", "Tools"],
-          searchTerms: [
-            "Oil Change",
-            "Tire Rotation",
-            "Battery Check",
-            "Brake Inspection",
-          ],
         ),
         body: Consumer<ItemController>(
           builder: (context, itemController, _) {

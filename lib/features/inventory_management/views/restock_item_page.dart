@@ -147,7 +147,8 @@ class _RestockItemPageState extends State<RestockItemPage> {
 
       final order = Order(
         orderNo: IDGenerator.generateOrderNo(),
-        orderDate: Formatter.today(),
+        orderDate: Formatter.todayDate(),
+        orderTime: Formatter.todayTime(),
         supplierID: supplierId,
       );
       await context.read<OrderController>().addOrder(order);

@@ -82,8 +82,8 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
 
     final restockRequest = RestockRequest(
       requestID: restockRequestId,
-      requestDate: Formatter.today(),
-      requestTime: Formatter.today(),
+      requestDate: Formatter.todayDate(),
+      requestTime: Formatter.todayTime(),
       requestBy: manager.id,
     );
 
