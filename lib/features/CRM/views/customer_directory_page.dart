@@ -19,7 +19,7 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA), // subtle background
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.blue,
@@ -31,13 +31,13 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
       ),
       body: Column(
         children: [
-          // 🔍 Modern Search Bar
+          // 🔍 Search Bar
           Padding(
             padding: const EdgeInsets.all(12.0),
             child: TextField(
               textAlignVertical: TextAlignVertical.center,
               decoration: InputDecoration(
-                hintText: "Search by customer name",
+                hintText: "Search by name, phone, or email",
                 hintStyle: const TextStyle(
                   color: Colors.grey,
                   fontSize: 16,
@@ -74,29 +74,46 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
                   return const Center(child: Text("No customers found"));
                 }
 
-                final data =
-                Map<String, dynamic>.from(snapshot.data!.snapshot.value as Map);
+                final data = Map<String, dynamic>.from(
+                    snapshot.data!.snapshot.value as Map);
 
-                // 🔍 Filter by name
+                // 🔍 Filter (name, phone, email)
                 final filtered = data.entries.where((e) {
                   final cust =
                   Map<String, dynamic>.from(e.value as Map<dynamic, dynamic>);
-                  final name =
-                  (cust['custName'] ?? "").toString().toLowerCase();
-                  return name.contains(searchQuery);
+                  final name = (cust['custName'] ?? "").toString().toLowerCase();
+                  final tel = (cust['custTel'] ?? "").toString().toLowerCase();
+                  final email = (cust['custEmail'] ?? "").toString().toLowerCase();
+
+                  return name.contains(searchQuery) ||
+                      tel.contains(searchQuery) ||
+                      email.contains(searchQuery);
                 }).toList();
+
+                // 🔠 Sort alphabetically by name
+                filtered.sort((a, b) {
+                  final nameA =
+                  (a.value['custName'] ?? "").toString().toLowerCase();
+                  final nameB =
+                  (b.value['custName'] ?? "").toString().toLowerCase();
+                  return nameA.compareTo(nameB);
+                });
 
                 if (filtered.isEmpty) {
                   return const Center(child: Text("No matching customers found"));
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final key = filtered[index].key;
                     final customer =
                     Map<String, dynamic>.from(filtered[index].value);
+
+                    final gender =
+                    (customer['gender'] ?? '').toString().toLowerCase();
 
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -112,24 +129,38 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
                         ],
                       ),
                       child: ListTile(
-                        contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 20, vertical: 12),
                         leading: CircleAvatar(
                           radius: 28,
-                          backgroundColor: theme.primaryColor.withOpacity(0.15),
-                          child: const Icon(Icons.person,
-                              size: 30, color: Colors.blue),
+                          backgroundColor: gender == 'female'
+                              ? Colors.pink.withOpacity(0.2)
+                              : theme.primaryColor.withOpacity(0.15),
+                          child: Icon(
+                            gender == 'female' ? Icons.female : Icons.male,
+                            size: 30,
+                            color: gender == 'female'
+                                ? Colors.pink
+                                : Colors.blue,
+                          ),
                         ),
-                        title: Text(
-                          customer['custName'] ?? 'No Name',
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
+                        title: RichText(
+                          text: TextSpan(
+                            children: _highlightMatch(
+                              customer['custName'] ?? 'No Name',
+                              searchQuery,
+                            ),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
                           ),
                         ),
                         subtitle: Text(
                           customer['custTel'] ?? '',
-                          style: const TextStyle(fontSize: 15, color: Colors.black54),
+                          style: const TextStyle(
+                              fontSize: 15, color: Colors.black54),
                         ),
                         trailing: const Icon(Icons.arrow_forward_ios,
                             size: 18, color: Colors.grey),
@@ -154,5 +185,26 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
         ],
       ),
     );
+  }
+
+  // 🔹 Highlight search matches
+  List<TextSpan> _highlightMatch(String text, String query) {
+    if (query.isEmpty) return [TextSpan(text: text)];
+    final lowerText = text.toLowerCase();
+    final lowerQuery = query.toLowerCase();
+    final startIndex = lowerText.indexOf(lowerQuery);
+    if (startIndex == -1) return [TextSpan(text: text)];
+
+    return [
+      TextSpan(text: text.substring(0, startIndex)),
+      TextSpan(
+        text: text.substring(startIndex, startIndex + query.length),
+        style: const TextStyle(
+          color: Colors.blue,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      TextSpan(text: text.substring(startIndex + query.length)),
+    ];
   }
 }
