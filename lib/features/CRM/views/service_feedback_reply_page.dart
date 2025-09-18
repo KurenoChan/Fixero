@@ -24,28 +24,28 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
 
   Future<void> _loadReplies() async {
     final fbID = widget.feedback["feedbackID"];
-    final replySnap =
-    await dbRef.child("communications/replies/$fbID").get();
+    final replySnap = await dbRef.child("communications/replies/$fbID").get();
 
     if (!replySnap.exists) {
       setState(() => replies = []);
       return;
     }
 
-    final replyData = Map<String, dynamic>.from(replySnap.value as Map);
+    List<Map<String, dynamic>> temp = [];
 
-    setState(() {
-      replies = replyData.entries.map((e) {
-        final data = Map<String, dynamic>.from(e.value);
-        return {
-          "replyID": e.key,
-          "from": data["from"] ?? "Unknown",
-          "message": data["message"] ?? "",
-          "date": data["date"] ?? "-",
-        };
-      }).toList();
-    });
+    for (final child in replySnap.children) {
+      final data = Map<String, dynamic>.from(child.value as Map);
+      temp.add({
+        "replyID": child.key,
+        "from": data["from"] ?? "System",   // fallback
+        "message": data["message"] ?? "(no message)",  // fallback
+        "date": data["date"] ?? "-",
+      });
+    }
+
+    setState(() => replies = temp);
   }
+
 
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty) return;
@@ -104,7 +104,8 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
             Text("Customer: ${fb['customerName']}"),
             Text("Car Model: ${fb['carModel']}"),
             Text("Service Type: ${fb['serviceType']}"),
-            Text("Comment: ${fb['comment']}"),
+            Text("Comment: ${fb['comment']}"),   // ✅ now works
+
             const Divider(height: 30),
 
             // Replies

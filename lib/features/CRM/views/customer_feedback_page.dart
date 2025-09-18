@@ -13,11 +13,37 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
   bool isLoading = true;
   List<Map<String, dynamic>> feedbacks = [];
+  List<Map<String, dynamic>> filteredFeedbacks = [];
+
+  // Filters
+  String searchQuery = "";
+  String selectedFeedbackType = "All";
+  String selectedServiceType = "All";
+
+  final List<String> feedbackTypes = ["All", "Positive", "Complaint", "Suggestion"];
+  final List<String> serviceTypes = [
+    "All",
+    "Vehicle Safety Check",
+    "Car Repair",
+    "Battery Repair",
+    "Fuel Tank Maintenance",
+    "Tire Repair"
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadFeedbacks();
+  }
+
+  Future<void> _markAsSeen(String feedbackId) async {
+    try {
+      await dbRef
+          .child("communications/feedbacks/$feedbackId")
+          .update({"seenStatus": "Seen"});
+    } catch (e) {
+      debugPrint("❌ Failed to update seenStatus for $feedbackId: $e");
+    }
   }
 
   Future<void> _loadFeedbacks() async {
@@ -29,6 +55,7 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
       setState(() {
         isLoading = false;
         feedbacks = [];
+        filteredFeedbacks = [];
       });
       return;
     }
@@ -71,6 +98,7 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
         "feedbackType": fbData["feedbackType"] ?? "General",
         "date": fbData["date"] ?? "-",
         "seenStatus": fbData["seenStatus"] ?? "Seen",
+        "comment": fbData["comment"] ?? "-",
       });
     }
 
@@ -83,10 +111,38 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
 
     setState(() {
       feedbacks = temp;
-      isLoading = false;
     });
+
+    _applyFilters(); // apply filter on load
+    setState(() => isLoading = false);
   }
 
+  void _applyFilters() {
+    List<Map<String, dynamic>> temp = feedbacks;
+
+    // search filter
+    if (searchQuery.isNotEmpty) {
+      temp = temp.where((fb) {
+        final query = searchQuery.toLowerCase();
+        return fb["customerName"].toLowerCase().contains(query) ||
+            fb["carModel"].toLowerCase().contains(query) ||
+            fb["comment"].toLowerCase().contains(query) ||
+            fb["serviceType"].toLowerCase().contains(query);
+      }).toList();
+    }
+
+    // feedback type filter
+    if (selectedFeedbackType != "All") {
+      temp = temp.where((fb) => fb["feedbackType"] == selectedFeedbackType).toList();
+    }
+
+    // service type filter
+    if (selectedServiceType != "All") {
+      temp = temp.where((fb) => fb["serviceType"] == selectedServiceType).toList();
+    }
+
+    setState(() => filteredFeedbacks = temp);
+  }
 
   String _getServiceIcon(String serviceType) {
     if (serviceType.isEmpty) {
@@ -99,8 +155,6 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
         .replaceAll("/", "_");
     return "assets/icons/services_Icon/$fileName.png";
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -115,69 +169,147 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : feedbacks.isEmpty
-          ? const Center(child: Text("No feedbacks found."))
-          : ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: feedbacks.length,
-        itemBuilder: (context, index) {
-          final fb = feedbacks[index];
-          final iconPath = _getServiceIcon(fb["serviceType"]);
-
-          return Card(
-            elevation: 3,
-            margin: const EdgeInsets.only(bottom: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Colors.grey.shade200,
-                child: Image.asset(iconPath, fit: BoxFit.contain),
+          : Column(
+        children: [
+          // 🔎 Search bar
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              decoration: const InputDecoration(
+                hintText: "Search feedbacks...",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
               ),
-              title: Text(
-                fb["customerName"],
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text("Service: ${fb['serviceType']}"),
-                  Text("Feedback: ${fb['feedbackType']}"),
-                  Text("Car: ${fb['carModel']}"),
-                  Text("Date: ${fb['date']}"),
-                ],
-              ),
-              trailing: fb["seenStatus"] == "Unseen"
-                  ? Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.red.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  "Unseen",
-                  style: TextStyle(
-                      color: Colors.red,
-                      fontWeight: FontWeight.bold),
-                ),
-              )
-                  : null,
-              onTap: () async {
-                await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        ServiceFeedbackReplyPage(feedback: fb),
-                  ),
-                );
-                _loadFeedbacks(); // refresh after reply
+              onChanged: (value) {
+                setState(() => searchQuery = value);
+                _applyFilters();
               },
             ),
-          );
-        },
+          ),
+
+          // 🔽 Filters
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedFeedbackType,
+                    items: feedbackTypes
+                        .map((ft) => DropdownMenuItem(
+                      value: ft,
+                      child: Text(ft),
+                    ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() => selectedFeedbackType = value!);
+                      _applyFilters();
+                    },
+                    decoration: const InputDecoration(
+                      labelText: "Feedback Type",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: DropdownButtonFormField<String>(
+                    value: selectedServiceType,
+                    items: serviceTypes
+                        .map((st) => DropdownMenuItem(
+                      value: st,
+                      child: Text(st),
+                    ))
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() => selectedServiceType = value!);
+                      _applyFilters();
+                    },
+                    decoration: const InputDecoration(
+                      labelText: "Service Type",
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+
+          // 📋 List
+          Expanded(
+            child: filteredFeedbacks.isEmpty
+                ? const Center(child: Text("No feedbacks found."))
+                : ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: filteredFeedbacks.length,
+              itemBuilder: (context, index) {
+                final fb = filteredFeedbacks[index];
+                final iconPath = _getServiceIcon(fb["serviceType"]);
+
+                return Card(
+                  elevation: 3,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: Colors.grey.shade200,
+                      child: Image.asset(iconPath, fit: BoxFit.contain),
+                    ),
+                    title: Text(
+                      fb["customerName"],
+                      style: const TextStyle(
+                          fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("Service: ${fb['serviceType']}"),
+                        Text("Feedback: ${fb['feedbackType']}"),
+                        Text("Car: ${fb['carModel']}"),
+                        Text("Date: ${fb['date']}"),
+                      ],
+                    ),
+                    trailing: fb["seenStatus"] == "Unseen"
+                        ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Text(
+                        "Unseen",
+                        style: TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    )
+                        : null,
+                    onTap: () async {
+                      final feedbackId = fb["feedbackID"];
+                      if (feedbackId != null) {
+                        await _markAsSeen(feedbackId);
+                      }
+
+                      await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ServiceFeedbackReplyPage(feedback: fb),
+                        ),
+                      );
+
+                      _loadFeedbacks(); // refresh after reply
+                    },
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
