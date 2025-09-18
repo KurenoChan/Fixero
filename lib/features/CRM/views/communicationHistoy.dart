@@ -24,7 +24,7 @@ class _CommunicationHistoryPageState extends State<CommunicationHistoryPage> {
   Future<void> _loadFeedbacks() async {
     setState(() => isLoading = true);
 
-    final fbSnap = await dbRef.child("customerRelationship/feedbacks").get();
+    final fbSnap = await dbRef.child("communications/feedbacks/").get();
 
     if (!fbSnap.exists) {
       setState(() {

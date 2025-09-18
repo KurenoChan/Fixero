@@ -24,7 +24,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   Future<void> _loadReplies() async {
     final fbID = widget.feedback["feedbackID"];
     final replySnap =
-    await dbRef.child("customerRelationship/replies/$fbID").get();
+    await dbRef.child("communications/replies/$fbID").get();
 
     if (!replySnap.exists) {
       setState(() => replies = []);
@@ -49,7 +49,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   Future<void> _reopenFeedback() async {
     final fbID = widget.feedback["feedbackID"];
 
-    await dbRef.child("customerRelationship/feedbacks/$fbID").update({
+    await dbRef.child("communications/feedbacks/$fbID").update({
       "status": "Open",
     });
 
