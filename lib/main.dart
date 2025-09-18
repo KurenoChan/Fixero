@@ -7,6 +7,7 @@ import 'package:fixero/features/inventory_management/controllers/order_controlle
 import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
+import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -38,6 +39,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => SupplierController()),
         ChangeNotifierProvider(create: (_) => OrderController()),
         ChangeNotifierProvider(create: (_) => ItemUsageController()),
+
+        ChangeNotifierProvider(create: (_) => JobController()),
       ],
       child: MainApp(seenIntro: seenIntro),
     ),
@@ -55,7 +58,6 @@ class MainApp extends StatelessWidget {
       theme: lightMode,
       darkTheme: darkMode,
       themeMode: ThemeMode.system,
-      // initialRoute: HomePage.routeName,
       routes: {
         HomePage.routeName: (_) => const HomePage(),
         InventoryPage.routeName: (_) => const InventoryPage(),

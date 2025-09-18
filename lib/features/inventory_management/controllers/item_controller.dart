@@ -66,7 +66,10 @@ class ItemController extends ChangeNotifier {
 
   /// 🔹 Low stock items
   List<Item> get lowStockItems =>
-      _items.where((e) => e.stockQuantity <= e.lowStockThreshold).toList();
+      _items.where((e) => e.stockQuantity > 0 && e.stockQuantity <= e.lowStockThreshold).toList();
+
+  List<Item> get outOfStockItems =>
+      _items.where((e) => e.stockQuantity == 0).toList();
 
   /// 🔹 Get item by ID
   Item? getItemByID(String id) {
