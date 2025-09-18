@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/features/CRM/views/service_feedback_reply_page.dart';
+
 class CustomerFeedbackPage extends StatefulWidget {
   const CustomerFeedbackPage({super.key});
 
@@ -41,42 +42,65 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
       final status = (fbData["status"] ?? "").toString().trim().toLowerCase();
       if (status != "open") continue;
 
-      final customerID = fbData["customerID"];
-      final serviceID = (fbData["serviceID"] ?? "").trim();
+      final jobId = fbData["jobID"];
+      if (jobId == null || jobId.isEmpty) continue;
 
-      // 🔹 Fetch service record
-      final svcSnap = await dbRef.child("services/$serviceID").get();
-      final serviceData = svcSnap.exists
-          ? Map<String, dynamic>.from(svcSnap.value as Map)
-          : {};
+      // 🔹 Fetch job record
+      final jobSnap = await dbRef.child("jobservices/jobs/$jobId").get();
+      if (!jobSnap.exists) continue;
+      final jobData = Map<String, dynamic>.from(jobSnap.value as Map);
+
+      // 🔹 Fetch vehicle record
+      final plateNo = jobData["plateNo"] ?? "";
+      final vehicleSnap = await dbRef.child("vehicles/$plateNo").get();
+      final vehicleData =
+      vehicleSnap.exists ? Map<String, dynamic>.from(vehicleSnap.value as Map) : {};
 
       // 🔹 Fetch customer record
-      final custSnap = await dbRef.child("users/customers/$customerID").get();
-      final customerData = custSnap.exists
-          ? Map<String, dynamic>.from(custSnap.value as Map)
-          : {};
+      final ownerId = vehicleData["ownerID"] ?? "";
+      final custSnap = await dbRef.child("users/customers/$ownerId").get();
+      final customerData =
+      custSnap.exists ? Map<String, dynamic>.from(custSnap.value as Map) : {};
 
+      // 🔹 Collect combined data
       temp.add({
         "feedbackID": child.key,
-        "customerID": customerID,
         "customerName": customerData["custName"] ?? "Unknown",
-        "carModel": serviceData["carModel"] ?? "-",
-        "serviceType": serviceData["serviceType"] ?? "-",
-        "serviceDate": serviceData["serviceDate"] ?? "-",
-        "serviceFee": serviceData["serviceFee"] ?? 0,
-        "serviceQuality": fbData["serviceQuality"] ?? 0,
-        "completionEfficiency": fbData["completionEfficiency"] ?? 0,
-        "engineeringAttitude": fbData["engineeringAttitude"] ?? 0,
-        "comment": fbData["comment"] ?? "",
-        "status": fbData["status"] ?? "Unknown",
+        "carModel": vehicleData["model"] ?? "-",
+        "serviceType": jobData["jobServiceType"] ?? "-",
+        "feedbackType": fbData["feedbackType"] ?? "General",
+        "date": fbData["date"] ?? "-",
+        "seenStatus": fbData["seenStatus"] ?? "Seen",
       });
     }
+
+    // Sort Unseen first
+    temp.sort((a, b) {
+      if (a["seenStatus"] == "Unseen" && b["seenStatus"] != "Unseen") return -1;
+      if (a["seenStatus"] != "Unseen" && b["seenStatus"] == "Unseen") return 1;
+      return 0;
+    });
 
     setState(() {
       feedbacks = temp;
       isLoading = false;
     });
   }
+
+
+  String _getServiceIcon(String serviceType) {
+    if (serviceType.isEmpty) {
+      return "assets/icons/services_Icon/default.png"; // fallback
+    }
+    final fileName = serviceType
+        .toLowerCase()
+        .replaceAll(" ", "_")
+        .replaceAll("-", "_")
+        .replaceAll("/", "_");
+    return "assets/icons/services_Icon/$fileName.png";
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -92,30 +116,55 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : feedbacks.isEmpty
-          ? const Center(child: Text("No open feedbacks found."))
+          ? const Center(child: Text("No feedbacks found."))
           : ListView.builder(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(16),
         itemCount: feedbacks.length,
         itemBuilder: (context, index) {
           final fb = feedbacks[index];
+          final iconPath = _getServiceIcon(fb["serviceType"]);
+
           return Card(
-            margin: const EdgeInsets.only(bottom: 12),
+            elevation: 3,
+            margin: const EdgeInsets.only(bottom: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             child: ListTile(
-              leading: const CircleAvatar(
-                child: Icon(Icons.person),
+              leading: CircleAvatar(
+                backgroundColor: Colors.grey.shade200,
+                child: Image.asset(iconPath, fit: BoxFit.contain),
               ),
-              title: Text("Customer: ${fb['customerName']}"),
+              title: Text(
+                fb["customerName"],
+                style: const TextStyle(
+                    fontWeight: FontWeight.bold, fontSize: 16),
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("Service Car: ${fb['carModel']}"),
-                  Text("Service Type: ${fb['serviceType']}"),
-                  Text("Service Date: ${fb['serviceDate']}"),
-                  Text("Feedback: ${fb['comment']}"),
+                  Text("Service: ${fb['serviceType']}"),
+                  Text("Feedback: ${fb['feedbackType']}"),
+                  Text("Car: ${fb['carModel']}"),
+                  Text("Date: ${fb['date']}"),
                 ],
               ),
-              isThreeLine: true,
-              trailing: const Icon(Icons.reply, size: 18),
+              trailing: fb["seenStatus"] == "Unseen"
+                  ? Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  "Unseen",
+                  style: TextStyle(
+                      color: Colors.red,
+                      fontWeight: FontWeight.bold),
+                ),
+              )
+                  : null,
               onTap: () async {
                 await Navigator.push(
                   context,
@@ -124,7 +173,7 @@ class _CustomerFeedbackPageState extends State<CustomerFeedbackPage> {
                         ServiceFeedbackReplyPage(feedback: fb),
                   ),
                 );
-                _loadFeedbacks(); // refresh list after replying
+                _loadFeedbacks(); // refresh after reply
               },
             ),
           );
