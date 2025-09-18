@@ -23,8 +23,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
 
   Future<void> _loadReplies() async {
     final fbID = widget.feedback["feedbackID"];
-    final replySnap =
-    await dbRef.child("communications/replies/$fbID").get();
+    final replySnap = await dbRef.child("communications/replies/$fbID").get();
 
     if (!replySnap.exists) {
       setState(() => replies = []);
@@ -57,7 +56,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Feedback has been reopened.")),
       );
-      Navigator.pop(context, true); // ✅ return true to trigger refresh
+      Navigator.pop(context, true); // return true to trigger refresh
     }
   }
 
@@ -80,25 +79,27 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // 🔹 Customer & Service Info
-            Text("Customer: ${fb['customerName']} (${fb['customerID']})",
+            // 🔹 Customer & Job Info
+            Text("Customer: ${fb['customerName'] ?? 'Unknown'}",
                 style:
                 const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text("Car Model: ${fb['carModel']}"),
             Text("Service Type: ${fb['serviceType']}"),
-            Text("Service Date: ${fb['serviceDate']}"),
-            Text("Service Fee: RM ${fb['serviceFee']}"),
+            Text("Service Date: ${fb['date']}"),
             const Divider(height: 30),
 
-            // 🔹 Feedback details
-            const Text("Feedback Details",
+            // 🔹 Feedback ratings
+            const Text("Feedback Ratings",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text("Service Quality: ${fb['serviceQuality']}"),
             Text("Completion Efficiency: ${fb['completionEfficiency']}"),
             Text("Engineering Attitude: ${fb['engineeringAttitude']}"),
             const SizedBox(height: 10),
-            Text("Comment: ${fb['comment']}"),
-            Text("Status: ${fb['status']}"),
+
+            // 🔹 Feedback details
+            const Text("Comment",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(fb["comment"] ?? "-"),
             const Divider(height: 30),
 
             // 🔹 Replies

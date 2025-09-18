@@ -37,15 +37,14 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       final data = Map<String, dynamic>.from(child.value as Map);
       temp.add({
         "replyID": child.key,
-        "from": data["from"] ?? "System",   // fallback
-        "message": data["message"] ?? "(no message)",  // fallback
+        "from": data["from"] ?? "Unknown",
+        "message": data["message"] ?? "",
         "date": data["date"] ?? "-",
       });
     }
 
     setState(() => replies = temp);
   }
-
 
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty) return;
