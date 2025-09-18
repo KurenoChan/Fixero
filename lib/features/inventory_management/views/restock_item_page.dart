@@ -158,7 +158,7 @@ class _RestockItemPageState extends State<RestockItemPage> {
 
       // 2️⃣ CREATE RESTOCK REQUEST (auto-approved)
       final restockRequest = RestockRequest(
-        requestId: restockRequestId,
+        requestID: restockRequestId,
         orderNo: createdOrderNo,
         requestBy: manager.id,
         approvedBy: manager.id,
@@ -172,8 +172,8 @@ class _RestockItemPageState extends State<RestockItemPage> {
 
       // 3️⃣ CREATE REQUESTED ITEM
       final requestedItem = RequestedItem(
-        requestItemId: requestedItemId,
-        requestId: restockRequestId,
+        requestItemID: requestedItemId,
+        requestID: restockRequestId,
         itemID: widget.item.itemID,
         quantityRequested: int.parse(_quantityController.text),
         remark: _notesController.text.isEmpty ? null : _notesController.text,

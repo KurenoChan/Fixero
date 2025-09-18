@@ -38,7 +38,7 @@ class ItemRepository {
     await _db.child(itemID).update(updatedItem.toMap());
   }
 
-  Future<void> deleteItem(String itemID) async {
-    await _db.child(itemID).remove();
+  Future<void> deleteItem(Item item) async {
+    await _db.child(item.itemID).remove();
   }
 }

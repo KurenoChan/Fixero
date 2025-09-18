@@ -112,8 +112,8 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
       // 2️⃣ Update all requested items with remark
       final itemDAO = RequestedItemDAO();
-      final requestedItems = await itemDAO.getItemsByRequestId(
-        request.requestId,
+      final requestedItems = await itemDAO.getItemsByRequestID(
+        request.requestID,
       );
 
       for (final item in requestedItems) {
@@ -248,10 +248,10 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
       for (var request in requests) {
         // Ensure requested items are loaded
-        await requestedItemController.loadItemsByRequestId(request.requestId);
+        await requestedItemController.loadItemsByRequestId(request.requestID);
 
         final pendingItems = requestedItemController.getPendingItems(
-          request.requestId,
+          request.requestID,
         );
 
         for (var reqItem in pendingItems) {
@@ -264,7 +264,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
             await itemController.loadItems();
           }
 
-          final item = itemController.getItemById(reqItem.itemID);
+          final item = itemController.getItemByID(reqItem.itemID);
           if (item != null) {
             final updatedItem = item.copyWith(
               stockQuantity: item.stockQuantity + reqItem.quantityRequested,
@@ -363,7 +363,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
         return FutureBuilder(
           future: Future.wait([
-            RequestedItemDAO().getItemsByRequestId(request.requestId),
+            RequestedItemDAO().getItemsByRequestID(request.requestID),
             ManagerRepository().getManager(request.requestBy),
           ]),
           builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
@@ -388,7 +388,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
             // Map requested items to actual items, filtering invalid images
             final itemsForGrid = requestedItems
-                .map((ri) => itemController.getItemById(ri.itemID))
+                .map((ri) => itemController.getItemByID(ri.itemID))
                 .where((item) => item != null)
                 .take(4) // max 4 items
                 .toList();
@@ -560,7 +560,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                           ),
                   ),
                   title: Text(
-                    request.requestId,
+                    request.requestID,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: Theme.of(
@@ -584,37 +584,41 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Text(
-                              request.requestDate,
-                              style: Theme.of(context).textTheme.labelSmall,
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 2,
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Text(
+                                request.requestDate,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                             ),
                           ),
 
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Text(
-                              request.requestTime,
-                              style: Theme.of(context).textTheme.labelSmall,
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 2,
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Text(
+                                request.requestTime,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                             ),
                           ),
                         ],

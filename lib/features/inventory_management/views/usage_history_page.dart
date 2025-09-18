@@ -58,7 +58,7 @@ class _UsageHistoryPageState extends State<UsageHistoryPage> {
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final itemUsage = usageController.itemUsages[index];
-                      final Item? item = itemController.getItemById(
+                      final Item? item = itemController.getItemByID(
                         itemUsage.itemID,
                       );
 

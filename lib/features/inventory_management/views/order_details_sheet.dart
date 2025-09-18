@@ -117,10 +117,10 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
     try {
       for (var request in _requests) {
         // 🔹 Ensure requested items are loaded
-        await requestedItemController.loadItemsByRequestId(request.requestId);
+        await requestedItemController.loadItemsByRequestId(request.requestID);
 
         final pendingItems = requestedItemController.getPendingItems(
-          request.requestId,
+          request.requestID,
         );
 
         for (var reqItem in pendingItems) {
@@ -134,7 +134,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
             await itemController.loadItems();
           }
 
-          final item = itemController.getItemById(reqItem.itemID);
+          final item = itemController.getItemByID(reqItem.itemID);
           if (item != null) {
             final updatedItem = item.copyWith(
               stockQuantity: item.stockQuantity + reqItem.quantityRequested,
@@ -449,8 +449,8 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
 
                                 return FutureBuilder(
                                   future: Future.wait([
-                                    RequestedItemDAO().getItemsByRequestId(
-                                      request.requestId,
+                                    RequestedItemDAO().getItemsByRequestID(
+                                      request.requestID,
                                     ),
                                     ManagerRepository().getManager(
                                       request.requestBy,
@@ -490,7 +490,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
 
                                     final itemsForGrid = requestedItems
                                         .map(
-                                          (ri) => itemController.getItemById(
+                                          (ri) => itemController.getItemByID(
                                             ri.itemID,
                                           ),
                                         )
@@ -525,7 +525,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                                             itemsForGrid,
                                           ),
                                           title: Text(
-                                            request.requestId,
+                                            request.requestID,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: Theme.of(

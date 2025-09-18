@@ -1,8 +1,13 @@
 import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
+import 'package:fixero/common/widgets/charts/fixero_linechart.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/authentication/models/manager.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
+import 'package:fixero/features/inventory_management/models/restock_record.dart';
 import 'package:fixero/features/inventory_management/views/edit_item_page.dart';
+import 'package:fixero/features/inventory_management/views/item_usage_chart_data.dart';
+import 'package:fixero/features/inventory_management/views/item_usage_chart_helper.dart';
 import 'package:fixero/features/inventory_management/views/request_restock_page.dart';
 import 'package:fixero/features/inventory_management/views/restock_item_page.dart';
 import 'package:flutter/material.dart';
@@ -18,11 +23,56 @@ class ItemDetailsPage extends StatefulWidget {
 
 class _ItemDetailsPageState extends State<ItemDetailsPage> {
   Manager? currentManager;
+  int _visibleRestockCount = 3;
+
+  List<RestockRecord> _restockRecords = [];
+  bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
     super.initState();
+    _fetchRestockRecords();
     _loadCurrentManager();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final itemUsageController = context.read<ItemUsageController>();
+      await itemUsageController.loadItemUsagesByItemID(widget.itemID);
+    });
+  }
+
+  Future<void> _fetchRestockRecords() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final records = await context.read<ItemController>().getRestockingDetails(
+        widget.itemID,
+      );
+
+      if (!mounted) return;
+
+      setState(() {
+        _restockRecords = records;
+        _isLoading = false;
+        _visibleRestockCount = records.length >= 3
+            ? 3
+            : records.length; // reset view count
+      });
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+
+      debugPrint('Error fetching restock records: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
   }
 
   Future<void> _loadCurrentManager() async {
@@ -33,10 +83,45 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     });
   }
 
+  Future<void> _deleteItem() async {
+    final confirm = await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete item'),
+        content: const Text('Are you sure you want to delete this item?'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, false);
+            },
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color.fromARGB(255, 184, 13, 1),
+            ),
+            onPressed: () {
+              Navigator.pop(context, true);
+            },
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm) {
+      if (!mounted) return;
+      final itemController = context.read<ItemController>();
+      await itemController.deleteItem(widget.itemID);
+      if (!mounted) return;
+      Navigator.pop(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<ItemController>();
-    final item = controller.getItemById(widget.itemID); // reactive
+    final item = controller.getItemByID(widget.itemID); // reactive
 
     if (item == null) {
       return Scaffold(
@@ -327,30 +412,44 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
                           const SizedBox(height: 10.0),
 
-                          // Usage History Overview / Details
-                          // Mini Tab for Overview (Graph) and Details
-
-                          // Details will display in tabular format
+                          Builder(
+                            builder: (context) {
+                              final itemUsageController = context
+                                  .watch<ItemUsageController>();
+                              final itemUsageChartData =
+                                  aggregateItemUsageByMonth(
+                                    itemUsageController.itemUsages,
+                                  );
+                              debugPrint(
+                                'Chart data: $itemUsageChartData',
+                              ); // <-- DEBUG
+                              return FixeroLineChart<ItemUsageChartData>(
+                                data: itemUsageChartData,
+                                color: Colors.green,
+                                showDot: true,
+                                showGradient: true,
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
 
-                    // Restocking Details
+                    // ------------------ RESTOCKING DETAILS REFINED ------------------
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20.0),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
                             'RESTOCKING DETAILS',
                             style: TextStyle(
                               fontSize: 15.0,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .inversePrimary
-                                  .withValues(alpha: 0.8),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.inversePrimary.withAlpha(200),
                             ),
                           ),
-
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 5.0),
                             width: 50.0,
@@ -359,93 +458,177 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                               thickness: 1.0,
                               color: Theme.of(
                                 context,
-                              ).dividerColor.withValues(alpha: 0.8),
+                              ).dividerColor.withAlpha(200),
                             ),
                           ),
-
                           const SizedBox(height: 10.0),
 
-                          Column(
-                            spacing: 20.0,
-                            children: [
-                              Table(
-                                defaultVerticalAlignment:
-                                    TableCellVerticalAlignment.middle,
-                                border: TableBorder.all(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inversePrimary
-                                      .withValues(alpha: 0.8),
-                                  width: 1,
-                                ),
-                                children: [
-                                  TableRow(
-                                    children: [
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: const Text(
-                                            'Supplier',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: const Text(
-                                            'Restocked By',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      TableCell(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(8.0),
-                                          child: Text(
-                                            'Quantity (${item.unit})',
-                                            textAlign: TextAlign.center,
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                          // Loading/Error/Empty States
+                          if (_isLoading)
+                            const Center(child: CircularProgressIndicator())
+                          else if (_error != null)
+                            Center(child: Text('Error: $_error'))
+                          else if (_restockRecords.isEmpty)
+                            const Center(
+                              child: Text(
+                                '( No record )',
+                                style: TextStyle(fontStyle: FontStyle.italic),
                               ),
-
-                              // if more than 3 restock records
-                              // ElevatedButton(
-                              //   onPressed: () {},
-                              //   style: ElevatedButton.styleFrom(
-                              //     backgroundColor: Theme.of(
-                              //       context,
-                              //     ).colorScheme.inversePrimary.withAlpha(50),
-                              //   ),
-                              //   child: const Text(
-                              //     'View More',
-                              //     style: TextStyle(fontWeight: FontWeight.normal),
-                              //   ),
-                              // ),
-                            ],
-                          ),
+                            )
+                          else
+                            // Actual table
+                            Column(
+                              children: [
+                                LayoutBuilder(
+                                  builder: (context, constraints) {
+                                    return Table(
+                                      defaultVerticalAlignment:
+                                          TableCellVerticalAlignment.middle,
+                                      border: TableBorder.all(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary
+                                            .withAlpha(80),
+                                        width: 1,
+                                      ),
+                                      columnWidths: {
+                                        0: IntrinsicColumnWidth(), // supplier
+                                        1: IntrinsicColumnWidth(), // restocked date
+                                        2: IntrinsicColumnWidth(), // quantity
+                                      },
+                                      children: [
+                                        TableRow(
+                                          decoration: const BoxDecoration(
+                                            color: Colors.black12,
+                                          ),
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: Text(
+                                                'Supplier',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            const Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: Text(
+                                                'Restocked Date',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            Padding(
+                                              padding: const EdgeInsets.all(
+                                                8.0,
+                                              ),
+                                              child: Text(
+                                                'Quantity\n(${item.unit})',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        ..._restockRecords
+                                            .take(_visibleRestockCount)
+                                            .map(
+                                              (record) => TableRow(
+                                                children: [
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          8.0,
+                                                        ),
+                                                    child: Text(
+                                                      record
+                                                          .supplier
+                                                          .supplierName,
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          8.0,
+                                                        ),
+                                                    child: Text(
+                                                      record.order.arrivalDate
+                                                          .toString()
+                                                          .split(' ')[0],
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                          8.0,
+                                                        ),
+                                                    child: Text(
+                                                      record
+                                                          .requestedItem
+                                                          .quantityRequested
+                                                          .toString(),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                      ],
+                                    );
+                                  },
+                                ),
+                                if (_visibleRestockCount <
+                                    _restockRecords.length)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 10.0),
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _visibleRestockCount =
+                                              (_visibleRestockCount + 5).clamp(
+                                                0,
+                                                _restockRecords.length,
+                                              );
+                                        });
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Theme.of(context)
+                                            .colorScheme
+                                            .inversePrimary
+                                            .withAlpha(50),
+                                      ),
+                                      child: const Text(
+                                        'View More',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
                         ],
                       ),
                     ),
 
+                    const SizedBox(height: 20.0),
+
                     // 🔹 Inside ListView before the closing bracket
                     if (currentManager?.role == "Inventory Manager") ...[
                       ElevatedButton(
-                        onPressed: () {
-                          // Delete logic
+                        onPressed: () async {
+                          await _deleteItem();
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color.fromARGB(
@@ -462,6 +645,8 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                         ),
                       ),
                     ],
+
+                    const SizedBox(height: 20.0),
                   ],
                 ),
               ),

@@ -16,6 +16,11 @@ class ItemUsageDAO {
     return await _repo.fetchAllItemUsages();
   }
 
+  Future<List<ItemUsage>> getItemUsagesByItemID(String itemID) async {
+    final all = await getAllItemUsages();
+    return all.where((u) => u.itemID == itemID).toList();
+  }
+
   Future<void> addItemUsage(ItemUsage itemUsage) async {
     await _repo.addItemUsage(itemUsage);
   }

@@ -1,14 +1,14 @@
 class RequestedItem {
-  final String requestItemId;
-  final String requestId;
+  final String requestItemID;
+  final String requestID;
   final String itemID;
   final int quantityRequested;
   final String status; // "Pending" | "Received" | "Not Processed"
   final String? remark;
 
   RequestedItem({
-    required this.requestItemId,
-    required this.requestId,
+    required this.requestItemID,
+    required this.requestID,
     required this.itemID,
     required this.quantityRequested,
     this.status = "Pending",
@@ -17,16 +17,16 @@ class RequestedItem {
 
   // ✅ copyWith method
   RequestedItem copyWith({
-    String? requestItemId,
-    String? requestId,
+    String? requestItemID,
+    String? requestID,
     String? itemID,
     int? quantityRequested,
     String? status,
     String? remark,
   }) {
     return RequestedItem(
-      requestItemId: requestItemId ?? this.requestItemId,
-      requestId: requestId ?? this.requestId,
+      requestItemID: requestItemID ?? this.requestItemID,
+      requestID: requestID ?? this.requestID,
       itemID: itemID ?? this.itemID,
       quantityRequested: quantityRequested ?? this.quantityRequested,
       status: status ?? this.status,
@@ -35,10 +35,10 @@ class RequestedItem {
   }
 
   // ✅ fromMap
-  factory RequestedItem.fromMap(Map<String, dynamic> map, String requestItemId) {
+  factory RequestedItem.fromMap(Map<String, dynamic> map, String requestItemID) {
     return RequestedItem(
-      requestItemId: requestItemId,
-      requestId: map["requestID"] ?? "",
+      requestItemID: requestItemID,
+      requestID: map["requestID"] ?? "",
       itemID: map["itemID"] ?? "",
       quantityRequested: map["quantityRequested"] is int
           ? map["quantityRequested"]
@@ -51,7 +51,7 @@ class RequestedItem {
   // ✅ toMap
   Map<String, dynamic> toMap() {
     return {
-      "requestID": requestId,
+      "requestID": requestID,
       "itemID": itemID,
       "quantityRequested": quantityRequested,
       "status": status,

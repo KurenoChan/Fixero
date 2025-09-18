@@ -19,7 +19,7 @@ class RequestedItemController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      _items = await _dao.getItemsByRequestId(requestId);
+      _items = await _dao.getItemsByRequestID(requestId);
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
@@ -48,7 +48,7 @@ class RequestedItemController extends ChangeNotifier {
       await _dao.updateRequestedItem(item);
 
       final index = _items.indexWhere(
-        (i) => i.requestItemId == item.requestItemId,
+        (i) => i.requestItemID == item.requestItemID,
       );
       if (index != -1) {
         _items[index] = item;
@@ -62,10 +62,10 @@ class RequestedItemController extends ChangeNotifier {
   }
 
   /// 🔹 Delete requested item
-  Future<void> deleteRequestedItem(String requestItemId) async {
+  Future<void> deleteRequestedItem(String requestItemID) async {
     try {
-      await _dao.deleteRequestedItem(requestItemId);
-      _items.removeWhere((i) => i.requestItemId == requestItemId);
+      await _dao.deleteRequestedItem(requestItemID);
+      _items.removeWhere((i) => i.requestItemID == requestItemID);
       notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
@@ -96,7 +96,7 @@ class RequestedItemController extends ChangeNotifier {
   ) async {
     // Filter cached items for the request
     final itemsToUpdate = _items
-        .where((i) => i.requestId == requestId)
+        .where((i) => i.requestID == requestId)
         .toList();
 
     for (var item in itemsToUpdate) {
@@ -105,7 +105,7 @@ class RequestedItemController extends ChangeNotifier {
 
       // Update cache
       final index = _items.indexWhere(
-        (i) => i.requestItemId == item.requestItemId,
+        (i) => i.requestItemID == item.requestItemID,
       );
       if (index != -1) _items[index] = updated;
     }
@@ -116,14 +116,14 @@ class RequestedItemController extends ChangeNotifier {
   /// 🔹 Get pending items for a specific request
   List<RequestedItem> getPendingItems(String requestId) {
     return _items
-        .where((i) => i.requestId == requestId && i.status == "Pending")
+        .where((i) => i.requestID == requestId && i.status == "Pending")
         .toList();
   }
 
   /// 🔹 Get received items for a specific request
   List<RequestedItem> getReceivedItems(String requestId) {
     return _items
-        .where((i) => i.requestId == requestId && i.status == "Received")
+        .where((i) => i.requestID == requestId && i.status == "Received")
         .toList();
   }
 
@@ -135,5 +135,5 @@ class RequestedItemController extends ChangeNotifier {
       _items.where((i) => i.status == "Received").toList();
 
   List<RequestedItem> getItemsByRequestIdSync(String requestId) =>
-      _items.where((i) => i.requestId == requestId).toList();
+      _items.where((i) => i.requestID == requestId).toList();
 }

@@ -4,7 +4,7 @@ import 'package:fixero/features/inventory_management/models/requested_item.dart'
 class RequestedItemDAO {
   final RequestedItemRepository _repo = RequestedItemRepository();
 
-  Future<List<RequestedItem>> getItemsByRequestId(String requestId) async {
+  Future<List<RequestedItem>> getItemsByRequestID(String requestId) async {
     return await _repo.fetchItemsByRequestId(requestId);
   }
 
@@ -20,14 +20,8 @@ class RequestedItemDAO {
     await _repo.deleteRequestedItem(requestItemId);
   }
 
-  /// Convenience filters
-  // Future<List<RequestedItem>> getPendingItems(String requestId) async {
-  //   final all = await _repo.fetchItemsByRequestId(requestId);
-  //   return all.where((i) => i.status == "Pending").toList();
-  // }
-
-  // Future<List<RequestedItem>> getReceivedItems(String requestId) async {
-  //   final all = await _repo.fetchItemsByRequestId(requestId);
-  //   return all.where((i) => i.status == "Received").toList();
-  // }
+  Future<List<RequestedItem>> getRequestedItemsByItemID(String itemID) async {
+    final all = await _repo.fetchAllRequestedItems();
+    return all.where((r) => r.itemID == itemID).toList();
+  }
 }

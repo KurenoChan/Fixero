@@ -20,12 +20,19 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data.isEmpty || data.any((d) => !d.value.isFinite)) {
-      return const Center(child: Text("Invalid or empty data"));
+      return const Center(
+        child: Text(
+          "( No record )",
+          style: TextStyle(fontStyle: FontStyle.italic),
+        ),
+      );
     }
 
-    final spots = data.asMap().entries.map(
-          (e) => FlSpot(e.key.toDouble(), e.value.value),
-    ).toList();
+    final spots = data
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
+        .toList();
 
     final maxY = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final minY = data.map((e) => e.value).reduce((a, b) => a < b ? a : b);
@@ -49,10 +56,7 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
                 belowBarData: BarAreaData(
                   show: showGradient,
                   gradient: LinearGradient(
-                    colors: [
-                      color.withAlpha(30),
-                      color.withAlpha(0),
-                    ],
+                    colors: [color.withAlpha(30), color.withAlpha(0)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -91,7 +95,9 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
                 ),
               ),
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             gridData: FlGridData(show: true),
             borderData: FlBorderData(show: true),

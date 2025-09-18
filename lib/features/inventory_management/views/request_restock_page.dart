@@ -81,15 +81,15 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
     debugPrint("Generated RequestedItem ID: $requestedItemId\n\n");
 
     final restockRequest = RestockRequest(
-      requestId: restockRequestId,
+      requestID: restockRequestId,
       requestDate: Formatter.today(),
       requestTime: Formatter.today(),
       requestBy: manager.id,
     );
 
     final requestedItem = RequestedItem(
-      requestItemId: requestedItemId,
-      requestId: restockRequestId,
+      requestItemID: requestedItemId,
+      requestID: restockRequestId,
       itemID: widget.item.itemID,
       quantityRequested: int.parse(_quantityController.text),
       remark: _notesController.text.isEmpty ? null : _notesController.text,

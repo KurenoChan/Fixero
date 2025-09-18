@@ -49,7 +49,7 @@ class RestockRequestController extends ChangeNotifier {
       await _dao.updateRequest(request);
 
       final index = _requests.indexWhere(
-        (r) => r.requestId == request.requestId,
+        (r) => r.requestID == request.requestID,
       );
       if (index != -1) {
         _requests[index] = request;
@@ -62,54 +62,6 @@ class RestockRequestController extends ChangeNotifier {
     }
   }
 
-  // Future<void> approveRequest(RestockRequest request, String managerId) async {
-  //   try {
-  //     final updated = request.copyWith(
-  //       status: "Approved",
-  //       approvedBy: managerId,
-  //       approvedDate: Formatter.todayDate(),
-  //     );
-
-  //     await _dao.updateRequest(updated);
-
-  //     final index = _requests.indexWhere(
-  //       (r) => r.requestId == updated.requestId,
-  //     );
-  //     if (index != -1) {
-  //       _requests[index] = updated;
-  //     }
-  //     notifyListeners();
-  //   } catch (e) {
-  //     _errorMessage = e.toString();
-  //     notifyListeners();
-  //     rethrow;
-  //   }
-  // }
-
-  // Future<void> rejectRequest(RestockRequest request, String managerId) async {
-  //   try {
-  //     final updated = request.copyWith(
-  //       status: "Rejected",
-  //       rejectedBy: managerId,
-  //       rejectedDate: Formatter.todayDate(),
-  //     );
-
-  //     await _dao.updateRequest(updated);
-
-  //     final index = _requests.indexWhere(
-  //       (r) => r.requestId == updated.requestId,
-  //     );
-  //     if (index != -1) {
-  //       _requests[index] = updated;
-  //     }
-  //     notifyListeners();
-  //   } catch (e) {
-  //     _errorMessage = e.toString();
-  //     notifyListeners();
-  //     rethrow;
-  //   }
-  // }
-
   /// Approve / reject helpers
   Future<void> approveRequest(RestockRequest request, String managerId) =>
       _updateStatus(request, "Approved", managerId);
@@ -117,15 +69,29 @@ class RestockRequestController extends ChangeNotifier {
   Future<void> rejectRequest(RestockRequest request, String managerId) =>
       _updateStatus(request, "Rejected", managerId);
 
-  Future<void> _updateStatus(RestockRequest request, String status, String managerId) async {
+  Future<void> _updateStatus(
+    RestockRequest request,
+    String status,
+    String managerId,
+  ) async {
     try {
       final updated = status == "Approved"
-          ? request.copyWith(status: status, approvedBy: managerId, approvedDate: Formatter.todayDate())
-          : request.copyWith(status: status, rejectedBy: managerId, rejectedDate: Formatter.todayDate());
+          ? request.copyWith(
+              status: status,
+              approvedBy: managerId,
+              approvedDate: Formatter.todayDate(),
+            )
+          : request.copyWith(
+              status: status,
+              rejectedBy: managerId,
+              rejectedDate: Formatter.todayDate(),
+            );
 
       await _dao.updateRequest(updated);
 
-      final index = _requests.indexWhere((r) => r.requestId == updated.requestId);
+      final index = _requests.indexWhere(
+        (r) => r.requestID == updated.requestID,
+      );
       if (index != -1) _requests[index] = updated;
 
       notifyListeners();
@@ -135,17 +101,6 @@ class RestockRequestController extends ChangeNotifier {
       rethrow;
     }
   }
-
-  // Future<List<RestockRequest>> getRequestsByOrderNo(String orderNo) async {
-  //   try {
-  //     final requests = await _dao.getRequestsByOrderNo(orderNo);
-  //     return requests;
-  //   } catch (e) {
-  //     _errorMessage = e.toString();
-  //     notifyListeners();
-  //     return [];
-  //   }
-  // }
 
   List<RestockRequest> getRequestsByOrderNo(String orderNo) =>
       _requests.where((r) => r.orderNo == orderNo).toList();

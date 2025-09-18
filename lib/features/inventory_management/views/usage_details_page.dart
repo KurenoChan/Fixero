@@ -18,7 +18,7 @@ class _UsageDetailsPageState extends State<UsageDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final itemController = context.watch<ItemController>();
-    final item = itemController.getItemById(widget.usage.itemID);
+    final item = itemController.getItemByID(widget.usage.itemID);
     final itemUsage = widget.usage;
 
     return SafeArea(
