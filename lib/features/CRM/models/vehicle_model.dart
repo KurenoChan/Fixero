@@ -1,43 +1,43 @@
-// vehicle_model.dart
+// models/vehicle_model.dart
 class Vehicle {
   final String plateNumber;
+  final String type;
+  final String model;
   final String color;
   final String manufacturer;
-  final String model;
-  final String type;
   final int year;
-  final String ownerId;
+  final String ownerID;
 
   Vehicle({
     required this.plateNumber,
+    required this.type,
+    required this.model,
     required this.color,
     required this.manufacturer,
-    required this.model,
-    required this.type,
     required this.year,
-    required this.ownerId,
+    required this.ownerID,
   });
 
-  factory Vehicle.fromMap(Map<dynamic, dynamic> map, String id) {
+  factory Vehicle.fromMap(String plate, Map<String, dynamic> data) {
     return Vehicle(
-      plateNumber: id,
-      color: map['color'] ?? '',
-      manufacturer: map['manufacturer'] ?? '',
-      model: map['model'] ?? '',
-      type: map['type'] ?? '',
-      year: map['year'] ?? 0,
-      ownerId: map['ownerID'] ?? '',
+      plateNumber: plate,
+      type: data['type'] ?? '',
+      model: data['model'] ?? '',
+      color: data['color'] ?? '',
+      manufacturer: data['manufacturer'] ?? '',
+      year: data['year'] ?? 0,
+      ownerID: data['ownerID'] ?? '',
     );
   }
 
   Map<String, dynamic> toMap() {
     return {
-      'color': color,
-      'manufacturer': manufacturer,
-      'model': model,
-      'type': type,
-      'year': year,
-      'ownerID': ownerId,
+      "type": type,
+      "model": model,
+      "color": color,
+      "manufacturer": manufacturer,
+      "year": year,
+      "ownerID": ownerID,
     };
   }
 }

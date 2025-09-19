@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_database/firebase_database.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
+import '../controllers/customer_controller.dart';
 import 'customer_profile_page.dart';
 
 class CustomerDirectoryPage extends StatefulWidget {
@@ -10,9 +12,9 @@ class CustomerDirectoryPage extends StatefulWidget {
 }
 
 class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
-  final DatabaseReference ref =
-  FirebaseDatabase.instance.ref().child("users/customers");
+  final CustomerController customerController = CustomerController();
   String searchQuery = "";
+  String sortOption = "A-Z"; // default
 
   @override
   Widget build(BuildContext context) {
@@ -20,157 +22,123 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.blue,
-        title: const Text(
-          "Customer Directory",
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
+      appBar: const FixeroSubAppBar(
+        title: "Customer Directory",
+        showBackButton: true,
       ),
       body: Column(
         children: [
-          // 🔍 Search Bar
+          // 🔍 Search + Sort combined
           Padding(
             padding: const EdgeInsets.all(12.0),
-            child: TextField(
-              textAlignVertical: TextAlignVertical.center,
-              decoration: InputDecoration(
-                hintText: "Search by name, phone, or email",
-                hintStyle: const TextStyle(
-                  color: Colors.grey,
-                  fontSize: 16,
-                ),
-                prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding:
-                const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(30),
-                  borderSide: BorderSide.none,
+            child: Card(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
+              elevation: 2,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                child: Row(
+                  children: [
+                    // Search field
+                    Expanded(
+                      child: TextField(
+                        decoration: const InputDecoration(
+                          hintText: "Search name, phone, or email",
+                          prefixIcon: Icon(Icons.search),
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (val) =>
+                            setState(() => searchQuery = val.toLowerCase()),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    // Sort dropdown
+                    DropdownButton<String>(
+                      value: sortOption,
+                      underline: const SizedBox(),
+                      items: const [
+                        DropdownMenuItem(value: "A-Z", child: Text("A → Z")),
+                        DropdownMenuItem(value: "Z-A", child: Text("Z → A")),
+                      ],
+                      onChanged: (val) =>
+                          setState(() => sortOption = val ?? "A-Z"),
+                    ),
+                  ],
                 ),
               ),
-              onChanged: (value) {
-                setState(() {
-                  searchQuery = value.trim().toLowerCase();
-                });
-              },
             ),
           ),
 
-          // 🔹 Customer List
+          // 🔹 Customer list
           Expanded(
-            child: StreamBuilder<DatabaseEvent>(
-              stream: ref.onValue,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+            child: ValueListenableBuilder<int>(
+              valueListenable: customerController,
+              builder: (context, _, __) {
+                var customers = customerController.allCustomers;
+
+                // 🔍 Search filter
+                if (searchQuery.isNotEmpty) {
+                  customers = customers
+                      .where((c) =>
+                  c.custName.toLowerCase().contains(searchQuery) ||
+                      c.custTel.toLowerCase().contains(searchQuery) ||
+                      c.custEmail.toLowerCase().contains(searchQuery))
+                      .toList();
                 }
 
-                if (!snapshot.hasData ||
-                    snapshot.data!.snapshot.value == null) {
-                  return const Center(child: Text("No customers found"));
-                }
-
-                final data = Map<String, dynamic>.from(
-                    snapshot.data!.snapshot.value as Map);
-
-                // 🔍 Filter (name, phone, email)
-                final filtered = data.entries.where((e) {
-                  final cust =
-                  Map<String, dynamic>.from(e.value as Map<dynamic, dynamic>);
-                  final name = (cust['custName'] ?? "").toString().toLowerCase();
-                  final tel = (cust['custTel'] ?? "").toString().toLowerCase();
-                  final email = (cust['custEmail'] ?? "").toString().toLowerCase();
-
-                  return name.contains(searchQuery) ||
-                      tel.contains(searchQuery) ||
-                      email.contains(searchQuery);
-                }).toList();
-
-                // 🔠 Sort alphabetically by name
-                filtered.sort((a, b) {
-                  final nameA =
-                  (a.value['custName'] ?? "").toString().toLowerCase();
-                  final nameB =
-                  (b.value['custName'] ?? "").toString().toLowerCase();
-                  return nameA.compareTo(nameB);
+                // 🔠 Sort
+                customers.sort((a, b) {
+                  if (sortOption == "A-Z") {
+                    return a.custName
+                        .toLowerCase()
+                        .compareTo(b.custName.toLowerCase());
+                  } else {
+                    return b.custName
+                        .toLowerCase()
+                        .compareTo(a.custName.toLowerCase());
+                  }
                 });
 
-                if (filtered.isEmpty) {
-                  return const Center(child: Text("No matching customers found"));
+                if (customers.isEmpty) {
+                  return const Center(child: Text("No customers found"));
                 }
 
                 return ListView.builder(
                   padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  itemCount: filtered.length,
-                  itemBuilder: (context, index) {
-                    final key = filtered[index].key;
-                    final customer =
-                    Map<String, dynamic>.from(filtered[index].value);
+                  itemCount: customers.length,
+                  itemBuilder: (_, i) {
+                    final c = customers[i];
+                    final isFemale = c.gender.toLowerCase() == "female";
 
-                    final gender =
-                    (customer['gender'] ?? '').toString().toLowerCase();
-
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 10),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
                       child: ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 12),
                         leading: CircleAvatar(
                           radius: 28,
-                          backgroundColor: gender == 'female'
-                              ? Colors.pink.withOpacity(0.2)
-                              : theme.primaryColor.withOpacity(0.15),
-                          child: Icon(
-                            gender == 'female' ? Icons.female : Icons.male,
-                            size: 30,
-                            color: gender == 'female'
-                                ? Colors.pink
-                                : Colors.blue,
+                          backgroundImage: AssetImage(
+                            isFemale
+                                ? "assets/icons/avatar/female_avatar.png"
+                                : "assets/icons/avatar/male_avatar.png",
                           ),
+
                         ),
-                        title: RichText(
-                          text: TextSpan(
-                            children: _highlightMatch(
-                              customer['custName'] ?? 'No Name',
-                              searchQuery,
-                            ),
+                        title: Text(c.custName,
                             style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ),
-                        subtitle: Text(
-                          customer['custTel'] ?? '',
-                          style: const TextStyle(
-                              fontSize: 15, color: Colors.black54),
-                        ),
-                        trailing: const Icon(Icons.arrow_forward_ios,
-                            size: 18, color: Colors.grey),
+                                fontWeight: FontWeight.w600, fontSize: 16)),
+                        subtitle: Text(c.custTel),
+                        trailing:
+                        const Icon(Icons.arrow_forward_ios, size: 18),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (_) => CustomerProfilePage(
-                                customerId: key,
-                                customerData: customer,
+                                customerId: c.custID,
+                                customerData: c.toMap(),
                               ),
                             ),
                           );
@@ -184,27 +152,7 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
           ),
         ],
       ),
+      bottomNavigationBar: const FixeroBottomAppBar(),
     );
-  }
-
-  // 🔹 Highlight search matches
-  List<TextSpan> _highlightMatch(String text, String query) {
-    if (query.isEmpty) return [TextSpan(text: text)];
-    final lowerText = text.toLowerCase();
-    final lowerQuery = query.toLowerCase();
-    final startIndex = lowerText.indexOf(lowerQuery);
-    if (startIndex == -1) return [TextSpan(text: text)];
-
-    return [
-      TextSpan(text: text.substring(0, startIndex)),
-      TextSpan(
-        text: text.substring(startIndex, startIndex + query.length),
-        style: const TextStyle(
-          color: Colors.blue,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      TextSpan(text: text.substring(startIndex + query.length)),
-    ];
   }
 }

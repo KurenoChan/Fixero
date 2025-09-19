@@ -45,6 +45,7 @@ flutter:
     - assets/logo/
     - assets/icons/
     - assets/icons/services_Icon/
+    - assets/icons/avatar/
     - assets/images/
     - assets/images/intro/
     - assets/images/background/
