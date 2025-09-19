@@ -4,8 +4,9 @@ import '../models/feedback_model.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../widgets/feedback_layout_widget.dart';
-import 'package:intl/intl.dart';
 import '../../authentication/controllers/manager_controller.dart';
+import 'package:intl/intl.dart';
+
 class ServiceFeedbackReplyPage extends StatefulWidget {
   final FeedbackModel feedback;
   const ServiceFeedbackReplyPage({super.key, required this.feedback});
@@ -25,9 +26,46 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     super.initState();
     _loadReplies();
   }
+  Future<void> _deleteReply(String replyID) async {
+    final fbID = widget.feedback.feedbackID;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Delete Reply"),
+        content: const Text("Are you sure you want to delete this reply for everyone?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Delete"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await dbRef.child("communications/replies/$fbID/$replyID").remove();
+
+      setState(() {
+        replies.removeWhere((r) => r["replyID"] == replyID);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Reply deleted successfully.")),
+      );
+    }
+  }
 
   Future<void> _loadReplies() async {
-    final fbID = widget.feedback.feedbackID; // ✅ use model property
+    final fbID = widget.feedback.feedbackID;
     final replySnap = await dbRef.child("communications/replies/$fbID").get();
 
     if (!replySnap.exists) {
@@ -47,25 +85,36 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       });
     }
 
+    // 🔹 sort replies by date ascending (latest at bottom)
+    temp.sort((a, b) {
+      final dateA = DateTime.tryParse(a["date"]) ?? DateTime(1970);
+      final dateB = DateTime.tryParse(b["date"]) ?? DateTime(1970);
+      return dateA.compareTo(dateB);
+    });
+
     setState(() => replies = temp);
   }
+
 
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty) return;
 
     final fbID = widget.feedback.feedbackID;
-    final newReplyKey =
-        "RPL-${DateTime.now().toString().replaceAll(RegExp(r'[-: ]'), '').substring(0, 12)}";
+
+    // 🔑 Always unique because of milliseconds
+    final newReplyKey = "RPL-${DateTime.now().millisecondsSinceEpoch}";
 
     // 🔹 Get logged in manager profile
     final currentManager = await ManagerController.getCurrentManager();
 
-    final formattedDate = DateFormat("yyyy-MM-dd HH:mm").format(DateTime.now());
+    final formattedDate =
+    DateFormat("yyyy-MM-dd HH:mm").format(DateTime.now().toLocal());
 
     final replyData = {
       "from": currentManager != null
           ? "${currentManager.role} - ${currentManager.name}"
           : "Unknown",
+      "replyEmail": currentManager?.email ?? "Unknown",
       "message": _replyController.text.trim(),
       "date": formattedDate,
     };
@@ -75,6 +124,8 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     _replyController.clear();
     _loadReplies();
   }
+
+
 
 
   Future<void> _closeFeedback() async {
@@ -144,6 +195,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
               ),
             )
           ],
+          onDeleteReply: _deleteReply,
         ),
       ),
     );

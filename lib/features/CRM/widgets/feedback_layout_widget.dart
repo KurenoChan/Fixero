@@ -8,6 +8,7 @@ Widget buildFeedbackLayout({
   required List<Map<String, dynamic>> replies,
   required List<Widget> actions, // buttons / reply input section
   required BuildContext context,
+  Function(String replyID)? onDeleteReply,
 }) {
   return ListView(
     children: [
@@ -144,9 +145,20 @@ Widget buildFeedbackLayout({
                 child: Text(r["message"],
                     style: const TextStyle(color: Colors.black87)),
               ),
-              trailing: Text(r["date"],
-                  style: const TextStyle(
-                      fontSize: 12, color: Colors.grey)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(r["date"],
+                      style: const TextStyle(
+                          fontSize: 12, color: Colors.grey)),
+                  if (onDeleteReply != null) // ✅ only show delete in ReplyPage
+                    IconButton(
+                      icon: const Icon(Icons.delete,
+                          color: Colors.red, size: 20),
+                      onPressed: () => onDeleteReply(r["replyID"]),
+                    ),
+                ],
+              ),
             ),
           );
         }).toList(),
