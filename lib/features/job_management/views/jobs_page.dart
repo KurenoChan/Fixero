@@ -5,6 +5,7 @@ import 'package:fixero/data/dao/job_services/job_dao.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
 import 'add_job_page.dart';
+import 'mechanic_selection_page.dart';
 
 class JobsPage extends StatefulWidget {
   static const routeName = '/jobs';
@@ -382,10 +383,6 @@ class JobDetailsPage extends StatelessWidget {
                   valueColor: _getStatusColor(job.jobStatus),
                 ),
                 _DetailItem(label: 'Description', value: job.jobDescription),
-                _DetailItem(
-                  label: 'Estimated Duration',
-                  value: '${job.estimatedDuration} minutes',
-                ),
               ],
             ),
 
@@ -403,6 +400,18 @@ class JobDetailsPage extends StatelessWidget {
               children: [
                 _DetailItem(label: 'Scheduled Date', value: job.scheduledDate),
                 _DetailItem(label: 'Scheduled Time', value: job.scheduledTime),
+                _DetailItem(
+                  label: 'Estimated Duration',
+                  value: '${job.estimatedDuration} minutes',
+                ),
+              ],
+            ),
+
+            const SizedBox(height: 20),
+
+            _DetailSection(
+              title: 'Timestamps',
+              children: [
                 _DetailItem(label: 'Created At', value: job.createdAt),
               ],
             ),
@@ -422,10 +431,10 @@ class JobDetailsPage extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () {
-                  // Handle job actions (edit, update status, etc.)
-                  _showStatusUpdateDialog(context);
+                  // Navigate to Mechanic Selection Page
+                  _navigateToMechanicSelection(context);
                 },
-                child: const Text('Update Job Status'),
+                child: const Text('Assign Mechanic'),
               ),
             ),
           ],
@@ -451,54 +460,24 @@ class JobDetailsPage extends StatelessWidget {
     }
   }
 
-  void _showStatusUpdateDialog(BuildContext context) {
-    final List<String> statusOptions = [
-      'Pending',
-      'Scheduled',
-      'Ongoing',
-      'Completed',
-      'Cancelled',
-    ];
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Update Job Status'),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: ListView.builder(
-              shrinkWrap: true,
-              itemCount: statusOptions.length,
-              itemBuilder: (BuildContext context, int index) {
-                final status = statusOptions[index];
-                return ListTile(
-                  title: Text(status),
-                  leading: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      color: _getStatusColor(status),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.pop(context);
-                    // In a real app, you would update the job status here
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Job status updated to $status'),
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
+  void _navigateToMechanicSelection(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => MechanicSelectionPage(job: job)),
+    ).then((selectedMechanic) {
+      if (selectedMechanic != null) {
+        // Handle the selected mechanic here
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Assigned ${selectedMechanic.mechanicName} to job'),
+            duration: const Duration(seconds: 2),
           ),
         );
-      },
-    );
+
+        // In a real app, you would update the job with the selected mechanic
+        // await _jobDAO.updateJob(job.copyWith(mechanicID: selectedMechanic.mechanicID));
+      }
+    });
   }
 }
 
