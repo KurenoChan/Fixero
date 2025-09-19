@@ -1,17 +1,20 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
+import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
+import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
+import 'package:fixero/features/job_management/controllers/job_controller.dart';
+import 'package:fixero/features/job_management/views/job_demand_chart_helper.dart';
+import 'package:fixero/features/job_management/views/service_chart_helper.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'common/widgets/bars/fixero_bottom_appbar.dart';
 import 'common/widgets/bars/fixero_home_appbar.dart';
 import 'common/widgets/charts/fixero_barchart.dart';
 import 'common/widgets/charts/fixero_linechart.dart';
 import 'common/widgets/charts/fixero_piechart.dart';
-import 'common/widgets/fixero_dropdown.dart';
 import 'data/dao/income_dao.dart';
-import 'data/dao/job_demand_dao.dart';
-import 'data/dao/service_dao.dart';
 
 class HomePage extends StatefulWidget {
   static const routeName = '/home';
@@ -24,7 +27,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final List<String> insightsFilterOptions = const ["This Month", "This Year"];
-  late String _selectedInsightFilter;
+  // late String _selectedInsightFilter;
 
   String? _managerName;
   String? _profileImgUrl;
@@ -33,46 +36,70 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadManagerData();
-    _selectedInsightFilter = insightsFilterOptions[0];
+    // _selectedInsightFilter = insightsFilterOptions[0];
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final itemController = context.read<ItemController>();
+      final jobController = context.read<JobController>();
+
+      if (itemController.items.isEmpty) {
+        await itemController.loadItems();
+        if (!context.mounted) return;
+      }
+
+      if (jobController.jobs.isEmpty) {
+        await jobController.loadJobs();
+        if (!context.mounted) return;
+      }
+    });
+  }
+
+  IconData _getServiceIcon(String serviceType) {
+    switch (serviceType.toLowerCase()) {
+      case "oil change":
+        return Icons.oil_barrel; // 🛢️ fits perfectly
+      case "battery check":
+      case "battery repair":
+        return Icons.battery_full; // 🔋 battery
+      case "tire rotation":
+      case "tire repair":
+        return Icons
+            .tire_repair; // ⭕ if using Flutter 3.24+, else use Icons.build
+      case "brake inspection":
+        return Icons.car_repair; // 🚗 mechanic-like
+      case "alignment":
+      case "vehicle safety check":
+        return Icons.rule; // 📏 alignment / inspection
+      case "fuel tank maintenance":
+        return Icons.local_gas_station; // ⛽ fuel tank
+      case "car repair":
+        return Icons.build; // 🛠️ general repair
+      default:
+        return Icons.miscellaneous_services; // ⚙️ fallback
+    }
   }
 
   Future<void> _loadManagerData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final repo = ManagerRepository();
-      final manager = await repo.getManager(uid); // correct method name
+      final manager = await repo.getManager(uid);
       if (mounted && manager != null) {
         setState(() {
           _managerName = manager.name;
-          _profileImgUrl =
-              manager.profileImgUrl ??
-              "https://cdn-icons-png.flaticon.com/512/3237/3237476.png";
+          _profileImgUrl = manager.profileImgUrl;
         });
       }
     }
   }
 
-  void _handleInsightFilterChange(String newFilter) {
-    setState(() {
-      _selectedInsightFilter = newFilter;
-      // TODO: Update data or charts based on newFilter
-    });
-  }
-
-  // Future<void> _handleSignOut(BuildContext context) async {
   void _handleServiceTap(BuildContext context, String label, IconData icon) {
     // Example behavior: show a dialog
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
         title: Text(label),
-        content: Row(
-          children: [
-            Icon(icon, size: 30),
-            const SizedBox(width: 10),
-            Text("You tapped on $label"),
-          ],
-        ),
+        content: Text("You tapped on $label"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -86,6 +113,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final itemController = context.watch<ItemController>();
+    final jobController = context.watch<JobController>();
 
     return SafeArea(
       child: Scaffold(
@@ -103,32 +132,55 @@ class _HomePageState extends State<HomePage> {
           children: [
             const SizedBox(height: 10),
 
-            // Image.network(
-            //   'https://www.boschautoparts.com/o/commerce-media/accounts/-1/images/2220845',
-            //   height: 200, // optional
-            //   fit: BoxFit.cover, // optional
-            // ),
-
-            
             // =====================
             // 1. Dashboard Overview
             // =====================
 
             // Dashboard Rows
             _buildDashboardRow(context, [
-              _dashboardCard(context, "Active Jobs", "10"),
-              _dashboardCard(context, "Low Stock Part", "Brake Pads"),
-            ]),
-            const SizedBox(height: 20),
-            _buildDashboardRow(context, [
+              _dashboardCard(
+                context,
+                "Ongoing Jobs",
+                jobController.ongoingJobs.length.toString(),
+              ),
               _dashboardCard(context, "Invoices", "5"),
-              _dashboardCard(context, "Appointments", "3"),
+            ]),
+            const SizedBox(height: 10),
+            _buildDashboardRow(context, [
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const StockAlertsPage(filter: StockFilter.lowStock),
+                  ),
+                ),
+                child: _dashboardCard(
+                  context,
+                  "Low Stock Items",
+                  itemController.lowStockItems.length.toString(),
+                ),
+              ),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>
+                        const StockAlertsPage(filter: StockFilter.outOfStock),
+                  ),
+                ),
+                child: _dashboardCard(
+                  context,
+                  "Out of Stock Items",
+                  itemController.outOfStockItems.length.toString(),
+                ),
+              ),
             ]),
 
             const SizedBox(height: 40),
 
             // ======================
-            // 2. Recommended Section
+            // 2. Services Section
             // ======================
             Column(
               spacing: 10.0,
@@ -137,7 +189,7 @@ class _HomePageState extends State<HomePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text("Recommended", style: TextStyle(fontSize: 17)),
+                    const Text("Services", style: TextStyle(fontSize: 17)),
                     TextButton(
                       onPressed: () {},
                       style: TextButton.styleFrom(
@@ -164,44 +216,61 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 // Service Cards
+                // SingleChildScrollView(
+                //   scrollDirection: Axis.horizontal,
+                //   child: Row(
+                //     children: [
+                //       SingleChildScrollView(
+                //         scrollDirection: Axis.horizontal,
+                //         child: Row(
+                //           spacing: 10.0,
+                //           children: [
+                //             _serviceCard(
+                //               context,
+                //               "Oil Change",
+                //               Icons.oil_barrel,
+                //             ),
+                //             _serviceCard(
+                //               context,
+                //               "Tire Rotation",
+                //               Icons.sync,
+                //             ),
+                //             _serviceCard(
+                //               context,
+                //               "Battery Check",
+                //               Icons.battery_full,
+                //             ),
+                //             _serviceCard(
+                //               context,
+                //               "Brake Inspection",
+                //               Icons.car_repair,
+                //             ),
+                //             _serviceCard(
+                //               context,
+                //               "Alignment",
+                //               Icons.construction,
+                //             ),
+                //           ],
+                //         ),
+                //       ),
+                //     ],
+                //   ),
+                // ),
+
+                // Service Cards (dynamic)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
-                    children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          spacing: 10.0,
-                          children: [
-                            _recommendedServiceCard(
-                              context,
-                              "Oil Change",
-                              Icons.oil_barrel,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Tire Rotation",
-                              Icons.sync,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Battery Check",
-                              Icons.battery_full,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Brake Inspection",
-                              Icons.car_repair,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Alignment",
-                              Icons.construction,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
+                    spacing: 10,
+                    children: jobController.getJobServiceTypes().map((
+                      serviceType,
+                    ) {
+                      return _serviceCard(
+                        context,
+                        Formatter.capitalize(serviceType),
+                        _getServiceIcon(serviceType),
+                      );
+                    }).toList(),
                   ),
                 ),
               ],
@@ -221,36 +290,36 @@ class _HomePageState extends State<HomePage> {
                 const Text("Insights", style: TextStyle(fontSize: 17)),
 
                 // Insights Filter Dropdown (This Month / This Year)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 15),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                      right: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                      bottom: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                      left: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                    ),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: FixeroDropdown(
-                    options: insightsFilterOptions,
-                    selectedOption: _selectedInsightFilter,
-                    onChanged: _handleInsightFilterChange,
-                  ),
-                ),
+                // Container(
+                //   width: double.infinity,
+                //   padding: const EdgeInsets.symmetric(horizontal: 15),
+                //   decoration: BoxDecoration(
+                //     border: Border(
+                //       top: BorderSide(
+                //         color: theme.colorScheme.inversePrimary,
+                //         width: 1,
+                //       ),
+                //       right: BorderSide(
+                //         color: theme.colorScheme.inversePrimary,
+                //         width: 1,
+                //       ),
+                //       bottom: BorderSide(
+                //         color: theme.colorScheme.inversePrimary,
+                //         width: 1,
+                //       ),
+                //       left: BorderSide(
+                //         color: theme.colorScheme.inversePrimary,
+                //         width: 1,
+                //       ),
+                //     ),
+                //     borderRadius: BorderRadius.circular(10),
+                //   ),
+                //   child: FixeroDropdown(
+                //     options: insightsFilterOptions,
+                //     selectedOption: _selectedInsightFilter,
+                //     onChanged: _handleInsightFilterChange,
+                //   ),
+                // ),
 
                 // Insights Cards List
                 Column(
@@ -268,38 +337,32 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    // 2. Job Demand
+                    // 2. Job Demand by year (job.createdAt)
                     _insightsCard(
                       context: context,
                       title: "Job Demand",
-                      value: "28",
-                      trend: "-5%",
+                      value: jobController.jobs.length.toString(),
+                      trend: getJobDemandTrend(jobController.demandByMonth),
                       chart: FixeroBarChart(
-                        data: JobDemandDAO.initializeData(),
-                        color: Color.fromRGBO(255, 178, 122, 1.0),
+                        data: jobController.demandByMonth,
+                        color: const Color.fromRGBO(255, 178, 122, 1.0),
                       ),
                     ),
+
 
                     // 3. Popular Service (only chart)
                     _insightsCard(
                       context: context,
                       value: "Popular Services",
-                      chart: FixeroPieChart(data: ServiceDAO.initializeData()),
+                      chart: FixeroPieChart(
+                        data: aggregateServicePopularity(jobController.jobs),
+                      ),
                       trendColor: theme.colorScheme.inversePrimary,
                     ),
                   ],
                 ),
               ],
             ),
-
-            // Uncomment to test logout
-            // Center(
-            //   child: IconButton(
-            //     onPressed: () => _handleSignOut(context),
-            //     icon: const Icon(Icons.logout),
-            //     tooltip: "Logout",
-            //   ),
-            // ),
           ],
         ),
       ),
@@ -313,7 +376,7 @@ class _HomePageState extends State<HomePage> {
       children: children
           .map(
             (widget) => SizedBox(
-              width: MediaQuery.of(context).size.width * 0.44,
+              width: MediaQuery.of(context).size.width * 0.45,
               child: widget,
             ),
           )
@@ -330,8 +393,8 @@ class _HomePageState extends State<HomePage> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.5),
+            theme.colorScheme.primary.withValues(alpha: 0.8),
+            theme.colorScheme.primary.withValues(alpha: 0.3),
           ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -367,11 +430,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Recommended Service Card
-  Widget _recommendedServiceCard(
-    BuildContext context,
-    String label,
-    IconData icon,
-  ) {
+  Widget _serviceCard(BuildContext context, String label, IconData icon) {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () => _handleServiceTap(context, label, icon),

@@ -5,6 +5,7 @@ import 'package:fixero/features/inventory_management/controllers/requested_item_
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 import 'package:fixero/features/inventory_management/models/restock_request.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:fixero/utils/generators/id_generator.dart';
 import 'package:flutter/material.dart';
 import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
@@ -76,31 +77,32 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
     final restockRequestId = IDGenerator.generateRestockRequestID();
     final requestedItemId = IDGenerator.generateRequestedItemID();
 
-    print("\n\nGenerated RestockRequest ID: $restockRequestId");
-    print("Generated RequestedItem ID: $requestedItemId\n\n");
+    debugPrint("\n\nGenerated RestockRequest ID: $restockRequestId");
+    debugPrint("Generated RequestedItem ID: $requestedItemId\n\n");
 
     final restockRequest = RestockRequest(
-      requestId: restockRequestId,
-      requestDateTime: DateTime.now(),
+      requestID: restockRequestId,
+      requestDate: Formatter.todayDate(),
+      requestTime: Formatter.todayTime(),
       requestBy: manager.id,
     );
 
     final requestedItem = RequestedItem(
-      requestItemId: requestedItemId,
-      requestId: restockRequestId,
-      itemId: widget.item.itemId,
+      requestItemID: requestedItemId,
+      requestID: restockRequestId,
+      itemID: widget.item.itemID,
       quantityRequested: int.parse(_quantityController.text),
       remark: _notesController.text.isEmpty ? null : _notesController.text,
     );
 
     try {
       // ✅ Save to RTDB
-      await RestockRequestDAO().createRequest(restockRequest);
-      await RequestedItemDAO().createItem(requestedItem);
+      await RestockRequestDAO().addRequest(restockRequest);
+      await RequestedItemDAO().addRequestedItem(requestedItem);
 
       // ✅ Update provider/controllers
-      await restockController.createRequest(restockRequest);
-      await itemController.createItem(requestedItem);
+      await restockController.addRequest(restockRequest);
+      await itemController.addRequestedItem(requestedItem);
 
       if (!mounted) return;
 
@@ -161,7 +163,7 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
               // 🔹 Item ID
               TextFormField(
                 enabled: false,
-                initialValue: item.itemId,
+                initialValue: item.itemID,
                 decoration: const InputDecoration(labelText: 'Item ID'),
               ),
 

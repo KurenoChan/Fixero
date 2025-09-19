@@ -22,28 +22,28 @@ class IntroPage3 extends StatelessWidget {
 
         Text.rich(
           TextSpan(
-              children: [
-                TextSpan(
-                  text: '\n',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Poppins',
-                    fontSize: 25,
-                    height: 1.2,
-                  ),
+            children: [
+              TextSpan(
+                text: '\n',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                  fontFamily: 'Poppins',
+                  fontSize: 25,
+                  height: 1.2,
                 ),
+              ),
 
-                TextSpan(
-                  text: 'Welcome to Fixero',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontFamily: 'Poppins',
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    height: 1.2,
-                  ),
+              TextSpan(
+                text: 'Welcome to Fixero',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.inverseSurface,
+                  fontFamily: 'Poppins',
+                  fontSize: 40,
+                  fontWeight: FontWeight.bold,
+                  height: 1.2,
                 ),
-              ]
+              ),
+            ],
           ),
           textAlign: TextAlign.center,
         ),
@@ -56,8 +56,10 @@ class IntroPage3 extends StatelessWidget {
             'Your smart mobile tool for running efficient workshops.',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 20,
-                color: Colors.white54
+              fontSize: 20,
+              color: Theme.of(
+                context,
+              ).colorScheme.inverseSurface.withValues(alpha: 0.7),
             ),
           ),
         ),

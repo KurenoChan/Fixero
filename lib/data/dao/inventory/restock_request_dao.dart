@@ -8,7 +8,7 @@ class RestockRequestDAO {
     return await _repo.fetchAllRequests();
   }
 
-  Future<void> createRequest(RestockRequest request) async {
+  Future<void> addRequest(RestockRequest request) async {
     await _repo.addRequest(request);
   }
 
@@ -16,18 +16,16 @@ class RestockRequestDAO {
     await _repo.updateRequest(request);
   }
 
-  Future<void> deleteRequest(String requestId) async {
-    await _repo.deleteRequest(requestId);
+  Future<void> deleteRequest(String requestID) async {
+    await _repo.deleteRequest(requestID);
   }
 
-  /// Convenience filters
-  Future<List<RestockRequest>> getPendingRequests() async {
+  Future<RestockRequest?> getRestockRequestByID(String requestID) async {
     final all = await _repo.fetchAllRequests();
-    return all.where((r) => r.status == "Pending").toList();
-  }
-
-  Future<List<RestockRequest>> getApprovedRequests() async {
-    final all = await _repo.fetchAllRequests();
-    return all.where((r) => r.status == "Approved").toList();
+    try {
+      return all.firstWhere((r) => r.requestID == requestID);
+    } catch (_) {
+      return null;
+    }
   }
 }

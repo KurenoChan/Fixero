@@ -1,4 +1,9 @@
 import 'package:fixero/data/dao/inventory/item_dao.dart';
+import 'package:fixero/data/dao/inventory/order_dao.dart';
+import 'package:fixero/data/dao/inventory/requested_item_dao.dart';
+import 'package:fixero/data/dao/inventory/restock_request_dao.dart';
+import 'package:fixero/data/dao/inventory/supplier_dao.dart';
+import 'package:fixero/features/inventory_management/models/restock_record.dart';
 import 'package:flutter/foundation.dart';
 import '../models/item.dart';
 
@@ -29,6 +34,11 @@ class ItemController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 🔹 Return all items (cached) for global search
+  List<Item> getAllItemsSync() {
+    return _items;
+  }
+
   /// 🔹 Sync methods for UI to read cached items
   List<String> getCategoriesSync() {
     return _items.map((e) => e.itemCategory).toSet().toList();
@@ -42,7 +52,7 @@ class ItemController extends ChangeNotifier {
         .toList();
   }
 
-  List<Item> getItemsSync(String subCategory) {
+  List<Item> getItemsBySubCategorySync(String subCategory) {
     return _items.where((e) => e.itemSubCategory == subCategory).toList();
   }
 
@@ -56,14 +66,55 @@ class ItemController extends ChangeNotifier {
 
   /// 🔹 Low stock items
   List<Item> get lowStockItems =>
-      _items.where((e) => e.stockQuantity <= e.lowStockThreshold).toList();
+      _items.where((e) => e.stockQuantity > 0 && e.stockQuantity <= e.lowStockThreshold).toList();
+
+  List<Item> get outOfStockItems =>
+      _items.where((e) => e.stockQuantity == 0).toList();
+
+  /// 🔹 Get item by ID
+  Item? getItemByID(String id) {
+    try {
+      return _items.firstWhere((item) => item.itemID == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<List<RestockRecord>> getRestockingDetails(String itemID) async {
+    final List<RestockRecord> details = [];
+    final requestedItems = await RequestedItemDAO().getRequestedItemsByItemID(
+      itemID,
+    );
+
+    for (final ri in requestedItems) {
+      final rr = await RestockRequestDAO().getRestockRequestByID(ri.requestID);
+      if (rr == null || rr.orderNo == null || rr.orderNo!.isEmpty) continue;
+
+      final order = await OrderDAO().getOrderByID(rr.orderNo!);
+      if (order == null || order.arrivalDate == null) continue;
+
+      final supplier = await SupplierDAO().getSupplierByID(order.supplierID);
+      if (supplier == null) continue;
+
+      details.add(
+        RestockRecord(
+          requestedItem: ri,
+          restockRequest: rr,
+          order: order,
+          supplier: supplier,
+        ),
+      );
+    }
+
+    return details;
+  }
 
   /// 🔹 Update item
   Future<void> updateItem(Item updatedItem) async {
     try {
       await _dao.updateItem(updatedItem);
 
-      final index = _items.indexWhere((i) => i.itemId == updatedItem.itemId);
+      final index = _items.indexWhere((i) => i.itemID == updatedItem.itemID);
       if (index != -1) {
         _items[index] = updatedItem;
       } else {
@@ -79,12 +130,27 @@ class ItemController extends ChangeNotifier {
     }
   }
 
-  /// 🔹 Get item by ID
-  Item? getItemById(String id) {
+  /// 🔹 Delete item
+  Future<void> deleteItem(String itemID) async {
     try {
-      return _items.firstWhere((item) => item.itemId == id);
+      // 1️⃣ Find the item in the list
+      final itemToDelete = _items.firstWhere(
+        (i) => i.itemID == itemID,
+        orElse: () => throw Exception("Item not found"),
+      );
+
+      // 2️⃣ Delete from Firebase via DAO
+      await _dao.deleteItem(itemToDelete);
+
+      // 3️⃣ Remove from local cache
+      _items.remove(itemToDelete);
+
+      _errorMessage = null;
+      notifyListeners();
     } catch (e) {
-      return null;
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
     }
   }
 }

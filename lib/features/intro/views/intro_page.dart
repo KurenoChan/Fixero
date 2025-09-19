@@ -48,7 +48,7 @@ class _IntroPageState extends State<IntroPage> {
       body: Stack(
         children: [
           Container(
-            color: Colors.black,
+            color: Theme.of(context).colorScheme.surface,
             child: PageView(
               controller: _introPageController,
               onPageChanged: (index) {
@@ -72,9 +72,10 @@ class _IntroPageState extends State<IntroPage> {
                   SmoothPageIndicator(
                     controller: _introPageController,
                     count: _totalPages,
-                    effect: const ExpandingDotsEffect(
-                      // Example effect
-                      activeDotColor: Colors.white,
+                    effect: ExpandingDotsEffect(
+                      activeDotColor: Theme.of(
+                        context,
+                      ).colorScheme.inverseSurface,
                       dotColor: Colors.grey,
                       dotHeight: 10,
                       dotWidth: 10,
@@ -90,8 +91,12 @@ class _IntroPageState extends State<IntroPage> {
                         ? ElevatedButton(
                             onPressed: _navigateToLogin,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.inverseSurface,
+                              foregroundColor: Theme.of(
+                                context,
+                              ).colorScheme.surface,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(30),
                               ),
