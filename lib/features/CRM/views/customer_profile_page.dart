@@ -5,6 +5,7 @@ import '../models/vehicle_model.dart';
 import '../controllers/vehicle_controller.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import 'edit_customer_page.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   final String customerId;
@@ -80,6 +81,27 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
         title: customer!.custName,
         showBackButton: true,
       ),
+
+      /// 🔹 Add edit button here
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.blue,
+        child: const Icon(Icons.edit, color: Colors.white),
+        onPressed: () async {
+          final updatedCustomer = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EditCustomerPage(customer: customer!),
+            ),
+          );
+
+          if (updatedCustomer is Customer) {
+            setState(() {
+              customer = updatedCustomer; // ✅ immediately apply updated data
+            });
+          }
+        },
+      ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
