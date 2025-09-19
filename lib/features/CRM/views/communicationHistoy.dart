@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:fixero/features/CRM/views/service_feedback_detail_page.dart';
-import "../controllers/feedback_list_page.dart";
-
+import '../controllers/feedback_list_page.dart';
+import '../models/feedback_model.dart';
+import 'service_feedback_detail_page.dart';
 
 class CommunicationHistoryPage extends StatelessWidget {
   const CommunicationHistoryPage({super.key});
@@ -11,7 +11,7 @@ class CommunicationHistoryPage extends StatelessWidget {
     return FeedbackListPage(
       title: "Communication History",
       statusFilter: "Closed",
-      detailPageBuilder: (fb) => ServiceFeedbackDetailPage(feedback: fb),
+      detailPageBuilder: (FeedbackModel fb) => ServiceFeedbackDetailPage(feedback: fb),
     );
   }
 }

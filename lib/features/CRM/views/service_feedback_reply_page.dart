@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../models/feedback_model.dart';
 
 class ServiceFeedbackReplyPage extends StatefulWidget {
-  final Map<String, dynamic> feedback;
+  final FeedbackModel feedback;
 
   const ServiceFeedbackReplyPage({super.key, required this.feedback});
 
@@ -23,7 +24,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
   }
 
   Future<void> _loadReplies() async {
-    final fbID = widget.feedback["feedbackID"];
+    final fbID = widget.feedback.feedbackID; // ✅ use model property
     final replySnap = await dbRef.child("communications/replies/$fbID").get();
 
     if (!replySnap.exists) {
@@ -49,7 +50,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty) return;
 
-    final fbID = widget.feedback["feedbackID"];
+    final fbID = widget.feedback.feedbackID; // ✅ use model property
     final newReplyKey =
         "RPL-${DateTime.now().toString().replaceAll(RegExp(r'[-: ]'), '').substring(0, 12)}";
 
@@ -68,7 +69,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
   }
 
   Future<void> _closeFeedback() async {
-    final fbID = widget.feedback["feedbackID"];
+    final fbID = widget.feedback.feedbackID; // ✅ use model property
 
     await dbRef.child("communications/feedbacks/$fbID").update({
       "status": "Closed",
@@ -99,11 +100,11 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
         padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
-            // Feedback Info
-            Text("Customer: ${fb['customerName']}"),
-            Text("Car Model: ${fb['carModel']}"),
-            Text("Service Type: ${fb['serviceType']}"),
-            Text("Comment: ${fb['comment']}"),   // ✅ now works
+            // Feedback Info (use model properties)
+            Text("Customer: ${fb.customerName ?? 'Unknown'}"),
+            Text("Car Model: ${fb.carModel ?? '-'}"),
+            Text("Service Type: ${fb.serviceType ?? '-'}"),
+            Text("Comment: ${fb.comment}"),
 
             const Divider(height: 30),
 

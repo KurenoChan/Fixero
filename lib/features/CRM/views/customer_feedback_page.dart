@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:fixero/features/CRM/views/service_feedback_reply_page.dart';
-import "../controllers/feedback_list_page.dart";
+import '../controllers/feedback_list_page.dart';
+import '../models/feedback_model.dart';
+import 'service_feedback_reply_page.dart';
 
-// Open feedback page (replyable)
 class CustomerFeedbackPage extends StatelessWidget {
   const CustomerFeedbackPage({super.key});
 
@@ -11,7 +11,7 @@ class CustomerFeedbackPage extends StatelessWidget {
     return FeedbackListPage(
       title: "Customer Feedback",
       statusFilter: "Open",
-      detailPageBuilder: (fb) => ServiceFeedbackReplyPage(feedback: fb),
+      detailPageBuilder: (FeedbackModel fb) => ServiceFeedbackReplyPage(feedback: fb),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../controllers/customer_controller.dart';
+import '../controllers/vehicle_controller.dart';
 import 'customer_profile_page.dart';
 
 class CustomerDirectoryPage extends StatefulWidget {
@@ -13,6 +14,7 @@ class CustomerDirectoryPage extends StatefulWidget {
 
 class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
   final CustomerController customerController = CustomerController();
+  final VehicleController vehicleController = VehicleController();
   String searchQuery = "";
   String sortOption = "A-Z"; // default
 
@@ -132,17 +134,20 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
                         subtitle: Text(c.custTel),
                         trailing:
                         const Icon(Icons.arrow_forward_ios, size: 18),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CustomerProfilePage(
-                                customerId: c.custID,
-                                customerData: c.toMap(),
+                          onTap: () {
+                            final vehicles = vehicleController.fetchVehiclesByOwner(c.custID);
+
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => CustomerProfilePage(
+                                  customerId: c.custID,
+                                  customerData: c.toMap(),
+                                ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+
                       ),
                     );
                   },

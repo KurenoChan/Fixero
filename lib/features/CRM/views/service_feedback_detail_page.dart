@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import '../models/feedback_model.dart';
 
 class ServiceFeedbackDetailPage extends StatefulWidget {
-  final Map<String, dynamic> feedback;
+  final FeedbackModel feedback;
 
   const ServiceFeedbackDetailPage({super.key, required this.feedback});
 
@@ -22,7 +23,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   }
 
   Future<void> _loadReplies() async {
-    final fbID = widget.feedback["feedbackID"];
+    final fbID = widget.feedback.feedbackID; // ✅ use property, not []
     final replySnap = await dbRef.child("communications/replies/$fbID").get();
 
     if (!replySnap.exists) {
@@ -46,7 +47,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   }
 
   Future<void> _reopenFeedback() async {
-    final fbID = widget.feedback["feedbackID"];
+    final fbID = widget.feedback.feedbackID; // ✅ use property
 
     await dbRef.child("communications/feedbacks/$fbID").update({
       "status": "Open",
@@ -63,8 +64,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
   @override
   Widget build(BuildContext context) {
     final fb = widget.feedback;
-    final isClosed =
-        (fb["status"] ?? "").toString().trim().toLowerCase() == "closed";
+    final isClosed = fb.status.toLowerCase() == "closed"; // ✅ check property
 
     return Scaffold(
       appBar: AppBar(
@@ -80,26 +80,25 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
         child: ListView(
           children: [
             // 🔹 Customer & Job Info
-            Text("Customer: ${fb['customerName'] ?? 'Unknown'}",
-                style:
-                const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text("Car Model: ${fb['carModel']}"),
-            Text("Service Type: ${fb['serviceType']}"),
-            Text("Service Date: ${fb['date']}"),
+            Text("Customer: ${fb.customerName}",
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text("Car Model: ${fb.carModel}"),
+            Text("Service Type: ${fb.serviceType}"),
+            Text("Service Date: ${fb.date}"),
             const Divider(height: 30),
 
             // 🔹 Feedback ratings
             const Text("Feedback Ratings",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text("Service Quality: ${fb['serviceQuality']}"),
-            Text("Completion Efficiency: ${fb['completionEfficiency']}"),
-            Text("Engineering Attitude: ${fb['engineeringAttitude']}"),
+            Text("Service Quality: ${fb.serviceQuality}"),
+            Text("Completion Efficiency: ${fb.completionEfficiency}"),
+            Text("Engineering Attitude: ${fb.engineeringAttitude}"),
             const SizedBox(height: 10),
 
             // 🔹 Feedback details
             const Text("Comment",
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(fb["comment"] ?? "-"),
+            Text(fb.comment),
             const Divider(height: 30),
 
             // 🔹 Replies

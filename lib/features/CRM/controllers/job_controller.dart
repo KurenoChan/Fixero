@@ -1,25 +1,64 @@
+// controllers/job_controller.dart
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/job_model.dart';
 
-class JobController {
-  final DatabaseReference _dbRef = FirebaseDatabase.instance.ref();
+class JobController extends ValueNotifier<int> {
+  static final JobController _instance = JobController._internal();
+  factory JobController() => _instance;
 
-  Future<Job?> fetchJobById(String jobId) async {
-    final snap = await _dbRef.child("jobservices/jobs/$jobId").get();
-
-    if (!snap.exists) return null;
-
-    final data = Map<String, dynamic>.from(snap.value as Map);
-    return Job.fromMap(data, jobId);
+  JobController._internal() : super(0) {
+    _init();
   }
 
-  Future<List<Job>> fetchAllJobs() async {
-    final snap = await _dbRef.child("jobservices/jobs").get();
-    if (!snap.exists) return [];
+  final dbRef = FirebaseDatabase.instance.ref("jobservices/jobs");
+  final Map<String, Job> _byId = {};
+  StreamSubscription? _subAdded, _subChanged, _subRemoved;
 
-    final data = Map<String, dynamic>.from(snap.value as Map);
-    return data.entries
-        .map((e) => Job.fromMap(Map<String, dynamic>.from(e.value), e.key))
-        .toList();
+  List<Job> get allJobs => _byId.values.toList();
+
+  Future<void> _init() async {
+    final snap = await dbRef.get();
+    if (snap.exists) {
+      for (final child in snap.children) {
+        final id = child.key!;
+        final data = Map<String, dynamic>.from(child.value as Map);
+        _byId[id] = Job.fromMap(id, data);
+      }
+    }
+    _notify();
+
+    _subAdded = dbRef.onChildAdded.listen((event) {
+      final id = event.snapshot.key!;
+      if (_byId.containsKey(id)) return;
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      _byId[id] = Job.fromMap(id, data);
+      _notify();
+    });
+
+    _subChanged = dbRef.onChildChanged.listen((event) {
+      final id = event.snapshot.key!;
+      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+      _byId[id] = Job.fromMap(id, data);
+      _notify();
+    });
+
+    _subRemoved = dbRef.onChildRemoved.listen((event) {
+      _byId.remove(event.snapshot.key);
+      _notify();
+    });
+  }
+
+  void _notify() => value = _byId.length;
+
+  Job? getById(String id) => _byId[id];
+
+  @override
+  void dispose() {
+    _subAdded?.cancel();
+    _subChanged?.cancel();
+    _subRemoved?.cancel();
+    super.dispose();
   }
 }
