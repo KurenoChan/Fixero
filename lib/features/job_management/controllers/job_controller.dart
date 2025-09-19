@@ -50,6 +50,14 @@ class JobController extends ChangeNotifier {
         .toList();
   }
 
+  Job? getJobByJobID(String id) {
+    try {
+      return _jobs.firstWhere((job) => job.jobID == id);
+    } catch (e) {
+      return null;
+    }
+  }
+
   List<JobDemandChartData> get demandByMonth =>
       aggregateJobDemandByMonth(_jobs);
 }

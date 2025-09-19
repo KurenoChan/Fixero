@@ -99,7 +99,8 @@ class InventoryListPage<T> extends StatefulWidget {
 }
 
 class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
-  late List<T> _allItems; // current screen items (categories/subcategories/items)
+  late List<T>
+  _allItems; // current screen items (categories/subcategories/items)
   late List<T> _filteredItems;
   late List<Item> allSearchableItems; // all items for global search
 
@@ -117,8 +118,12 @@ class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
   void _onSearch(String query) {
     setState(() {
       _filteredItems = _allItems.where((item) {
-        if (item is Item) return item.itemName.toLowerCase().contains(query.toLowerCase());
-        if (item is String) return item.toLowerCase().contains(query.toLowerCase());
+        if (item is Item) {
+          return item.itemName.toLowerCase().contains(query.toLowerCase());
+        }
+        if (item is String) {
+          return item.toLowerCase().contains(query.toLowerCase());
+        }
         return false;
       }).toList();
     });
@@ -137,12 +142,14 @@ class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
                 searchHints: ['Items'],
                 searchTerms: allSearchableItems.map((e) => e.itemName).toList(),
                 onItemSelected: (selected) {
-                  final matchedItem =
-                      allSearchableItems.firstWhere((e) => e.itemName == selected);
+                  final matchedItem = allSearchableItems.firstWhere(
+                    (e) => e.itemName == selected,
+                  );
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ItemDetailsPage(itemID: matchedItem.itemID),
+                      builder: (_) =>
+                          ItemDetailsPage(itemID: matchedItem.itemID),
                     ),
                   );
                 },
@@ -298,6 +305,7 @@ class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
                               ),
                               title: Text(
                                 item.itemName,
+                                overflow: TextOverflow.ellipsis,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),

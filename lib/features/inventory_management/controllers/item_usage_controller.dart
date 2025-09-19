@@ -1,5 +1,7 @@
 import 'package:fixero/data/dao/inventory/item_usage_dao.dart';
 import 'package:fixero/features/inventory_management/models/item_usage.dart';
+import 'package:fixero/features/inventory_management/models/usage_details.dart';
+import 'package:fixero/features/job_management/models/job.dart';
 import 'package:flutter/material.dart';
 
 class ItemUsageController extends ChangeNotifier {
@@ -29,10 +31,9 @@ class ItemUsageController extends ChangeNotifier {
     notifyListeners();
   }
 
-List<ItemUsage> getItemUsagesByItemID(String id) {
-  return itemUsages.where((u) => u.itemID == id).toList();
-}
-
+  List<ItemUsage> getItemUsagesByItemID(String id) {
+    return itemUsages.where((u) => u.itemID == id).toList();
+  }
 
   ItemUsage? getItemUsageById(String id) {
     try {
@@ -40,5 +41,26 @@ List<ItemUsage> getItemUsagesByItemID(String id) {
     } catch (e) {
       return null;
     }
+  }
+
+  List<UsageDetails> getUsageDetailsForItem(String itemID, List<Job> jobs) {
+    final usages = getItemUsagesByItemID(itemID);
+    debugPrint("ItemID=$itemID, usages=${usages.length}, jobs=${jobs.length}");
+
+    return usages.map((usage) {
+      final job = jobs.cast<Job?>().firstWhere(
+        (j) => j?.jobID == usage.jobID,
+        orElse: () => null,
+      );
+
+      debugPrint("usage.jobID=${usage.jobID}, foundJob=${job?.jobServiceType}");
+
+      return UsageDetails(
+        service: job?.jobServiceType ?? "Unknown",
+        usageDate: usage.usageDate,
+        usageTime: usage.usageTime,
+        quantity: usage.quantityUsed ?? 0,
+      );
+    }).toList();
   }
 }

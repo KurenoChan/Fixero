@@ -5,11 +5,14 @@ import 'package:fixero/features/authentication/models/manager.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
 import 'package:fixero/features/inventory_management/models/restock_record.dart';
+import 'package:fixero/features/inventory_management/models/usage_details.dart';
 import 'package:fixero/features/inventory_management/views/edit_item_page.dart';
 import 'package:fixero/features/inventory_management/views/item_usage_chart_data.dart';
 import 'package:fixero/features/inventory_management/views/item_usage_chart_helper.dart';
 import 'package:fixero/features/inventory_management/views/request_restock_page.dart';
 import 'package:fixero/features/inventory_management/views/restock_item_page.dart';
+import 'package:fixero/features/job_management/controllers/job_controller.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,30 +24,58 @@ class ItemDetailsPage extends StatefulWidget {
   State<ItemDetailsPage> createState() => _ItemDetailsPageState();
 }
 
-class _ItemDetailsPageState extends State<ItemDetailsPage> {
+class _ItemDetailsPageState extends State<ItemDetailsPage>
+    with SingleTickerProviderStateMixin {
   Manager? currentManager;
   int _visibleRestockCount = 3;
+  late TabController _usageTabController;
 
   List<RestockRecord> _restockRecords = [];
   bool _isLoading = true;
   String? _error;
 
+  List<UsageDetails> _usageRecords = [];
+  bool _isUsageLoading = false;
+  String? _usageError;
+  int _visibleUsageCount = 0;
+
+  final List<Tab> _usageTabs = const [
+    Tab(text: 'Overview'),
+    Tab(text: 'Details'),
+  ];
   @override
   void initState() {
     super.initState();
-    _fetchRestockRecords();
-    _loadCurrentManager();
+    _usageTabController = TabController(length: _usageTabs.length, vsync: this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      final itemUsageController = context.read<ItemUsageController>();
 
-      // Load all item usages from Firebase if not already loaded
+      // Load controller data first
+      final itemUsageController = context.read<ItemUsageController>();
       if (itemUsageController.itemUsages.isEmpty) {
         await itemUsageController.loadItemUsages();
       }
-      setState(() {}); // Refresh to show chart after loading
+
+      if (!mounted) return;
+      final jobController = context.read<JobController>();
+      if (jobController.jobs.isEmpty) {
+        await jobController.loadJobs();
+      }
+
+      // Now fetch usage records safely
+      if (!mounted) return;
+      _fetchUsageRecords();
     });
+
+    _fetchRestockRecords();
+    _loadCurrentManager();
+  }
+
+  @override
+  void dispose() {
+    _usageTabController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchRestockRecords() async {
@@ -77,6 +108,42 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       setState(() {
         _error = e.toString();
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _fetchUsageRecords() async {
+    setState(() {
+      _isUsageLoading = true;
+      _usageError = null;
+    });
+
+    try {
+      final jobs = context.read<JobController>().jobs;
+      debugPrint('Jobs count: ${jobs.length}');
+      final records = context
+          .read<ItemUsageController>()
+          .getUsageDetailsForItem(widget.itemID, jobs);
+
+      if (!mounted) return;
+
+      // Sort by usageDate descending (if date is string yyyy-MM-dd format)
+      records.sort((a, b) => b.usageDate.compareTo(a.usageDate));
+
+      setState(() {
+        _usageRecords = records;
+        _isUsageLoading = false;
+        _visibleUsageCount = records.length >= 3 ? 3 : records.length;
+      });
+    } catch (e, stackTrace) {
+      if (!mounted) return;
+
+      debugPrint('Error fetching usage records: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      setState(() {
+        _usageError = e.toString();
+        _isUsageLoading = false;
       });
     }
   }
@@ -126,8 +193,8 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<ItemController>();
-    final item = controller.getItemByID(widget.itemID); // reactive
+    final itemController = context.watch<ItemController>();
+    final item = itemController.getItemByID(widget.itemID);
 
     if (item == null) {
       return Scaffold(
@@ -184,7 +251,6 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                           width: 220,
                           child: Text(
                             item.itemName,
-                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               fontSize: Theme.of(
                                 context,
@@ -216,6 +282,8 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 10.0),
 
                     // Item Description
                     Text(item.itemDescription, textAlign: TextAlign.justify),
@@ -388,11 +456,13 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                       ),
                     ),
 
-                    // Usage Overview
+                    // Usage History
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 20.0),
                       child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
+                          // Section Title
                           Text(
                             'USAGE HISTORY',
                             style: TextStyle(
@@ -403,59 +473,337 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                                   .withValues(alpha: 0.8),
                             ),
                           ),
+                          const SizedBox(height: 10),
 
+                          // Divider
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 5.0),
                             width: 50.0,
                             child: Divider(
-                              height: 1.0,
-                              thickness: 1.0,
+                              height: 1,
+                              thickness: 1,
                               color: Theme.of(
                                 context,
                               ).dividerColor.withValues(alpha: 0.8),
                             ),
                           ),
 
-                          const SizedBox(height: 10.0),
+                          // TabBar
+                          Material(
+                            color: Theme.of(context).cardColor,
+                            child: TabBar(
+                              controller: _usageTabController,
+                              tabs: _usageTabs,
+                              indicatorColor: Theme.of(context).primaryColor,
+                            ),
+                          ),
 
-                          Builder(
-                            builder: (context) {
-                              final itemUsageController = context
-                                  .watch<ItemUsageController>();
+                          const SizedBox(height: 10),
 
-                              // Filter usages for this specific item
-                              final itemUsagesForItem = itemUsageController
-                                  .getItemUsagesByItemID(widget.itemID);
+                          // TabBarView with flexible layout
+                          SizedBox(
+                            height:
+                                250, // fixed height for the whole TabBarView container
+                            child: TabBarView(
+                              controller: _usageTabController,
+                              children: [
+                                // Overview Tab (Line Chart)
+                                Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: SizedBox(
+                                    height: 250, // fixed height for chart only
+                                    child: Builder(
+                                      builder: (context) {
+                                        final itemUsageController = context
+                                            .watch<ItemUsageController>();
+                                        final itemUsagesForItem =
+                                            itemUsageController
+                                                .getItemUsagesByItemID(
+                                                  widget.itemID,
+                                                );
+                                        final itemUsageChartData =
+                                            aggregateItemUsageByMonth(
+                                              itemUsagesForItem,
+                                            );
 
-                              // Aggregate by month for chart
-                              final itemUsageChartData =
-                                  aggregateItemUsageByMonth(itemUsagesForItem);
+                                        if (itemUsageController.isLoading) {
+                                          return const Center(
+                                            child: CircularProgressIndicator(),
+                                          );
+                                        }
 
-                              // Show loading if still fetching
-                              if (itemUsageController.isLoading) {
-                                return const Center(
-                                  child: CircularProgressIndicator(),
-                                );
-                              }
+                                        if (itemUsageChartData.isEmpty) {
+                                          return const Center(
+                                            child: Text(
+                                              'No usage data available',
+                                              style: TextStyle(
+                                                fontStyle: FontStyle.italic,
+                                              ),
+                                            ),
+                                          );
+                                        }
 
-                              if (itemUsageChartData.isEmpty) {
-                                return const Center(
-                                  child: Text(
-                                    'No usage data available',
-                                    style: TextStyle(
-                                      fontStyle: FontStyle.italic,
+                                        return FixeroLineChart<
+                                          ItemUsageChartData
+                                        >(
+                                          data: itemUsageChartData,
+                                          color: Theme.of(context).primaryColor,
+                                          showDot: true,
+                                          showGradient: true,
+                                        );
+                                      },
                                     ),
                                   ),
-                                );
-                              }
+                                ),
 
-                              return FixeroLineChart<ItemUsageChartData>(
-                                data: itemUsageChartData,
-                                color: Theme.of(context).primaryColor,
-                                showDot: true,
-                                showGradient: true,
-                              );
-                            },
+                                // Details Tab (Table)
+                                Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: Builder(
+                                    builder: (context) {
+                                      if (_isUsageLoading) {
+                                        return const Center(
+                                          child: CircularProgressIndicator(),
+                                        );
+                                      }
+                                      if (_usageError != null) {
+                                        return Center(
+                                          child: Text('Error: $_usageError'),
+                                        );
+                                      }
+                                      if (_usageRecords.isEmpty) {
+                                        return const Center(
+                                          child: Text(
+                                            'No usage data available',
+                                            style: TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        );
+                                      }
+
+                                      return SingleChildScrollView(
+                                        child: Column(
+                                          children: [
+                                            Table(
+                                              defaultVerticalAlignment:
+                                                  TableCellVerticalAlignment
+                                                      .middle,
+                                              border: TableBorder.all(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .inversePrimary
+                                                    .withAlpha(80),
+                                                width: 1,
+                                              ),
+                                              columnWidths: const {
+                                                0: FlexColumnWidth(),
+                                                1: FlexColumnWidth(),
+                                                2: FlexColumnWidth(),
+                                                3: IntrinsicColumnWidth(),
+                                              },
+                                              children: [
+                                                // Header Row
+                                                TableRow(
+                                                  decoration: BoxDecoration(
+                                                    color: Theme.of(context)
+                                                        .colorScheme
+                                                        .inversePrimary
+                                                        .withAlpha(30),
+                                                  ),
+                                                  children: [
+                                                    const Padding(
+                                                      padding: EdgeInsets.all(
+                                                        5.0,
+                                                      ),
+                                                      child: Text(
+                                                        'Service',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const Padding(
+                                                      padding: EdgeInsets.all(
+                                                        5.0,
+                                                      ),
+                                                      child: Text(
+                                                        'Usage Date',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const Padding(
+                                                      padding: EdgeInsets.all(
+                                                        5.0,
+                                                      ),
+                                                      child: Text(
+                                                        'Usage Time',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                            5.0,
+                                                          ),
+                                                      child: Text(
+                                                        'Quantity\n(${item.unit})',
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                        style: const TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                // Data Rows
+                                                ..._usageRecords
+                                                    .take(_visibleUsageCount)
+                                                    .map(
+                                                      (u) => TableRow(
+                                                        children: [
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  5.0,
+                                                                ),
+                                                            child: Text(
+                                                              u.service,
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .textTheme
+                                                                      .bodySmall,
+                                                            ),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  5.0,
+                                                                ),
+                                                            child: Text(
+                                                              u.usageDate,
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .textTheme
+                                                                      .bodySmall,
+                                                            ),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  5.0,
+                                                                ),
+                                                            child: Text(
+                                                              Formatter.formatTime12Hour(
+                                                                u.usageTime,
+                                                              ),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .textTheme
+                                                                      .bodySmall,
+                                                            ),
+                                                          ),
+                                                          Padding(
+                                                            padding:
+                                                                const EdgeInsets.all(
+                                                                  5.0,
+                                                                ),
+                                                            child: Text(
+                                                              u.quantity
+                                                                  .toString(),
+                                                              textAlign:
+                                                                  TextAlign
+                                                                      .center,
+                                                              style:
+                                                                  Theme.of(
+                                                                        context,
+                                                                      )
+                                                                      .textTheme
+                                                                      .bodySmall,
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                              ],
+                                            ),
+
+                                            // View More Button
+                                            if (_visibleUsageCount <
+                                                _usageRecords.length)
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                  top: 10.0,
+                                                ),
+                                                child: ElevatedButton(
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _visibleUsageCount =
+                                                          (_visibleUsageCount +
+                                                                  5)
+                                                              .clamp(
+                                                                0,
+                                                                _usageRecords
+                                                                    .length,
+                                                              );
+                                                    });
+                                                  },
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                        backgroundColor:
+                                                            Theme.of(context)
+                                                                .colorScheme
+                                                                .inversePrimary
+                                                                .withAlpha(50),
+                                                      ),
+                                                  child: const Text(
+                                                    'View More',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.normal,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -497,7 +845,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                           else if (_restockRecords.isEmpty)
                             const Center(
                               child: Text(
-                                '( No record )',
+                                'No restocking data available',
                                 style: TextStyle(fontStyle: FontStyle.italic),
                               ),
                             )

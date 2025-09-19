@@ -83,7 +83,7 @@ class _HomePageState extends State<HomePage> {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final repo = ManagerRepository();
-      final manager = await repo.getManager(uid); // correct method name
+      final manager = await repo.getManager(uid);
       if (mounted && manager != null) {
         setState(() {
           _managerName = manager.name;
@@ -93,14 +93,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // void _handleInsightFilterChange(String newFilter) {
-  //   setState(() {
-  //     _selectedInsightFilter = newFilter;
-  //     // TODO: Update data or charts based on newFilter
-  //   });
-  // }
-
-  // Future<void> _handleSignOut(BuildContext context) async {
   void _handleServiceTap(BuildContext context, String label, IconData icon) {
     // Example behavior: show a dialog
     showDialog(

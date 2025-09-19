@@ -50,8 +50,19 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
               LineChartBarData(
                 spots: spots,
                 isCurved: true,
-                barWidth: 2,
-                dotData: FlDotData(show: showDot),
+                barWidth: 3,
+                dotData: FlDotData(
+                  show: showDot,
+                  getDotPainter: (spot, percent, barData, index) =>
+                      FlDotCirclePainter(
+                        radius: 4, // dot size
+                        color: color, // dot fill color
+                        strokeWidth: 1.5,
+                        strokeColor: Theme.of(
+                          context,
+                        ).colorScheme.primary, // optional border
+                      ),
+                ),
                 color: color,
                 belowBarData: BarAreaData(
                   show: showGradient,
@@ -63,6 +74,28 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
                 ),
               ),
             ],
+
+            lineTouchData: LineTouchData(
+              touchTooltipData: LineTouchTooltipData(
+                getTooltipColor: (LineBarSpot touchedSpot) {
+                  return Theme.of(context).colorScheme.primary;
+                },
+                tooltipBorderRadius: BorderRadius.circular(5),
+                fitInsideHorizontally:
+                    true, // <-- Fit tooltip inside horizontally
+                fitInsideVertically: true, // <-- Fit tooltip inside vertically
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((touchedSpot) {
+                    final label = data[touchedSpot.spotIndex].label;
+                    final value = touchedSpot.y.toStringAsFixed(0);
+                    return LineTooltipItem(
+                      '$label\n$value',
+                      const TextStyle(color: Colors.white),
+                    );
+                  }).toList();
+                },
+              ),
+            ),
             titlesData: FlTitlesData(
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
@@ -79,6 +112,7 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
                 sideTitles: SideTitles(
                   showTitles: true,
                   interval: 2,
+                  reservedSize: 40, // more space below to prevent cutoff
                   getTitlesWidget: (value, _) {
                     final index = value.toInt();
                     if (index >= 0 && index < data.length) {

@@ -139,13 +139,25 @@ class _UsageHistoryPageState extends State<UsageHistoryPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
-                                  spacing: 5,
+                                  spacing: 15,
                                   children: [
-                                    Icon(Icons.access_time, size: 20),
-                                    Text(
-                                      Formatter.formatTime12Hour(
-                                        itemUsage.usageTime,
-                                      ),
+                                    Row(
+                                      spacing: 5,
+                                      children: [
+                                        Icon(Icons.calendar_month, size: 20),
+                                        Text(itemUsage.usageDate),
+                                      ],
+                                    ),
+                                    Row(
+                                      spacing: 5,
+                                      children: [
+                                        Icon(Icons.access_time, size: 20),
+                                        Text(
+                                          Formatter.formatTime12Hour(
+                                            itemUsage.usageTime,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
