@@ -3,6 +3,8 @@ import '../models/customer_model.dart';
 import '../controllers/customer_controller.dart';
 import '../models/vehicle_model.dart';
 import '../controllers/vehicle_controller.dart';
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   final String customerId;
@@ -20,36 +22,60 @@ class CustomerProfilePage extends StatefulWidget {
 
 class _CustomerProfilePageState extends State<CustomerProfilePage> {
   final VehicleController _vehicleController = VehicleController();
+  final CustomerController _customerController = CustomerController();
+
+  Map<String, dynamic>? customer;
   List<Vehicle> vehicles = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadVehicles();
+    _loadData();
   }
 
-  Future<void> _loadVehicles() async {
-    final fetched = await _vehicleController.fetchVehiclesByOwner(widget.customerId);
+  Future<void> _loadData() async {
+    // 1) If no customerData passed in, fetch from CustomerController
+    if (widget.customerData.isEmpty) {
+      final fetched = await _customerController.fetchCustomerById(widget.customerId);
+      if (fetched != null) {
+        customer = fetched.toMap();
+      }
+    } else {
+      customer = widget.customerData;
+    }
+
+    // 2) Load vehicles
+    final fetchedVehicles = await _vehicleController.fetchVehiclesByOwner(widget.customerId);
+
     setState(() {
-      vehicles = fetched;
+      vehicles = fetchedVehicles;
       isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (customer == null) {
+      return const Scaffold(
+        body: Center(child: Text("Customer not found")),
+      );
+    }
+
     final theme = Theme.of(context);
-    final customer = widget.customerData;
+    final isFemale = (customer?['gender']?.toLowerCase() == 'female');
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: AppBar(
-        title: Text(
-          customer['custName'] ?? 'Customer Profile',
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.blue,
+      appBar: FixeroSubAppBar(
+        title: customer?['custName'] ?? 'Customer Profile',
+        showBackButton: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -58,36 +84,48 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
           children: [
             // 🔹 Profile Header
             Card(
-              elevation: 4,
+              elevation: 5,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              child: Padding(
+              child: Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.blue.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                ),
                 child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     CircleAvatar(
                       radius: 50,
-                      backgroundColor: (customer['gender']?.toLowerCase() == 'female')
-                          ? Colors.pink.withOpacity(0.2)
-                          : Colors.blue.withOpacity(0.2),
-                      child: Icon(
-                        (customer['gender']?.toLowerCase() == 'female')
-                            ? Icons.female
-                            : Icons.male,
-                        size: 60,
-                        color: (customer['gender']?.toLowerCase() == 'female')
-                            ? Colors.pink
-                            : Colors.blue,
+                      backgroundImage: AssetImage(
+                        isFemale
+                            ? "assets/icons/avatar/female_avatar.png"
+                            : "assets/icons/avatar/male_avatar.png",
                       ),
                     ),
                     const SizedBox(height: 15),
                     Text(
-                      customer['custName'] ?? '',
+                      customer?['custName'] ?? '',
                       style: const TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold),
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: 6),
                     Text(
-                      customer['custEmail'] ?? '',
-                      style: const TextStyle(color: Colors.grey, fontSize: 16),
+                      customer?['custEmail'] ?? '',
+                      style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
@@ -99,16 +137,26 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: [
-                  _infoTile(Icons.person, "Gender", customer['gender'] ?? ''),
-                  _divider(),
-                  _infoTile(Icons.cake, "Date of Birth", customer['dob'] ?? ''),
-                  _divider(),
-                  _infoTile(Icons.phone, "Phone", customer['custTel'] ?? ''),
-                  _divider(),
-                  _infoTile(Icons.email, "Email", customer['custEmail'] ?? ''),
-                ],
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.blue.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _infoTile(Icons.person, "Gender", customer?['gender'] ?? ''),
+                    _divider(),
+                    _infoTile(Icons.cake, "Date of Birth", customer?['dob'] ?? ''),
+                    _divider(),
+                    _infoTile(Icons.phone, "Phone", customer?['custTel'] ?? ''),
+                    _divider(),
+                    _infoTile(Icons.email, "Email", customer?['custEmail'] ?? ''),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -117,15 +165,25 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: const Icon(Icons.home, color: Colors.blue),
-                title: const Text("Address",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                  "${customer['address1'] ?? ''}, ${customer['address2'] ?? ''}, "
-                      "${customer['city'] ?? ''}, ${customer['state'] ?? ''}, "
-                      "${customer['postalCode'] ?? ''}, ${customer['country'] ?? ''}",
-                  style: const TextStyle(fontSize: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade50, Colors.blue.shade100],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: ListTile(
+                  leading: const Icon(Icons.home, color: Colors.blue),
+                  title: const Text("Address",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    "${customer?['address1'] ?? ''}, ${customer?['address2'] ?? ''}, "
+                        "${customer?['city'] ?? ''}, ${customer?['state'] ?? ''}, "
+                        "${customer?['postalCode'] ?? ''}, ${customer?['country'] ?? ''}",
+                    style: const TextStyle(fontSize: 15),
+                  ),
                 ),
               ),
             ),
@@ -138,9 +196,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                   fontSize: 18,
                 )),
             const SizedBox(height: 10),
-            if (isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (vehicles.isEmpty)
+            if (vehicles.isEmpty)
               const Text("No vehicles found for this customer",
                   style: TextStyle(color: Colors.grey))
             else
@@ -162,9 +218,12 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
-                      subtitle: Text("${v.manufacturer} ${v.model} (${v.year})"),
+                      subtitle:
+                      Text("${v.manufacturer} ${v.model} (${v.year})"),
                       trailing: Text(v.color,
-                          style: const TextStyle(fontWeight: FontWeight.w500)),
+                          style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: Colors.black87)),
                     ),
                   );
                 }).toList(),
@@ -172,6 +231,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
           ],
         ),
       ),
+      bottomNavigationBar: const FixeroBottomAppBar(),
     );
   }
 

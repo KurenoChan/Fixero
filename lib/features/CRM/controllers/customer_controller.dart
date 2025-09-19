@@ -1,5 +1,3 @@
-// controllers/customer_controller.dart
-import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/customer_model.dart';
@@ -12,64 +10,42 @@ class CustomerController extends ValueNotifier<int> {
     _init();
   }
 
-  final DatabaseReference dbRef = FirebaseDatabase.instance.ref("users/customers");
+  final DatabaseReference _dbRef =
+  FirebaseDatabase.instance.ref("users/customers");
   final Map<String, Customer> _byId = {};
-  StreamSubscription? _subAdded;
-  StreamSubscription? _subChanged;
-  StreamSubscription? _subRemoved;
 
   List<Customer> get allCustomers => _byId.values.toList(growable: false);
 
   Future<void> _init() async {
-    // Initial load
-    final snap = await dbRef.get();
+    final snap = await _dbRef.get();
     if (snap.exists) {
       for (final child in snap.children) {
-        final id = child.key!;
+        final id = child.key;
+        if (id == null) continue;
         final data = Map<String, dynamic>.from(child.value as Map);
-        _byId[id] = Customer.fromMap(id, data);
+        final c = Customer.fromMap(id, data);
+        _byId[id] = c;
       }
     }
-    _notify();
-
-    // Sync listeners
-    _subAdded = dbRef.onChildAdded.listen((event) {
-      final id = event.snapshot.key!;
-      if (_byId.containsKey(id)) return;
-      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-      _byId[id] = Customer.fromMap(id, data);
-      _notify();
-    });
-
-    _subChanged = dbRef.onChildChanged.listen((event) {
-      final id = event.snapshot.key!;
-      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
-      _byId[id] = Customer.fromMap(id, data);
-      _notify();
-    });
-
-    _subRemoved = dbRef.onChildRemoved.listen((event) {
-      final id = event.snapshot.key!;
-      _byId.remove(id);
-      _notify();
-    });
+    notifyListeners();
   }
 
-  void _notify() => value = _byId.length;
+  /// 🔹 Fetch a customer by ID (used by Feedback Detail, Replies, etc.)
+  Future<Customer?> fetchCustomerById(String customerId) async {
+    // 1) Cached?
+    if (_byId.containsKey(customerId)) {
+      return _byId[customerId];
+    }
 
-  Customer? getById(String id) => _byId[id];
+    // 2) Fetch from Firebase
+    final snap = await _dbRef.child(customerId).get();
+    if (snap.exists) {
+      final data = Map<String, dynamic>.from(snap.value as Map);
+      final c = Customer.fromMap(customerId, data);
+      _byId[customerId] = c;
+      return c;
+    }
 
-  Future<void> updateCustomer(Customer c) async {
-    _byId[c.custID] = c;
-    _notify();
-    await dbRef.child(c.custID).update(c.toMap());
-  }
-
-  @override
-  void dispose() {
-    _subAdded?.cancel();
-    _subChanged?.cancel();
-    _subRemoved?.cancel();
-    super.dispose();
+    return null;
   }
 }

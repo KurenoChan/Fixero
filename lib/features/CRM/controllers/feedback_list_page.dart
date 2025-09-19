@@ -134,6 +134,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                       children: [
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             value: selectedFeedbackType,
                             items: feedbackTypes
                                 .map((ft) => DropdownMenuItem(value: ft, child: Text(ft)))
@@ -150,6 +151,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                         const SizedBox(width: 10),
                         Expanded(
                           child: DropdownButtonFormField<String>(
+                            isExpanded: true,
                             value: selectedServiceType,
                             items: serviceTypes
                                 .map((st) => DropdownMenuItem(value: st, child: Text(st)))

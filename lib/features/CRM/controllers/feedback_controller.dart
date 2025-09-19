@@ -101,7 +101,6 @@ class FeedbackController extends ValueNotifier<int> {
   }
 
   Future<void> _enrichFeedback(FeedbackModel fb) async {
-    // If no jobID we can stop early
     if (fb.jobID.isEmpty) return;
 
     try {
@@ -109,6 +108,7 @@ class FeedbackController extends ValueNotifier<int> {
           .ref("jobservices/jobs/${fb.jobID}")
           .get();
       if (!jobSnap.exists) return;
+
       final jobData = Map<String, dynamic>.from(jobSnap.value as Map);
       fb.serviceType = jobData["jobServiceType"] ?? "-";
 
@@ -117,12 +117,13 @@ class FeedbackController extends ValueNotifier<int> {
         final vehicleSnap =
         await FirebaseDatabase.instance.ref("vehicles/$plateNo").get();
         if (vehicleSnap.exists) {
-          final vehicleData =
-          Map<String, dynamic>.from(vehicleSnap.value as Map);
+          final vehicleData = Map<String, dynamic>.from(vehicleSnap.value as Map);
           fb.carModel = vehicleData["model"] ?? "-";
 
-          final ownerId = vehicleData["ownerID"] ?? "";
-          if (ownerId != null && ownerId.toString().isNotEmpty) {
+          final ownerId = vehicleData["ownerID"]?.toString();
+          if (ownerId != null && ownerId.isNotEmpty) {
+            fb.customerId = ownerId;  // ✅ save customerId in model
+
             final custSnap = await FirebaseDatabase.instance
                 .ref("users/customers/$ownerId")
                 .get();
@@ -137,6 +138,7 @@ class FeedbackController extends ValueNotifier<int> {
       debugPrint("Failed to enrich feedback ${fb.feedbackID}: $e");
     }
   }
+
 
   int _unseenCount() {
     return _byId.values.where((f) {

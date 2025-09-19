@@ -10,7 +10,8 @@ class FeedbackModel {
   String status;
   String seenStatus;
 
-  // Enriched fields (populated by controller _enrichFeedback)
+  // Enriched fields
+  String? customerId;     // 🔹 add this
   String? customerName;
   String? carModel;
   String? serviceType;
@@ -26,6 +27,7 @@ class FeedbackModel {
     required this.serviceQuality,
     required this.status,
     required this.seenStatus,
+    this.customerId,        // new
     this.customerName,
     this.carModel,
     this.serviceType,
@@ -44,20 +46,5 @@ class FeedbackModel {
       status: data['status'] ?? 'Open',
       seenStatus: data['seenStatus'] ?? 'Seen',
     );
-  }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'feedbackType': feedbackType,
-      'comment': comment,
-      'completionEfficiency': completionEfficiency,
-      'date': date,
-      'engineeringAttitude': engineeringAttitude,
-      'jobID': jobID,
-      'serviceQuality': serviceQuality,
-      'status': status,
-      'seenStatus': seenStatus,
-      // enriched fields are not saved back here
-    };
   }
 }
