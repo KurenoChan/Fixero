@@ -31,7 +31,7 @@ class _ServiceHistoryViewState extends State<ServiceHistoryView> {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context);
+    Theme.of(context);
     final jobs = controller.allSorted;
 
     return Scaffold(
