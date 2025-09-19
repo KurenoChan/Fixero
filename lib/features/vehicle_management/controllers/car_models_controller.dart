@@ -109,17 +109,20 @@ class CarModelsController extends ChangeNotifier {
   static String _mapImage(String manufacturerName) {
     final key = manufacturerName.toLowerCase();
     if (key.contains('toyota')) return 'assets/images/manufacturer/toyota.png';
-    if (key.contains('perodua'))
+    if (key.contains('perodua')) {
       return 'assets/images/manufacturer/perodua.png';
+    }
     if (key.contains('honda')) return 'assets/images/manufacturer/honda.png';
     if (key.contains('proton')) return 'assets/images/manufacturer/proton.png';
     if (key.contains('nissan')) return 'assets/images/manufacturer/nissan.png';
     if (key.contains('ford')) return 'assets/images/manufacturer/ford.png';
     if (key.contains('mazda')) return 'assets/images/manufacturer/mazda.png';
-    if (key.contains('hyundai'))
+    if (key.contains('hyundai')) {
       return 'assets/images/manufacturer/hyundai.png';
-    if (key.contains('volkswagen'))
+    }
+    if (key.contains('volkswagen')) {
       return 'assets/images/manufacturer/volkswagen.png';
+    }
     if (key.contains('isuzu')) return 'assets/images/manufacturer/isuzu.png';
     if (key.contains('bmw')) return 'assets/images/manufacturer/bmw.png';
     return 'assets/images/manufacturer/car_generic.png';

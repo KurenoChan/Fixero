@@ -87,7 +87,7 @@ class _JobCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(.12),
+                  color: statusColor.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -106,7 +106,7 @@ class _JobCard extends StatelessWidget {
               Icon(
                 Icons.event,
                 size: 16,
-                color: t.colorScheme.onSurface.withOpacity(.7),
+                color: t.colorScheme.onSurface.withValues(alpha: 0.7),
               ),
               const SizedBox(width: 6),
               Text(
@@ -141,7 +141,7 @@ class _JobCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: t.colorScheme.primary.withOpacity(.08),
+        color: t.colorScheme.primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(

@@ -29,22 +29,22 @@ class ServiceJob {
 
   /// Build from a map, using `fallbackKey` as the jobID if not found in map.
   factory ServiceJob.fromMap(Map<dynamic, dynamic> map, {String? fallbackKey}) {
-    String _s(dynamic v) => (v ?? '').toString();
+    String s(dynamic v) => (v ?? '').toString();
 
-    final id = _s(map['jobID'] ?? map['jobId'] ?? map['id'] ?? fallbackKey);
+    final id = s(map['jobID'] ?? map['jobId'] ?? map['id'] ?? fallbackKey);
 
     return ServiceJob(
       jobID: id,
-      plateNo: _s(map['plateNo']),
-      jobServiceType: _s(map['jobServiceType']),
-      jobDescription: _s(map['jobDescription']),
-      jobStatus: _s(map['jobStatus']),
-      scheduledDate: _s(map['scheduledDate']),
-      scheduledTime: _s(map['scheduledTime']),
+      plateNo: s(map['plateNo']),
+      jobServiceType: s(map['jobServiceType']),
+      jobDescription: s(map['jobDescription']),
+      jobStatus: s(map['jobStatus']),
+      scheduledDate: s(map['scheduledDate']),
+      scheduledTime: s(map['scheduledTime']),
       estimatedDuration:
           (map['estimatedDuration'] is num) ? (map['estimatedDuration'] as num).toInt() : null,
-      managedBy: _s(map['managedBy']).isEmpty ? null : _s(map['managedBy']),
-      mechanicID: _s(map['mechanicID']).isEmpty ? null : _s(map['mechanicID']),
+      managedBy: s(map['managedBy']).isEmpty ? null : s(map['managedBy']),
+      mechanicID: s(map['mechanicID']).isEmpty ? null : s(map['mechanicID']),
       sortStamp: _parseStamp(map),
     );
   }
@@ -75,7 +75,7 @@ class ServiceJob {
     final d = (m['scheduledDate'] ?? '').toString();
     final t = (m['scheduledTime'] ?? '').toString();
     if (d.isNotEmpty) {
-      final iso = t.isEmpty ? d : '${d}T${t}';
+      final iso = t.isEmpty ? d : '${d}T$t';
       final parsed = DateTime.tryParse(iso);
       if (parsed != null) return parsed;
     }

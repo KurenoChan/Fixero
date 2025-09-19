@@ -49,7 +49,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
 
     // 🔹 2) Load vehicles
     final fetchedVehicles =
-    await _vehicleController.fetchVehiclesByOwner(widget.customerId);
+    _vehicleController.fetchVehiclesByOwner(widget.customerId);
 
     setState(() {
       vehicles = fetchedVehicles;
@@ -195,7 +195,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                         borderRadius: BorderRadius.circular(12)),
                     child: ListTile(
                       leading: CircleAvatar(
-                        backgroundColor: Colors.redAccent.withOpacity(0.2),
+                        backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
                         child: const Icon(Icons.directions_car,
                             color: Colors.redAccent),
                       ),

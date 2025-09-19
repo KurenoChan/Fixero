@@ -26,6 +26,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     super.initState();
     _loadReplies();
   }
+
   Future<void> _deleteReply(String replyID) async {
     final fbID = widget.feedback.feedbackID;
 
@@ -33,7 +34,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Delete Reply"),
-        content: const Text("Are you sure you want to delete this reply for everyone?"),
+        content: const Text(
+          "Are you sure you want to delete this reply for everyone?",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -54,6 +57,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     if (confirm == true) {
       await dbRef.child("communications/replies/$fbID/$replyID").remove();
 
+      if (!mounted) return;
       setState(() {
         replies.removeWhere((r) => r["replyID"] == replyID);
       });
@@ -95,7 +99,6 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     setState(() => replies = temp);
   }
 
-
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty) return;
 
@@ -107,8 +110,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     // 🔹 Get logged in manager profile
     final currentManager = await ManagerController.getCurrentManager();
 
-    final formattedDate =
-    DateFormat("yyyy-MM-dd HH:mm").format(DateTime.now().toLocal());
+    final formattedDate = DateFormat(
+      "yyyy-MM-dd HH:mm",
+    ).format(DateTime.now().toLocal());
 
     final replyData = {
       "from": currentManager != null
@@ -119,14 +123,13 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       "date": formattedDate,
     };
 
-    await dbRef.child("communications/replies/$fbID/$newReplyKey").set(replyData);
+    await dbRef
+        .child("communications/replies/$fbID/$newReplyKey")
+        .set(replyData);
 
     _replyController.clear();
     _loadReplies();
   }
-
-
-
 
   Future<void> _closeFeedback() async {
     final fbID = widget.feedback.feedbackID; // ✅ use model property
@@ -149,7 +152,10 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: const FixeroSubAppBar(title: "Feedback Detail", showBackButton: true),
+      appBar: const FixeroSubAppBar(
+        title: "Feedback Detail",
+        showBackButton: true,
+      ),
       bottomNavigationBar: const FixeroBottomAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -161,7 +167,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
             // reply input
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
@@ -193,7 +201,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
               ),
-            )
+            ),
           ],
           onDeleteReply: _deleteReply,
         ),

@@ -457,7 +457,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                         onPressed: () {
                           if (!_form.currentState!.validate()) return;
 
-                          int? _toInt(String s) =>
+                          int? toInt(String s) =>
                               s.trim().isEmpty ? null : int.tryParse(s.trim());
 
                           final v = Vehicle(
@@ -478,10 +478,10 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                             make: makeCtrl.text.trim().isEmpty
                                 ? null
                                 : makeCtrl.text.trim(),
-                            peakPowerKw: _toInt(powerCtrl.text),
-                            speedLimiter: _toInt(limiterCtrl.text),
-                            mileage: _toInt(mileageCtrl.text),
-                            fuelTank: _toInt(tankCtrl.text),
+                            peakPowerKw: toInt(powerCtrl.text),
+                            speedLimiter: toInt(limiterCtrl.text),
+                            mileage: toInt(mileageCtrl.text),
+                            fuelTank: toInt(tankCtrl.text),
                             // keep existing owner
                             ownerName: widget.original?.ownerName,
                             ownerGender: widget.original?.ownerGender,

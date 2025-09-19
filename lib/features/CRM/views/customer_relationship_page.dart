@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../../../common/widgets/bars/fixero_main_appbar.dart';
 import 'package:fixero/features/CRM/views/customer_directory_page.dart';
-import 'package:fixero/features/CRM/views/communicationHistoy.dart';
+import 'package:fixero/features/CRM/views/communication_history.dart';
 import 'package:fixero/features/CRM/views/customer_feedback_page.dart';
 
 // Import your feedback controller

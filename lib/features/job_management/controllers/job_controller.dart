@@ -16,17 +16,30 @@ class JobController extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   /// 🔹 Load all jobs from Firebase once
+  // Future<void> loadJobs() async {
+  //   _isLoading = true;
+  //   notifyListeners();
+
+  //   try {
+  //     _jobs = await _dao.getAllJobs();
+  //     _errorMessage = null;
+  //   } catch (e) {
+  //     _errorMessage = e.toString();
+  //   }
+
+  //   _isLoading = false;
+  //   notifyListeners();
+  // }
+
   Future<void> loadJobs() async {
     _isLoading = true;
     notifyListeners();
-
     try {
       _jobs = await _dao.getAllJobs();
       _errorMessage = null;
     } catch (e) {
       _errorMessage = e.toString();
     }
-
     _isLoading = false;
     notifyListeners();
   }

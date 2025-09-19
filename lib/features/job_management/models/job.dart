@@ -61,7 +61,9 @@ class Job {
       jobStatus: map['jobStatus'] ?? '',
       scheduledDate: map['scheduledDate'] ?? '',
       scheduledTime: map['scheduledTime'] ?? '',
-      estimatedDuration: (map['estimatedDuration'] ?? 0) as int,
+      estimatedDuration: (map['estimatedDuration'] is int)
+          ? map['estimatedDuration']
+          : int.tryParse(map['estimatedDuration'].toString()) ?? 0,
       createdAt: map['createdAt'] ?? '',
       mechanicID: map['mechanicID'] ?? '',
       plateNo: map['plateNo'] ?? '',
