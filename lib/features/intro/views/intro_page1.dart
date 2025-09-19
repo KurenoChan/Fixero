@@ -26,7 +26,7 @@ class IntroPage1 extends StatelessWidget {
               TextSpan(
                 text: 'Tired of\n',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.inverseSurface,
                   fontFamily: 'Poppins',
                   fontSize: 25,
                   height: 1.2,
@@ -36,14 +36,14 @@ class IntroPage1 extends StatelessWidget {
               TextSpan(
                 text: 'Job Confusion?',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.inverseSurface,
                   fontFamily: 'Poppins',
                   fontSize: 40,
                   fontWeight: FontWeight.bold,
                   height: 1.2,
                 ),
               ),
-            ]
+            ],
           ),
           textAlign: TextAlign.center,
         ),
@@ -56,8 +56,10 @@ class IntroPage1 extends StatelessWidget {
             'Track jobs, assign tasks, and stay organized — all in one app.',
             textAlign: TextAlign.center,
             style: TextStyle(
-                fontSize: 20,
-                color: Colors.white54
+              fontSize: 20,
+              color: Theme.of(
+                context,
+              ).colorScheme.inverseSurface.withValues(alpha: 0.7),
             ),
           ),
         ),

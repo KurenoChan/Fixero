@@ -1,6 +1,7 @@
 class Order {
   final String orderNo;
   final String orderDate;
+  final String orderTime;
   final String? arrivalDate;
   final int? rating;
   final String? feedback;
@@ -9,6 +10,7 @@ class Order {
   Order({
     required this.orderNo,
     required this.orderDate,
+    required this.orderTime,
     this.arrivalDate,
     this.rating,
     this.feedback,
@@ -18,6 +20,7 @@ class Order {
   Map<String, dynamic> toMap() {
     return {
       "orderDate": orderDate,
+      "orderTime": orderTime,
       "arrivalDate": arrivalDate,
       "rating": rating,
       "feedback": feedback,
@@ -29,6 +32,7 @@ class Order {
     return Order(
       orderNo: id,
       orderDate: map["orderDate"],
+      orderTime: map["orderTime"],
       arrivalDate: map["arrivalDate"],
       rating: map["rating"],
       feedback: map["feedback"],
@@ -38,6 +42,7 @@ class Order {
   Order copyWith({
     String? orderNo,
     String? orderDate,
+    String? orderTime,
     String? arrivalDate,
     int? rating,
     String? feedback,
@@ -46,6 +51,7 @@ class Order {
     return Order(
       orderNo: orderNo ?? this.orderNo,
       orderDate: orderDate ?? this.orderDate,
+      orderTime: orderTime ?? this.orderTime,
       arrivalDate: arrivalDate ?? this.arrivalDate,
       rating: rating ?? this.rating,
       feedback: feedback ?? this.feedback,

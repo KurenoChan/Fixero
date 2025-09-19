@@ -3,6 +3,7 @@ import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
 import 'package:fixero/features/inventory_management/models/order.dart';
@@ -111,8 +112,8 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
       // 2️⃣ Update all requested items with remark
       final itemDAO = RequestedItemDAO();
-      final requestedItems = await itemDAO.getItemsByRequestId(
-        request.requestId,
+      final requestedItems = await itemDAO.getItemsByRequestID(
+        request.requestID,
       );
 
       for (final item in requestedItems) {
@@ -120,7 +121,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
           status: "Not Processed",
           remark: remark.isNotEmpty ? remark : "Request rejected",
         );
-        await itemDAO.updateItem(updatedItem);
+        await itemDAO.updateRequestedItem(updatedItem);
       }
 
       if (!context.mounted) return;
@@ -176,10 +177,13 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
   }
 
   Future<void> _markOrderAsReceived(BuildContext context, Order order) async {
+    if (!context.mounted) return;
+
     final ratingController = TextEditingController();
     final feedbackController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
+    // 1️⃣ Confirm dialog
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -187,7 +191,6 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
         content: Form(
           key: formKey,
           child: Column(
-            spacing: 10,
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
@@ -234,22 +237,42 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
     if (confirmed != true || !context.mounted) return;
 
+    final requestedItemController = context.read<RequestedItemController>();
+    final itemController = context.read<ItemController>();
     final orderController = context.read<OrderController>();
-    final itemDao = RequestedItemDAO();
     final restockController = context.read<RestockRequestController>();
 
     try {
-      // 1️⃣ Get all requests for this order
-      final requests = await restockController.getRequestsByOrderNo(
-        order.orderNo,
-      );
+      // 2️⃣ Get all requests for this order
+      final requests = restockController.getRequestsByOrderNo(order.orderNo);
 
-      // 2️⃣ Update all requested items to "Received"
       for (var request in requests) {
-        final pendingItems = await itemDao.getPendingItems(request.requestId);
-        for (var item in pendingItems) {
-          final updatedItem = item.copyWith(status: "Received");
-          await itemDao.updateItem(updatedItem);
+        // Ensure requested items are loaded
+        await requestedItemController.loadItemsByRequestId(request.requestID);
+
+        final pendingItems = requestedItemController.getPendingItems(
+          request.requestID,
+        );
+
+        for (var reqItem in pendingItems) {
+          // 🔹 Update requested item status to "Received"
+          final updatedReqItem = reqItem.copyWith(status: "Received");
+          await requestedItemController.updateRequestedItem(updatedReqItem);
+
+          // 🔹 Update actual stock quantity
+          if (itemController.items.isEmpty) {
+            await itemController.loadItems();
+          }
+
+          final item = itemController.getItemByID(reqItem.itemID);
+          if (item != null) {
+            final updatedItem = item.copyWith(
+              stockQuantity: item.stockQuantity + reqItem.quantityRequested,
+            );
+            await itemController.updateItem(updatedItem);
+          } else {
+            debugPrint("⚠️ Item not found for ID: ${reqItem.itemID}");
+          }
         }
       }
 
@@ -263,16 +286,18 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
             ? null
             : feedbackController.text,
       );
-
       await orderController.updateOrder(updatedOrder);
 
       if (!context.mounted) return;
 
+      // 4️⃣ Refresh UI
+      setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Order marked as received!")),
       );
     } catch (e) {
       if (!context.mounted) return;
+      debugPrint("❌ Failed to mark order as received: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to mark as received: $e")));
@@ -324,7 +349,12 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    final pendingRequests = restockController.pendingRequests;
+    final pendingRequests = [...restockController.pendingRequests]
+      ..sort((a, b) {
+        final aDateTime = DateTime.parse("${a.requestDate} ${a.requestTime}");
+        final bDateTime = DateTime.parse("${b.requestDate} ${b.requestTime}");
+        return bDateTime.compareTo(aDateTime); // Descending: latest first
+      });
 
     if (pendingRequests.isEmpty) {
       return const Center(child: Text("No pending requests"));
@@ -338,7 +368,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
         return FutureBuilder(
           future: Future.wait([
-            RequestedItemDAO().getItemsByRequestId(request.requestId),
+            RequestedItemDAO().getItemsByRequestID(request.requestID),
             ManagerRepository().getManager(request.requestBy),
           ]),
           builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
@@ -363,7 +393,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
             // Map requested items to actual items, filtering invalid images
             final itemsForGrid = requestedItems
-                .map((ri) => itemController.getItemById(ri.itemId))
+                .map((ri) => itemController.getItemByID(ri.itemID))
                 .where((item) => item != null)
                 .take(4) // max 4 items
                 .toList();
@@ -535,7 +565,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                           ),
                   ),
                   title: Text(
-                    request.requestId,
+                    request.requestID,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: Theme.of(
@@ -559,37 +589,41 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Text(
-                              request.requestDate,
-                              style: Theme.of(context).textTheme.labelSmall,
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 2,
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Text(
+                                request.requestDate,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                             ),
                           ),
 
-                          Container(
-                            padding: EdgeInsets.symmetric(
-                              vertical: 2,
-                              horizontal: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.circular(5.0),
-                            ),
-                            child: Text(
-                              request.requestTime,
-                              style: Theme.of(context).textTheme.labelSmall,
+                          Flexible(
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                vertical: 2,
+                                horizontal: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Text(
+                                request.requestTime,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                             ),
                           ),
                         ],
@@ -641,9 +675,15 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    final pendingOrders = orderController.orders
-        .where((order) => order.arrivalDate == null)
-        .toList();
+    final pendingOrders =
+        orderController.orders
+            .where((order) => order.arrivalDate == null)
+            .toList()
+          ..sort((a, b) {
+            final aDateTime = DateTime.parse("${a.orderDate} ${a.orderTime}");
+            final bDateTime = DateTime.parse("${b.orderDate} ${b.orderTime}");
+            return bDateTime.compareTo(aDateTime); // Descending: latest first
+          });
 
     if (pendingOrders.isEmpty) {
       return const Center(child: Text("No pending orders"));
@@ -758,26 +798,28 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const FixeroSubAppBar(
-        title: 'Requests & Orders',
-        showBackButton: true,
-      ),
-      body: Column(
-        children: [
-          TabBar(
-            controller: _tabController,
-            tabs: _tabs,
-            labelColor: Theme.of(context).colorScheme.primary,
-            indicatorColor: Theme.of(context).colorScheme.primary,
-          ),
-          Expanded(
-            child: TabBarView(
+    return SafeArea(
+      child: Scaffold(
+        appBar: const FixeroSubAppBar(
+          title: 'Requests & Orders',
+          showBackButton: true,
+        ),
+        body: Column(
+          children: [
+            TabBar(
               controller: _tabController,
-              children: [_buildPendingRequests(), _buildPendingOrders()],
+              tabs: _tabs,
+              labelColor: Theme.of(context).colorScheme.primary,
+              indicatorColor: Theme.of(context).colorScheme.primary,
             ),
-          ),
-        ],
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [_buildPendingRequests(), _buildPendingOrders()],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

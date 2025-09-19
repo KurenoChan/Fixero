@@ -81,28 +81,28 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
     debugPrint("Generated RequestedItem ID: $requestedItemId\n\n");
 
     final restockRequest = RestockRequest(
-      requestId: restockRequestId,
-      requestDate: Formatter.today(),
-      requestTime: Formatter.today(),
+      requestID: restockRequestId,
+      requestDate: Formatter.todayDate(),
+      requestTime: Formatter.todayTime(),
       requestBy: manager.id,
     );
 
     final requestedItem = RequestedItem(
-      requestItemId: requestedItemId,
-      requestId: restockRequestId,
-      itemId: widget.item.itemId,
+      requestItemID: requestedItemId,
+      requestID: restockRequestId,
+      itemID: widget.item.itemID,
       quantityRequested: int.parse(_quantityController.text),
       remark: _notesController.text.isEmpty ? null : _notesController.text,
     );
 
     try {
       // ✅ Save to RTDB
-      await RestockRequestDAO().createRequest(restockRequest);
-      await RequestedItemDAO().createItem(requestedItem);
+      await RestockRequestDAO().addRequest(restockRequest);
+      await RequestedItemDAO().addRequestedItem(requestedItem);
 
       // ✅ Update provider/controllers
-      await restockController.createRequest(restockRequest);
-      await itemController.createItem(requestedItem);
+      await restockController.addRequest(restockRequest);
+      await itemController.addRequestedItem(requestedItem);
 
       if (!mounted) return;
 
@@ -163,7 +163,7 @@ class _RequestRestockPageState extends State<RequestRestockPage> {
               // 🔹 Item ID
               TextFormField(
                 enabled: false,
-                initialValue: item.itemId,
+                initialValue: item.itemID,
                 decoration: const InputDecoration(labelText: 'Item ID'),
               ),
 

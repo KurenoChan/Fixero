@@ -1,9 +1,9 @@
 class RestockRequest {
-  final String requestId;
-  final String requestDate;   // yyyy-MM-dd
-  final String requestTime;   // HH:mm:ss
-  final String requestBy;     // Workshop Manager UID
-  final String status;        // "Pending" | "Approved" | "Rejected"
+  final String requestID;
+  final String requestDate; // yyyy-MM-dd
+  final String requestTime; // HH:mm:ss
+  final String requestBy; // Workshop Manager UID
+  final String status; // "Pending" | "Approved" | "Rejected"
   final String? approvedBy;
   final String? rejectedBy;
   final String? approvedDate; // yyyy-MM-dd
@@ -11,7 +11,7 @@ class RestockRequest {
   final String? orderNo;
 
   RestockRequest({
-    required this.requestId,
+    required this.requestID,
     required this.requestDate,
     required this.requestTime,
     required this.requestBy,
@@ -25,7 +25,7 @@ class RestockRequest {
 
   // ✅ copyWith
   RestockRequest copyWith({
-    String? requestId,
+    String? requestID,
     String? requestDate,
     String? requestTime,
     String? requestBy,
@@ -37,7 +37,7 @@ class RestockRequest {
     String? orderNo,
   }) {
     return RestockRequest(
-      requestId: requestId ?? this.requestId,
+      requestID: requestID ?? this.requestID,
       requestDate: requestDate ?? this.requestDate,
       requestTime: requestTime ?? this.requestTime,
       requestBy: requestBy ?? this.requestBy,
@@ -51,9 +51,9 @@ class RestockRequest {
   }
 
   // ✅ fromMap
-  factory RestockRequest.fromMap(Map<String, dynamic> map, String requestId) {
+  factory RestockRequest.fromMap(Map<String, dynamic> map, String requestID) {
     return RestockRequest(
-      requestId: requestId,
+      requestID: requestID,
       requestDate: map["requestDate"],
       requestTime: map["requestTime"],
       requestBy: map["requestBy"] ?? "",

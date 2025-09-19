@@ -4,30 +4,24 @@ import 'package:fixero/features/inventory_management/models/requested_item.dart'
 class RequestedItemDAO {
   final RequestedItemRepository _repo = RequestedItemRepository();
 
-  Future<List<RequestedItem>> getItemsByRequestId(String requestId) async {
+  Future<List<RequestedItem>> getItemsByRequestID(String requestId) async {
     return await _repo.fetchItemsByRequestId(requestId);
   }
 
-  Future<void> createItem(RequestedItem item) async {
-    await _repo.addItem(item);
+  Future<void> addRequestedItem(RequestedItem item) async {
+    await _repo.addRequestedItem(item);
   }
 
-  Future<void> updateItem(RequestedItem item) async {
-    await _repo.updateItem(item);
+  Future<void> updateRequestedItem(RequestedItem item) async {
+    await _repo.updateRequestedItem(item);
   }
 
-  Future<void> deleteItem(String requestItemId) async {
-    await _repo.deleteItem(requestItemId);
+  Future<void> deleteRequestedItem(String requestItemId) async {
+    await _repo.deleteRequestedItem(requestItemId);
   }
 
-  /// Convenience filters
-  Future<List<RequestedItem>> getPendingItems(String requestId) async {
-    final all = await _repo.fetchItemsByRequestId(requestId);
-    return all.where((i) => i.status == "Pending").toList();
-  }
-
-  Future<List<RequestedItem>> getReceivedItems(String requestId) async {
-    final all = await _repo.fetchItemsByRequestId(requestId);
-    return all.where((i) => i.status == "Received").toList();
+  Future<List<RequestedItem>> getRequestedItemsByItemID(String itemID) async {
+    final all = await _repo.fetchAllRequestedItems();
+    return all.where((r) => r.itemID == itemID).toList();
   }
 }

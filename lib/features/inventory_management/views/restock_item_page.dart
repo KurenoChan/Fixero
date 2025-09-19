@@ -147,7 +147,8 @@ class _RestockItemPageState extends State<RestockItemPage> {
 
       final order = Order(
         orderNo: IDGenerator.generateOrderNo(),
-        orderDate: Formatter.today(),
+        orderDate: Formatter.todayDate(),
+        orderTime: Formatter.todayTime(),
         supplierID: supplierId,
       );
       await context.read<OrderController>().addOrder(order);
@@ -158,7 +159,7 @@ class _RestockItemPageState extends State<RestockItemPage> {
 
       // 2️⃣ CREATE RESTOCK REQUEST (auto-approved)
       final restockRequest = RestockRequest(
-        requestId: restockRequestId,
+        requestID: restockRequestId,
         orderNo: createdOrderNo,
         requestBy: manager.id,
         approvedBy: manager.id,
@@ -167,21 +168,21 @@ class _RestockItemPageState extends State<RestockItemPage> {
         requestDate: Formatter.todayDate(),
         requestTime: Formatter.todayTime(),
       );
-      await context.read<RestockRequestController>().createRequest(
-        restockRequest,
-      );
+      await context.read<RestockRequestController>().addRequest(restockRequest);
       if (!mounted) return;
 
       // 3️⃣ CREATE REQUESTED ITEM
       final requestedItem = RequestedItem(
-        requestItemId: requestedItemId,
-        requestId: restockRequestId,
-        itemId: widget.item.itemId,
+        requestItemID: requestedItemId,
+        requestID: restockRequestId,
+        itemID: widget.item.itemID,
         quantityRequested: int.parse(_quantityController.text),
         remark: _notesController.text.isEmpty ? null : _notesController.text,
         status: "Pending",
       );
-      await context.read<RequestedItemController>().createItem(requestedItem);
+      await context.read<RequestedItemController>().addRequestedItem(
+        requestedItem,
+      );
       if (!mounted) return;
 
       // ✅ Debug logs
@@ -273,68 +274,70 @@ class _RestockItemPageState extends State<RestockItemPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: FixeroSubAppBar(title: "Restock Item", showBackButton: false),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: _buildStepIndicator(), // ✅ Step indicator shown
-          ),
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _itemDetailsForm(),
-                _requestDetailsForm(),
-                _orderDetailsForm(),
-              ],
-            ),
-          ),
-        ],
-      ),
-
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Row(
+    return SafeArea(
+      child: Scaffold(
+        appBar: FixeroSubAppBar(title: "Restock Item", showBackButton: false),
+        body: Column(
           children: [
-            // Cancel button only on Step 0
-            if (_currentStep == 0)
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(
-                      context,
-                    ).colorScheme.inverseSurface.withAlpha(50),
-                  ),
-                  onPressed: _discard,
-                  child: const Text("Discard"),
-                ),
-              ),
-            if (_currentStep == 0) const SizedBox(width: 16),
-
-            // Back button (for steps > 0)
-            if (_currentStep > 0)
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _backStep,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.grey.shade400,
-                  ),
-                  child: const Text("Back"),
-                ),
-              ),
-            if (_currentStep > 0) const SizedBox(width: 16),
-
-            // Next / Submit button
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: _buildStepIndicator(), // ✅ Step indicator shown
+            ),
             Expanded(
-              child: ElevatedButton(
-                onPressed: _nextStep,
-                child: Text(_currentStep == 2 ? "Submit" : "Next"),
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _itemDetailsForm(),
+                  _requestDetailsForm(),
+                  _orderDetailsForm(),
+                ],
               ),
             ),
           ],
+        ),
+
+        bottomNavigationBar: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              // Cancel button only on Step 0
+              if (_currentStep == 0)
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.inverseSurface.withAlpha(50),
+                    ),
+                    onPressed: _discard,
+                    child: const Text("Discard"),
+                  ),
+                ),
+              if (_currentStep == 0) const SizedBox(width: 16),
+
+              // Back button (for steps > 0)
+              if (_currentStep > 0)
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _backStep,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade400,
+                    ),
+                    child: const Text("Back"),
+                  ),
+                ),
+              if (_currentStep > 0) const SizedBox(width: 16),
+
+              // Next / Submit button
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: _nextStep,
+                  child: Text(_currentStep == 2 ? "Submit" : "Next"),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -352,7 +355,7 @@ class _RestockItemPageState extends State<RestockItemPage> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 10),
-            _readOnlyField("Item ID", widget.item.itemId),
+            _readOnlyField("Item ID", widget.item.itemID),
             _readOnlyField("Name", widget.item.itemName),
             _readOnlyField("Description", widget.item.itemDescription),
             _readOnlyField("Category", widget.item.itemCategory),

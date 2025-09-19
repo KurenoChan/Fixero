@@ -96,8 +96,8 @@ class RequestDetailsSheet extends StatelessWidget {
 
       // 2️⃣ Update all requested items with remark
       final itemDAO = RequestedItemDAO();
-      final requestedItems = await itemDAO.getItemsByRequestId(
-        request.requestId,
+      final requestedItems = await itemDAO.getItemsByRequestID(
+        request.requestID,
       );
 
       for (final item in requestedItems) {
@@ -105,7 +105,7 @@ class RequestDetailsSheet extends StatelessWidget {
           status: "Not Processed",
           remark: remark.isNotEmpty ? remark : "Request rejected",
         );
-        await itemDAO.updateItem(updatedItem);
+        await itemDAO.updateRequestedItem(updatedItem);
       }
 
       if (!context.mounted) return;
@@ -191,7 +191,7 @@ class RequestDetailsSheet extends StatelessWidget {
           ),
           child: FutureBuilder(
             future: Future.wait([
-              RequestedItemDAO().getItemsByRequestId(request.requestId),
+              RequestedItemDAO().getItemsByRequestID(request.requestID),
               ManagerRepository().getManager(request.requestBy),
             ]),
             builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
@@ -255,7 +255,7 @@ class RequestDetailsSheet extends StatelessWidget {
                               borderRadius: BorderRadius.circular(5.0),
                             ),
                             child: Text(
-                              request.requestId,
+                              request.requestID,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: Theme.of(
@@ -343,8 +343,8 @@ class RequestDetailsSheet extends StatelessWidget {
                                   DataColumn(label: Text("Remark")),
                                 ],
                                 rows: requestedItems.map((item) {
-                                  final actualItem = itemController.getItemById(
-                                    item.itemId,
+                                  final actualItem = itemController.getItemByID(
+                                    item.itemID,
                                   );
                                   return DataRow(
                                     cells: [

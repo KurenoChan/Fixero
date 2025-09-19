@@ -2,7 +2,9 @@ import 'package:fixero/data/dao/inventory/requested_item_dao.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
 import 'package:fixero/features/inventory_management/models/item.dart';
 import 'package:fixero/features/inventory_management/models/order.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
@@ -35,7 +37,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
       if (itemController.items.isEmpty) await itemController.loadItems();
       await restockController.loadRequests();
 
-      final orderRequests = await restockController.getRequestsByOrderNo(
+      final orderRequests = restockController.getRequestsByOrderNo(
         widget.order.orderNo,
       );
 
@@ -54,6 +56,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
     final feedbackController = TextEditingController();
     final formKey = GlobalKey<FormState>();
 
+    // 1️⃣ Confirm dialog with optional rating & feedback
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -61,7 +64,6 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
         content: Form(
           key: formKey,
           child: Column(
-            spacing: 10,
             mainAxisSize: MainAxisSize.min,
             children: [
               TextFormField(
@@ -72,7 +74,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                   hintText: "Enter 0 if no rating",
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return null; // optional
+                  if (value == null || value.isEmpty) return null;
                   final rating = int.tryParse(value);
                   if (rating == null || rating < 0 || rating > 5) {
                     return "Enter a number between 0 and 5";
@@ -108,20 +110,43 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
 
     if (confirmed != true || !mounted) return;
 
+    final requestedItemController = context.read<RequestedItemController>();
+    final itemController = context.read<ItemController>();
     final orderController = context.read<OrderController>();
-    final itemDao = RequestedItemDAO();
 
     try {
-      // 2️⃣ Update all requested items to "Received"
       for (var request in _requests) {
-        final pendingItems = await itemDao.getPendingItems(request.requestId);
-        for (var item in pendingItems) {
-          final updatedItem = item.copyWith(status: "Received");
-          await itemDao.updateItem(updatedItem);
+        // 🔹 Ensure requested items are loaded
+        await requestedItemController.loadItemsByRequestId(request.requestID);
+
+        final pendingItems = requestedItemController.getPendingItems(
+          request.requestID,
+        );
+
+        for (var reqItem in pendingItems) {
+          // 🔹 1. Update requested item status to "Received"
+          final updatedReqItem = reqItem.copyWith(status: "Received");
+          await requestedItemController.updateRequestedItem(updatedReqItem);
+
+          // 🔹 2. Update actual stock quantity
+          if (itemController.items.isEmpty) {
+            // Load items if cache is empty
+            await itemController.loadItems();
+          }
+
+          final item = itemController.getItemByID(reqItem.itemID);
+          if (item != null) {
+            final updatedItem = item.copyWith(
+              stockQuantity: item.stockQuantity + reqItem.quantityRequested,
+            );
+            await itemController.updateItem(updatedItem);
+          } else {
+            debugPrint("⚠️ Item not found for ID: ${reqItem.itemID}");
+          }
         }
       }
 
-      // 3️⃣ Update the order
+      // 🔹 3. Update the order
       final now = DateTime.now();
       final updatedOrder = widget.order.copyWith(
         arrivalDate:
@@ -131,20 +156,20 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
             ? null
             : feedbackController.text,
       );
-
       await orderController.updateOrder(updatedOrder);
 
       if (!mounted) return;
 
-      // 4️⃣ Refresh UI
+      // 🔹 4. Refresh UI
       setState(() => _requests = []);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Order marked as received!")),
       );
 
-      Navigator.of(context).pop(); // Close the sheet
+      Navigator.of(context).pop(); // Close sheet
     } catch (e) {
       if (!mounted) return;
+      debugPrint("❌ Failed to mark as received: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Failed to mark as received: $e")));
@@ -275,6 +300,12 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
     );
   }
 
+  Future<String> _getSupplierName(String supplierID) async {
+    final supplierController = context.read<SupplierController>();
+    final supplier = supplierController.getSupplierByIdSync(supplierID);
+    return supplier?.supplierName ?? "Unknown Supplier";
+  }
+
   @override
   Widget build(BuildContext context) {
     return DraggableScrollableSheet(
@@ -341,10 +372,54 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 30),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Order Date: ",
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+
+                          Text(widget.order.orderDate),
+                        ],
+                      ),
+                    ),
+
                     const SizedBox(height: 10),
 
-                    Text(widget.order.orderDate),
-                    const SizedBox(width: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          Text(
+                            "Supplied By: ",
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+
+                          FutureBuilder<String>(
+                            future: _getSupplierName(widget.order.supplierID),
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const Text("Loading...");
+                              }
+                              if (snapshot.hasError) {
+                                return Text("Error: ${snapshot.error}");
+                              }
+                              return Text(
+                                snapshot.data ?? "Unknown Supplier",
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
 
                     // 🔹 Scrollable content
                     Expanded(
@@ -352,7 +427,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                         controller: scrollController,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 15,
-                          vertical: 20,
+                          vertical: 10,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -374,8 +449,8 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
 
                                 return FutureBuilder(
                                   future: Future.wait([
-                                    RequestedItemDAO().getItemsByRequestId(
-                                      request.requestId,
+                                    RequestedItemDAO().getItemsByRequestID(
+                                      request.requestID,
                                     ),
                                     ManagerRepository().getManager(
                                       request.requestBy,
@@ -415,8 +490,8 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
 
                                     final itemsForGrid = requestedItems
                                         .map(
-                                          (ri) => itemController.getItemById(
-                                            ri.itemId,
+                                          (ri) => itemController.getItemByID(
+                                            ri.itemID,
                                           ),
                                         )
                                         .where((item) => item != null)
@@ -450,7 +525,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                                             itemsForGrid,
                                           ),
                                           title: Text(
-                                            request.requestId,
+                                            request.requestID,
                                             overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: Theme.of(

@@ -106,8 +106,8 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
       final newOrder = Order(
         orderNo: orderNo,
         orderDate: Formatter.todayDate(),
+        orderTime: Formatter.todayTime(),
         supplierID: supplierId,
-        // add createdBy if your model supports it
       );
 
       // 🔹 Add order (updates Firebase + Provider)
@@ -355,7 +355,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                   ],
                 ),
               ),
-              
+
               const Divider(height: 1, thickness: 1),
 
               // 🔹 Scrollable content
@@ -418,8 +418,8 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
 
                             return FutureBuilder(
                               future: Future.wait([
-                                RequestedItemDAO().getItemsByRequestId(
-                                  request.requestId,
+                                RequestedItemDAO().getItemsByRequestID(
+                                  request.requestID,
                                 ),
                                 ManagerRepository().getManager(
                                   request.requestBy,
@@ -452,7 +452,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                 final itemsForGrid = requestedItems
                                     .map(
                                       (ri) =>
-                                          itemController.getItemById(ri.itemId),
+                                          itemController.getItemByID(ri.itemID),
                                     )
                                     .where((item) => item != null)
                                     .take(4)
@@ -497,7 +497,7 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                             : _buildImageGrid(itemsForGrid),
                                       ),
                                       title: Text(
-                                        request.requestId,
+                                        request.requestID,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           fontSize: Theme.of(
@@ -530,9 +530,10 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                                       horizontal: 5,
                                                     ),
                                                 decoration: BoxDecoration(
-                                                  color: Theme.of(
-                                                    context,
-                                                  ).colorScheme.primary.withValues(alpha: 0.3),
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withValues(alpha: 0.3),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                         5.0,
@@ -552,9 +553,10 @@ class _CreateOrderSheetState extends State<CreateOrderSheet> {
                                                       horizontal: 5,
                                                     ),
                                                 decoration: BoxDecoration(
-                                                  color: Theme.of(
-                                                    context,
-                                                  ).primaryColorLight,
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                      .withValues(alpha: 0.3),
                                                   borderRadius:
                                                       BorderRadius.circular(
                                                         5.0,

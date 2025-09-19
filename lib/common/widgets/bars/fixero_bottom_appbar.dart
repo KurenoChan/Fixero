@@ -35,14 +35,14 @@ class FixeroBottomAppBar extends StatelessWidget {
   }
 
   Widget _navItem(
-      BuildContext context,
-      IconData icon,
-      String label,
-      ThemeData theme,
-      Widget page,
-      String destinationRoute,
-      String? currentRoute,
-      ) {
+    BuildContext context,
+    IconData icon,
+    String label,
+    ThemeData theme,
+    Widget page,
+    String destinationRoute,
+    String? currentRoute,
+  ) {
     final isActive = destinationRoute == currentRoute;
 
     return TextButton(
@@ -57,20 +57,26 @@ class FixeroBottomAppBar extends StatelessWidget {
           );
         }
       },
-      style: TextButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 6)),
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             icon,
-            color: isActive ? theme.colorScheme.inversePrimary : theme.colorScheme.inversePrimary.withAlpha(120),
+            color: isActive
+                ? theme.colorScheme.inversePrimary
+                : theme.colorScheme.inversePrimary.withAlpha(120),
             size: 24,
           ),
           const SizedBox(height: 2),
           Text(
             label,
             style: TextStyle(
-              color: isActive ? theme.colorScheme.inversePrimary : theme.colorScheme.inversePrimary.withAlpha(120),
+              color: isActive
+                  ? theme.colorScheme.inversePrimary
+                  : theme.colorScheme.inversePrimary.withAlpha(120),
               fontSize: 11,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
             ),
