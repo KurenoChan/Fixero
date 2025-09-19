@@ -5,7 +5,7 @@ import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../controllers/manu_vehicles_controller.dart';
 import '../models/vehicle.dart';
 import 'vehicle_details_view.dart';
-import 'car_models_view.dart' show VehicleFormDialog; // reuse dialog
+import 'car_models_view.dart' show VehicleFormDialog;
 
 class ManufacturerVehiclesView extends StatefulWidget {
   static const String routeName = '/manufacturer_vehicles';
@@ -165,8 +165,7 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
     if (s.contains('green')) return Colors.green;
     if (s.contains('black')) return Colors.black87;
     if (s.contains('white')) return Colors.grey.shade400;
-    if (s.contains('silver') || s.contains('grey') || s.contains('gray'))
-      return Colors.grey;
+    if (s.contains('silver') || s.contains('grey') || s.contains('gray'))return Colors.grey;
     if (s.contains('yellow')) return Colors.yellow.shade700;
     if (s.contains('orange')) return Colors.orange;
     if (s.contains('purple')) return Colors.purple;
@@ -181,14 +180,12 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
   Widget build(BuildContext context) {
     final t = Theme.of(context);
     final cs = t.colorScheme;
-    final headerColor = t.colorScheme.inversePrimary; // match car_models_view
+    final headerColor = t.colorScheme.inversePrimary;
 
     return Scaffold(
       backgroundColor: t.scaffoldBackgroundColor,
       resizeToAvoidBottomInset: true,
       bottomNavigationBar: const FixeroBottomAppBar(),
-
-      // Header: same style as Vehicles page, with back & info icons
       appBar: AppBar(
         toolbarHeight: 105,
         backgroundColor: headerColor,
@@ -211,7 +208,7 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
         ),
         actions: [
           IconButton(
-            onPressed: _showInfo, // ← opens info popup
+            onPressed: _showInfo,
             icon: const Icon(Icons.info_outline),
           ),
         ],
@@ -225,7 +222,6 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
 
       body: Column(
         children: [
-          // Search row OUTSIDE the AppBar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
             child: DecoratedBox(
@@ -257,7 +253,6 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
             ),
           ),
 
-          // Optional: sort bar
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 6, 12, 6),
             child: Row(

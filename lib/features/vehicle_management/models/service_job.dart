@@ -5,13 +5,13 @@ class ServiceJob {
   final String plateNo;
   final String jobServiceType;
   final String jobDescription;
-  final String jobStatus; // Completed / Cancelled / etc.
-  final String scheduledDate; // YYYY-MM-DD
-  final String scheduledTime; // HH:mm:ss
-  final int? estimatedDuration; // hours
-  final String? managedBy; // manager email
+  final String jobStatus;
+  final String scheduledDate;
+  final String scheduledTime;
+  final int? estimatedDuration;
+  final String? managedBy;
   final String? mechanicID;
-  final DateTime sortStamp; // parsed scheduledDate + time (fallback createdAt)
+  final DateTime sortStamp;
 
   const ServiceJob({
     required this.jobID,
@@ -27,7 +27,7 @@ class ServiceJob {
     this.mechanicID,
   });
 
-  /// Robust parser. Accepts jobID/jobId/id; falls back to [fallbackKey].
+  /// Build from a map, using `fallbackKey` as the jobID if not found in map.
   factory ServiceJob.fromMap(Map<dynamic, dynamic> map, {String? fallbackKey}) {
     String _s(dynamic v) => (v ?? '').toString();
 

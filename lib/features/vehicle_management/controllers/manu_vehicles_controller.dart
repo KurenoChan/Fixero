@@ -112,7 +112,6 @@ class ManufacturerVehiclesController extends ChangeNotifier {
       for (final c in snap.children) {
         final data = c.value;
         if (data is Map) {
-          // ⬇️ pass `fallbackKey: c.key` so plate comes from node key if absent in map
           final v = Vehicle.fromMap(data, fallbackKey: c.key);
           if (v.manufacturer.toLowerCase().trim() ==
               manufacturer.toLowerCase().trim()) {
@@ -175,8 +174,7 @@ class ManufacturerVehiclesController extends ChangeNotifier {
     final k = name.toLowerCase();
     if (k.contains('red')) return const Color(0xFFFF6B6B);
     if (k.contains('blue')) return const Color(0xFF4D9DE0);
-    if (k.contains('silver') || k.contains('grey') || k.contains('gray'))
-      return const Color(0xFFB0B0B0);
+    if (k.contains('silver') || k.contains('grey') || k.contains('gray'))return const Color(0xFFB0B0B0);
     if (k.contains('black')) return const Color(0xFF4A4A4A);
     if (k.contains('white')) return const Color(0xFFEDEDED);
     if (k.contains('maroon')) return const Color(0xFF8B1E3F);

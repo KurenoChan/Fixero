@@ -31,7 +31,6 @@ class VehicleDetailsController extends ChangeNotifier {
     _vehKey = await _resolveKeyByPlate(plateNo);
 
     if (_vehKey == null) {
-      // Not found – stop loading so UI can show a not-found state.
       _vehicle = null;
       _isLoading = false;
       notifyListeners();
@@ -52,7 +51,7 @@ class VehicleDetailsController extends ChangeNotifier {
       final m = Map<String, dynamic>.from(snap.value as Map);
       var v = Vehicle.fromMap(m, fallbackKey: _vehKey);
 
-      // Enrich owner (users/customers/{ownerID}) — optional
+      // Try to resolve owner name if ownerId is present
       String? ownerName;
       String? ownerGender;
       if (v.ownerId.isNotEmpty) {
@@ -73,7 +72,9 @@ class VehicleDetailsController extends ChangeNotifier {
     });
   }
 
-  /// Try /vehicles/{plate} first; if not found, search by body field `plateNo`.
+  /// Try to find the vehicle key by plate number.
+  /// First tries direct lookup by key, then queries by plateNo field.
+  /// Returns null if not found.
   Future<String?> _resolveKeyByPlate(String plate) async {
     final direct = await _vehiclesRef.child(plate).get();
     if (direct.exists) return plate;

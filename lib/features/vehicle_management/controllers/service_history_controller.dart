@@ -27,7 +27,6 @@ class ServiceHistoryController extends ChangeNotifier {
     _sub = ref.onValue.listen((event) {
       final next = <ServiceJob>[];
       for (final c in event.snapshot.children) {
-        // Build from snapshot so the node key is available as a fallback ID.
         final job = ServiceJob.fromSnapshot(c);
         if (job.plateNo.trim().toLowerCase() == plateNo.trim().toLowerCase()) {
           next.add(job);

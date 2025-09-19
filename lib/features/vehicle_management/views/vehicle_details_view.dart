@@ -52,14 +52,13 @@ class _VehicleDetailsViewState extends State<VehicleDetailsView> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
 
-      // Tall rounded header — centered title
       appBar: AppBar(
         toolbarHeight: 105,
         backgroundColor: headerColor,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: const Color(0x1A000000),
-        centerTitle: true, // centered
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
@@ -152,7 +151,6 @@ class _VehicleDetailsViewState extends State<VehicleDetailsView> {
   static String _fmtInt(int? n) => (n == null) ? '—' : n.toString();
 }
 
-/// Full-width hero image without arrows/circle
 Widget _wideHero({String? imageUrl}) {
   return Builder(
     builder: (context) {
@@ -185,7 +183,6 @@ Widget _wideHero({String? imageUrl}) {
   );
 }
 
-/// Card below the image: Model title, Plate chip, Owner pill
 class _TitleCard extends StatelessWidget {
   const _TitleCard({required this.vehicle});
   final Vehicle vehicle;
@@ -298,7 +295,7 @@ class _StatTile extends StatelessWidget {
   final String value;
   final String label;
 
-  static const Color _kIconYellow = Color(0xFFF5C542); // fixed yellow
+  static const Color _kIconYellow = Color(0xFFF5C542);
 
   @override
   Widget build(BuildContext context) {
@@ -514,7 +511,6 @@ class _RecentServiceHistorySectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Header row with CTA — shrinkwrap to prevent tiny overflows
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -701,7 +697,7 @@ class _StatusVisual {
   final Color color;
 }
 
-/// Full page for complete history list — now with expandable detail cards
+/// Full page for complete history list
 class _FullServiceHistoryView extends StatefulWidget {
   const _FullServiceHistoryView({required this.plateNo});
   final String plateNo;
@@ -733,7 +729,7 @@ class _FullServiceHistoryViewState extends State<_FullServiceHistoryView> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context);
-    final headerColor = t.colorScheme.inversePrimary; // same tall header style
+    final headerColor = t.colorScheme.inversePrimary;
     final List<ServiceJob> items = controller.allSorted;
 
     return Scaffold(

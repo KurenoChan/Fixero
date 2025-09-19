@@ -5,8 +5,6 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/car_model.dart';
 import '../models/vehicle.dart';
 
-/// Aggregates vehicles by `manufacturer` from Firebase Realtime Database.
-/// Also exposes CRUD for /vehicles/{plateNo}.
 class CarModelsController extends ChangeNotifier {
   final List<CarModel> _items = [];
   String _query = '';
@@ -84,11 +82,7 @@ class CarModelsController extends ChangeNotifier {
     final key = keyAsPlate ? v.plateNo : _vehiclesRef.push().key!;
     final ref = _vehiclesRef.child(key);
     final data = v.toMap(keyAsPlate: keyAsPlate);
-    await ref.set({
-      ...data,
-      if (!keyAsPlate)
-        'plateNo': v.plateNo, // ensure plate stored in body if random key
-    });
+    await ref.set({...data, if (!keyAsPlate) 'plateNo': v.plateNo});
   }
 
   /// Update fields for /vehicles/{plateNo}
@@ -112,7 +106,6 @@ class CarModelsController extends ChangeNotifier {
   }
 
   // ---------- Helpers ----------
-
   static String _mapImage(String manufacturerName) {
     final key = manufacturerName.toLowerCase();
     if (key.contains('toyota')) return 'assets/images/manufacturer/toyota.png';

@@ -4,7 +4,7 @@ import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../controllers/car_models_controller.dart';
 import '../models/car_model.dart';
 import '../models/vehicle.dart';
-import 'manu_vehicles_view.dart'; // ManufacturerVehiclesView
+import 'manu_vehicles_view.dart';
 
 class CarModelsView extends StatefulWidget {
   static const String routeName = '/car_models';
@@ -52,27 +52,26 @@ class _CarModelsViewState extends State<CarModelsView> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    // Use the same header color as your Car Overview page:
     final headerColor = theme.colorScheme.inversePrimary;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       bottomNavigationBar: const FixeroBottomAppBar(),
       appBar: AppBar(
-        automaticallyImplyLeading: false, // no back button on main page
+        automaticallyImplyLeading: false,
         toolbarHeight: 105,
         backgroundColor: headerColor,
         foregroundColor: Colors.white,
         elevation: 4,
         shadowColor: const Color(0x1A000000),
-        centerTitle: true, // << center the title
+        centerTitle: true,
         title: const Text(
           'Vehicles',
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 32,
             fontWeight: FontWeight.w800,
-            color: Colors.white, // keep pure white like your example
+            color: Colors.white,
             letterSpacing: 0.2,
           ),
         ),
@@ -243,10 +242,10 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
   // Extra specs
   late final TextEditingController vinCtrl;
   late final TextEditingController makeCtrl;
-  late final TextEditingController powerCtrl; // kW
-  late final TextEditingController limiterCtrl; // km/h
-  late final TextEditingController mileageCtrl; // KM
-  late final TextEditingController tankCtrl; // L
+  late final TextEditingController powerCtrl;
+  late final TextEditingController limiterCtrl;
+  late final TextEditingController mileageCtrl;
+  late final TextEditingController tankCtrl;
 
   @override
   void initState() {
@@ -316,7 +315,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                     vertical: 14,
                   ),
                   decoration: BoxDecoration(
-                    color: cs.surfaceVariant,
+                    color: cs.surfaceContainerHighest,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(18),
                     ),
@@ -393,8 +392,9 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                               keyboardType: TextInputType.number,
                               validator: (v) {
                                 final n = int.tryParse(v ?? '');
-                                if (n == null || n <= 0)
+                                if (n == null || n <= 0) {
                                   return 'Enter valid year';
+                                }
                                 return null;
                               },
                             ),
@@ -482,7 +482,7 @@ class _VehicleFormDialogState extends State<VehicleFormDialog> {
                             speedLimiter: _toInt(limiterCtrl.text),
                             mileage: _toInt(mileageCtrl.text),
                             fuelTank: _toInt(tankCtrl.text),
-                            // keep optional existing owner meta if editing
+                            // keep existing owner
                             ownerName: widget.original?.ownerName,
                             ownerGender: widget.original?.ownerGender,
                           );

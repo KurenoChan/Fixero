@@ -6,11 +6,11 @@ class Vehicle {
   final String manufacturer;
   final int year;
   final String ownerId;
-  final String? ownerName; // users/customers/{id}/custName
-  final String? ownerGender; // "male" | "female"
+  final String? ownerName;
+  final String? ownerGender;
   final String? vin;
-  final String? make; // country of make
-  final String? imageUrl; // vehicleImageUrl
+  final String? make;
+  final String? imageUrl;
   final int? peakPowerKw;
   final int? speedLimiter;
   final int? mileage;
@@ -105,9 +105,9 @@ class Vehicle {
     return int.tryParse(s);
   }
 
-  /// Supports `fallbackKey` (e.g., RTDB child key) if `plateNo` is missing.
-  factory Vehicle.fromMap(Map<dynamic, dynamic> m, {String? fallbackKey}) { // CHANGED
-    final plate = _s(m['plateNo']).isNotEmpty ? _s(m['plateNo']) : (fallbackKey ?? ''); // CHANGED
+  /// Build from a map, using `fallbackKey` as the plateNo if not found in map.
+  factory Vehicle.fromMap(Map<dynamic, dynamic> m, {String? fallbackKey}) {
+    final plate = _s(m['plateNo']).isNotEmpty ? _s(m['plateNo']) : (fallbackKey ?? '');
 
     return Vehicle(
       plateNo: plate,
