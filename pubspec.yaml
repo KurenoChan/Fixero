@@ -22,7 +22,7 @@ dependencies:
   firebase_storage: ^12.4.9
   firebase_analytics: ^11.5.2
   firebase_messaging: ^15.2.9
-  firebase_core: ^3.15.1
+  firebase_core: ^3.15.2
   firebase_ui_auth: ^1.17.0
   google_sign_in: ^7.1.1
   fl_chart: ^1.0.0
@@ -41,8 +41,12 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+
   assets:
     - assets/logo/
+    - assets/icons/
+    - assets/icons/services_Icon/
+    - assets/icons/avatar/
     - assets/images/
     - assets/images/intro/
     - assets/images/background/
