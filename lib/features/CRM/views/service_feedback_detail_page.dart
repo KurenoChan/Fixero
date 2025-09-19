@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/feedback_model.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 
 class ServiceFeedbackDetailPage extends StatefulWidget {
   final FeedbackModel feedback;
@@ -67,14 +69,9 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
     final isClosed = fb.status.toLowerCase() == "closed"; // ✅ check property
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Feedback Detail"),
-        backgroundColor: Colors.blue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context, false),
-        ),
-      ),
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: const FixeroSubAppBar(title: "Feedback Detail", showBackButton: true),
+      bottomNavigationBar: const FixeroBottomAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(

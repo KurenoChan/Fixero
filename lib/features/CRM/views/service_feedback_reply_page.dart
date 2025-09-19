@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/feedback_model.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 
 class ServiceFeedbackReplyPage extends StatefulWidget {
   final FeedbackModel feedback;
@@ -88,14 +90,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     final fb = widget.feedback;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Reply to Feedback"),
-        backgroundColor: Colors.blue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
+      backgroundColor: const Color(0xFFF5F6FA),
+      appBar: const FixeroSubAppBar(title: "Feedback Detail", showBackButton: true),
+      bottomNavigationBar: const FixeroBottomAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: ListView(

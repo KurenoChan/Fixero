@@ -1,4 +1,9 @@
 import 'package:flutter/material.dart';
+
+// adjust these two imports if your file is in a different folder
+import '../../../common/widgets/bars/fixero_sub_appbar.dart';
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
+
 import '../controllers/feedback_controller.dart';
 import '../models/feedback_model.dart';
 
@@ -53,14 +58,12 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Colors.blue,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+      // use your custom sub app bar (keeps your app's visual language)
+      appBar: FixeroSubAppBar(
+        title: widget.title,
+        showBackButton: true,
       ),
+
       // Outer: wait until controller.ready == true
       body: ValueListenableBuilder<bool>(
         valueListenable: feedbackController.ready,
@@ -231,9 +234,9 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                 ),
                               );
 
-                              // if detail returns true, controller is already synced so no further reload required
+                              // controller is already synced, so no extra reload needed
                               if (result == true) {
-                                // no-op; controller will already have updated via listeners
+                                // no-op
                               }
                             },
                           ),
@@ -247,6 +250,9 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
           );
         },
       ),
+
+      // bottom bar (your custom app bottom bar)
+      bottomNavigationBar: const FixeroBottomAppBar(),
     );
   }
 }
