@@ -6,9 +6,15 @@ class Vehicle {
   final String manufacturer;
   final int year;
   final String ownerId;
-
-  final String? ownerName;
-  final String? ownerGender;
+  final String? ownerName; // users/customers/{id}/custName
+  final String? ownerGender; // "male" | "female"
+  final String? vin;
+  final String? make; // country of make
+  final String? imageUrl; // vehicleImageUrl
+  final int? peakPowerKw;
+  final int? speedLimiter;
+  final int? mileage;
+  final int? fuelTank;
 
   const Vehicle({
     required this.plateNo,
@@ -20,6 +26,13 @@ class Vehicle {
     required this.ownerId,
     this.ownerName,
     this.ownerGender,
+    this.vin,
+    this.make,
+    this.imageUrl,
+    this.peakPowerKw,
+    this.speedLimiter,
+    this.mileage,
+    this.fuelTank,
   });
 
   Vehicle copyWith({
@@ -32,6 +45,13 @@ class Vehicle {
     String? ownerId,
     String? ownerName,
     String? ownerGender,
+    String? vin,
+    String? make,
+    String? imageUrl,
+    int? peakPowerKw,
+    int? speedLimiter,
+    int? mileage,
+    int? fuelTank,
   }) {
     return Vehicle(
       plateNo: plateNo ?? this.plateNo,
@@ -43,37 +63,71 @@ class Vehicle {
       ownerId: ownerId ?? this.ownerId,
       ownerName: ownerName ?? this.ownerName,
       ownerGender: ownerGender ?? this.ownerGender,
+      vin: vin ?? this.vin,
+      make: make ?? this.make,
+      imageUrl: imageUrl ?? this.imageUrl,
+      peakPowerKw: peakPowerKw ?? this.peakPowerKw,
+      speedLimiter: speedLimiter ?? this.speedLimiter,
+      mileage: mileage ?? this.mileage,
+      fuelTank: fuelTank ?? this.fuelTank,
     );
   }
 
-  static String _readStr(Map<dynamic, dynamic> m, List<String> keys) {
-    for (final k in keys) {
-      if (m.containsKey(k) && m[k] != null) {
-        final v = m[k].toString().trim();
-        if (v.isNotEmpty) return v;
-      }
-    }
-    return '';
+  Map<String, dynamic> toMap({bool keyAsPlate = true}) {
+    return {
+      'plateNo': plateNo,
+      'type': type,
+      'model': model,
+      'colorName': colorName,
+      'manufacturer': manufacturer,
+      'year': year,
+      'ownerID': ownerId,
+      if (ownerName != null) 'ownerName': ownerName,
+      if (ownerGender != null) 'ownerGender': ownerGender,
+      if (vin != null) 'vin': vin,
+      if (make != null) 'make': make,
+      if (imageUrl != null) 'vehicleImageUrl': imageUrl,
+      if (peakPowerKw != null) 'peakPowerKw': peakPowerKw,
+      if (speedLimiter != null) 'speedLimiter': speedLimiter,
+      if (mileage != null) 'mileage': mileage,
+      if (fuelTank != null) 'fuelTank': fuelTank,
+    };
   }
 
-  /// NEW: `fallbackKey` lets us use the node key (e.g. "ABC1234") when the map has no plateNo field.
-  static Vehicle fromMap(Map<dynamic, dynamic> m, {String? fallbackKey}) {
-    final plate = _readStr(m, ['plateNo', 'plate', 'plate_no', 'PlateNo', 'plateNumber']);
-    final typ   = _readStr(m, ['type', 'vehicleType', 'Type']);
-    final mdl   = _readStr(m, ['model', 'Model']);
-    final col   = _readStr(m, ['color', 'colour', 'Color']);
-    final man   = _readStr(m, ['manufacturer', 'make', 'Manufacturer']);
-    final yrStr = _readStr(m, ['year', 'Year']);
-    final own   = _readStr(m, ['ownerID', 'ownerId', 'custID', 'customerId']);
+  // ===== Helpers to construct from RTDB =====
+  static String _s(Object? v) => (v ?? '').toString();
+
+  static int? _toInt(Object? v) {
+    if (v == null) return null;
+    if (v is num) return v.toInt();
+    final s = v.toString().trim();
+    if (s.isEmpty) return null;
+    return int.tryParse(s);
+  }
+
+  /// Supports `fallbackKey` (e.g., RTDB child key) if `plateNo` is missing.
+  factory Vehicle.fromMap(Map<dynamic, dynamic> m, {String? fallbackKey}) { // CHANGED
+    final plate = _s(m['plateNo']).isNotEmpty ? _s(m['plateNo']) : (fallbackKey ?? ''); // CHANGED
 
     return Vehicle(
-      plateNo: plate.isNotEmpty ? plate : (fallbackKey ?? ''),
-      type: typ,
-      model: mdl,
-      colorName: col,
-      manufacturer: man,
-      year: int.tryParse(yrStr) ?? 0,
-      ownerId: own,
+      plateNo: plate,
+      type: _s(m['type']),
+      model: _s(m['model']),
+      colorName: _s(m['colorName']),
+      manufacturer: _s(m['manufacturer']),
+      year: int.tryParse(_s(m['year'])) ?? 0,
+      ownerId: _s(m['ownerID']),
+      ownerName: _s(m['ownerName']).isEmpty ? null : _s(m['ownerName']),
+      ownerGender: _s(m['ownerGender']).isEmpty ? null : _s(m['ownerGender']),
+      vin: _s(m['vin']).isEmpty ? null : _s(m['vin']),
+      make: _s(m['make']).isEmpty ? null : _s(m['make']),
+      imageUrl: _s(m['vehicleImageUrl']).isNotEmpty
+          ? _s(m['vehicleImageUrl'])
+          : (_s(m['imageUrl']).isEmpty ? null : _s(m['imageUrl'])),
+      peakPowerKw: _toInt(m['peakPowerKw']),
+      speedLimiter: _toInt(m['speedLimiter']),
+      mileage: _toInt(m['mileage']),
+      fuelTank: _toInt(m['fuelTank']),
     );
   }
 }

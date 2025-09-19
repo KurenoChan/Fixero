@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../controllers/car_models_controller.dart';
 import '../models/car_model.dart';
-import 'manu_vehicles_view.dart';
+import '../models/vehicle.dart';
+import 'manu_vehicles_view.dart'; // ManufacturerVehiclesView
 
 class CarModelsView extends StatefulWidget {
   static const String routeName = '/car_models';
@@ -17,261 +17,531 @@ class CarModelsView extends StatefulWidget {
 
 class _CarModelsViewState extends State<CarModelsView> {
   late final CarModelsController controller;
+  final _searchCtrl = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     controller = CarModelsController();
-    _ensureFirebaseThenListen();
-    controller.addListener(_onUpdate);
-  }
-
-  Future<void> _ensureFirebaseThenListen() async {
-    try {
-      await Firebase.initializeApp();
-    } catch (_) {}
-    await controller.listenManufacturers(path: 'vehicles');
+    controller.listenManufacturers();
   }
 
   @override
   void dispose() {
-    controller.removeListener(_onUpdate);
+    _searchCtrl.dispose();
     controller.dispose();
     super.dispose();
   }
 
-  void _onUpdate() => setState(() {});
+  Future<void> _openAdd() async {
+    final created = await showDialog<Vehicle>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const VehicleFormDialog(),
+    );
+    if (created != null) {
+      await controller.createVehicle(created, keyAsPlate: true);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Vehicle added')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final inverse = theme.colorScheme.inversePrimary;
+    final cs = theme.colorScheme;
+    // Use the same header color as your Car Overview page:
+    final headerColor = theme.colorScheme.inversePrimary;
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       bottomNavigationBar: const FixeroBottomAppBar(),
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            // ── Header (rounded, dark, left-aligned with info button) ─────────
-            Container(
-              height: 105,
-              width: double.infinity,
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
-              decoration: BoxDecoration(
-                color: inverse,
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(22),
-                  bottomRight: Radius.circular(22),
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x1A000000),
-                    blurRadius: 8,
-                    offset: Offset(0, 3),
-                  ),
-                ],
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const Text(
-                    'Car',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.2,
+      appBar: AppBar(
+        automaticallyImplyLeading: false, // no back button on main page
+        toolbarHeight: 105,
+        backgroundColor: headerColor,
+        foregroundColor: Colors.white,
+        elevation: 4,
+        shadowColor: const Color(0x1A000000),
+        centerTitle: true, // << center the title
+        title: const Text(
+          'Vehicles',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.w800,
+            color: Colors.white, // keep pure white like your example
+            letterSpacing: 0.2,
+          ),
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            bottomLeft: Radius.circular(22),
+            bottomRight: Radius.circular(22),
+          ),
+        ),
+      ),
+      body: Column(
+        children: [
+          // Search + Add row below the AppBar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+            child: Row(
+              children: [
+                Expanded(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x22000000),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: TextField(
+                      controller: _searchCtrl,
+                      onChanged: controller.setQuery,
+                      textAlignVertical: TextAlignVertical.center,
+                      decoration: const InputDecoration(
+                        hintText: 'Search vehicles',
+                        prefixIcon: Icon(Icons.search),
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 16,
+                        ),
+                      ),
                     ),
                   ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.info_outline, color: Colors.white),
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) {
-                          final t = Theme.of(ctx);
-                          return AlertDialog(
-                            backgroundColor: t.colorScheme.surface,
-                            title: Text(
-                              'Vehicles Page',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: t.colorScheme.inversePrimary,
-                              ),
-                            ),
-                            content: Text(
-                              'This page shows a summary of vehicles grouped by manufacturer.\n\n'
-                              '• Each box represents one manufacturer (e.g., Toyota, Honda).\n'
-                              '• The number inside the box is how many vehicles of that manufacturer are stored in the database.\n'
-                              '• Tap a box to see the list of vehicles for that manufacturer.\n\n'
-                              'This helps the workshop manager quickly understand the distribution of vehicles.',
-                              style: t.textTheme.bodyMedium?.copyWith(
-                                color: t.colorScheme.onSurface,
-                              ),
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.of(ctx).pop(),
-                                child: Text(
-                                  'OK',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: t.colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Search field ────────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
-              child: TextField(
-                onChanged: controller.setQuery,
-                decoration: InputDecoration(
-                  hintText: 'Search manufacturers',
-                  prefixIcon: const Icon(Icons.search),
-                  filled: true,
-                  fillColor: theme.colorScheme.surface,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide.none,
+                ),
+                const SizedBox(width: 12),
+                SizedBox(
+                  height: 48,
+                  child: FilledButton.icon(
+                    onPressed: _openAdd,
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add_circle_outline),
+                    label: const Text('Add'),
                   ),
                 ),
-              ),
+              ],
             ),
+          ),
 
-            // ── Grid of manufacturer cards ─────────────────────────────────
-            Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                itemCount: controller.models.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 16,
-                  crossAxisSpacing: 16,
-                  childAspectRatio: 0.90,
-                ),
-                itemBuilder: (context, i) {
-                  final CarModel m = controller.models[i];
-                  return _CarCard(model: m);
-                },
-              ),
+          // Manufacturer grid
+          Expanded(
+            child: AnimatedBuilder(
+              animation: controller,
+              builder: (ctx, _) {
+                final list = controller.models;
+                if (list.isEmpty) {
+                  return const Center(child: Text('No vehicles yet'));
+                }
+                return GridView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 1.0,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                  ),
+                  itemCount: list.length,
+                  itemBuilder: (ctx, i) {
+                    final m = list[i];
+                    return _ManufacturerCard(
+                      model: m,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ManufacturerVehiclesView(manufacturer: m.name),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ───────────────────────── Manufacturer card ─────────────────────────
+class _ManufacturerCard extends StatelessWidget {
+  final CarModel model;
+  final VoidCallback onTap;
+  const _ManufacturerCard({required this.model, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context);
+    final cs = t.colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Card(
+        elevation: 0,
+        color: cs.surface,
+        shadowColor: Colors.black12,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(model.imagePath, height: 72, fit: BoxFit.contain),
+              const SizedBox(height: 12),
+              Text(model.name, style: t.textTheme.titleMedium),
+              const SizedBox(height: 4),
+              Text('${model.count} vehicles', style: t.textTheme.bodySmall),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _CarCard extends StatelessWidget {
-  final CarModel model;
+// ─────────────── Add Vehicle Form (overflow-safe, extended fields) ───────────
+class VehicleFormDialog extends StatefulWidget {
+  final Vehicle? original; // null => create
 
-  const _CarCard({required this.model});
+  const VehicleFormDialog({super.key, this.original});
+
+  @override
+  State<VehicleFormDialog> createState() => _VehicleFormDialogState();
+}
+
+class _VehicleFormDialogState extends State<VehicleFormDialog> {
+  final _form = GlobalKey<FormState>();
+  late final TextEditingController plateCtrl;
+  late final TextEditingController manuCtrl;
+  late final TextEditingController modelCtrl;
+  late final TextEditingController typeCtrl;
+  late final TextEditingController colorCtrl;
+  late final TextEditingController yearCtrl;
+  late final TextEditingController ownerIdCtrl;
+  late final TextEditingController imageCtrl;
+
+  // Extra specs
+  late final TextEditingController vinCtrl;
+  late final TextEditingController makeCtrl;
+  late final TextEditingController powerCtrl; // kW
+  late final TextEditingController limiterCtrl; // km/h
+  late final TextEditingController mileageCtrl; // KM
+  late final TextEditingController tankCtrl; // L
+
+  @override
+  void initState() {
+    super.initState();
+    final v = widget.original;
+    plateCtrl = TextEditingController(text: v?.plateNo ?? '');
+    manuCtrl = TextEditingController(text: v?.manufacturer ?? '');
+    modelCtrl = TextEditingController(text: v?.model ?? '');
+    typeCtrl = TextEditingController(text: v?.type ?? '');
+    colorCtrl = TextEditingController(text: v?.colorName ?? '');
+    yearCtrl = TextEditingController(
+      text: v?.year == null ? '' : v!.year.toString(),
+    );
+    ownerIdCtrl = TextEditingController(text: v?.ownerId ?? '');
+    imageCtrl = TextEditingController(text: v?.imageUrl ?? '');
+
+    vinCtrl = TextEditingController(text: v?.vin ?? '');
+    makeCtrl = TextEditingController(text: v?.make ?? '');
+    powerCtrl = TextEditingController(text: v?.peakPowerKw?.toString() ?? '');
+    limiterCtrl = TextEditingController(
+      text: v?.speedLimiter?.toString() ?? '',
+    );
+    mileageCtrl = TextEditingController(text: v?.mileage?.toString() ?? '');
+    tankCtrl = TextEditingController(text: v?.fuelTank?.toString() ?? '');
+  }
+
+  @override
+  void dispose() {
+    plateCtrl.dispose();
+    manuCtrl.dispose();
+    modelCtrl.dispose();
+    typeCtrl.dispose();
+    colorCtrl.dispose();
+    yearCtrl.dispose();
+    ownerIdCtrl.dispose();
+    imageCtrl.dispose();
+    vinCtrl.dispose();
+    makeCtrl.dispose();
+    powerCtrl.dispose();
+    limiterCtrl.dispose();
+    mileageCtrl.dispose();
+    tankCtrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isEdit = widget.original != null;
+    final t = Theme.of(context);
+    final cs = t.colorScheme;
 
-    final Color tileBg = theme.colorScheme.primary.withValues(alpha: 0.35);
-    final Color titleColor = theme.textTheme.bodyLarge?.color ?? Colors.black87;
-    final Color countColor = theme.colorScheme.inversePrimary;
-
-    return InkWell(
-      onTap: () {
-        // 🔑 Navigate to manufacturer-specific page
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ManufacturerVehiclesView(manufacturer: model.name),
-            settings: const RouteSettings(
-              name: ManufacturerVehiclesView.routeName,
-            ),
-          ),
-        );
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        decoration: BoxDecoration(
-          color: tileBg,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x14000000),
-              blurRadius: 6,
-              offset: Offset(0, 3),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset(
-                  model.imagePath,
-                  fit: BoxFit.contain,
-                  filterQuality: FilterQuality.low,
-                  cacheWidth: 256,
-                  cacheHeight: 256,
-                  errorBuilder: (_, __, ___) =>
-                      const Icon(Icons.directions_car, size: 64),
-                ),
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              model.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: titleColor, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.surface,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x1A000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final maxH = MediaQuery.of(context).size.height * .82;
+          return ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: maxH, minWidth: 340),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
                   ),
-                ],
-              ),
-              child: Text(
-                model.count.toString(),
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w900,
-                  color: countColor,
+                  decoration: BoxDecoration(
+                    color: cs.surfaceVariant,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(18),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(isEdit ? Icons.edit : Icons.add_circle_outline),
+                      const SizedBox(width: 8),
+                      Text(
+                        isEdit ? 'Edit Vehicle' : 'Add Vehicle',
+                        style: t.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const Spacer(),
+                      IconButton(
+                        tooltip: 'Close',
+                        onPressed: () => Navigator.pop(context),
+                        icon: const Icon(Icons.close),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+
+                // Body
+                Expanded(
+                  child: Form(
+                    key: _form,
+                    child: Scrollbar(
+                      thumbVisibility: true,
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Vehicle Information',
+                              style: t.textTheme.titleMedium?.copyWith(
+                                color: cs.primary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            _field(
+                              controller: plateCtrl,
+                              label: 'Plate No *',
+                              readOnly: isEdit,
+                              capitalization: TextCapitalization.characters,
+                              validator: _req,
+                            ),
+                            _field(
+                              controller: manuCtrl,
+                              label: 'Manufacturer *',
+                              validator: _req,
+                            ),
+                            _field(
+                              controller: modelCtrl,
+                              label: 'Model *',
+                              validator: _req,
+                            ),
+                            _field(
+                              controller: typeCtrl,
+                              label: 'Type (e.g. Sedan) *',
+                              validator: _req,
+                            ),
+                            _field(
+                              controller: colorCtrl,
+                              label: 'Color Name *',
+                              validator: _req,
+                            ),
+                            _field(
+                              controller: yearCtrl,
+                              label: 'Year *',
+                              keyboardType: TextInputType.number,
+                              validator: (v) {
+                                final n = int.tryParse(v ?? '');
+                                if (n == null || n <= 0)
+                                  return 'Enter valid year';
+                                return null;
+                              },
+                            ),
+                            _field(
+                              controller: ownerIdCtrl,
+                              label: 'Owner ID *',
+                              validator: _req,
+                            ),
+                            _field(controller: imageCtrl, label: 'Image URL'),
+
+                            const SizedBox(height: 12),
+                            Text(
+                              'Specs',
+                              style: t.textTheme.titleMedium?.copyWith(
+                                color: cs.primary,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+
+                            _field(controller: vinCtrl, label: 'VIN'),
+                            _field(controller: makeCtrl, label: 'Make'),
+                            _numField(
+                              controller: powerCtrl,
+                              label: 'Peak Power (kW)',
+                            ),
+                            _numField(
+                              controller: limiterCtrl,
+                              label: 'Speed Limiter (km/h)',
+                            ),
+                            _numField(
+                              controller: mileageCtrl,
+                              label: 'Mileage (KM)',
+                            ),
+                            _numField(
+                              controller: tankCtrl,
+                              label: 'Fuel Tank (L)',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // Footer
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Row(
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      const Spacer(),
+                      FilledButton(
+                        onPressed: () {
+                          if (!_form.currentState!.validate()) return;
+
+                          int? _toInt(String s) =>
+                              s.trim().isEmpty ? null : int.tryParse(s.trim());
+
+                          final v = Vehicle(
+                            plateNo: plateCtrl.text.trim().toUpperCase(),
+                            manufacturer: manuCtrl.text.trim(),
+                            model: modelCtrl.text.trim(),
+                            type: typeCtrl.text.trim(),
+                            colorName: colorCtrl.text.trim(),
+                            year: int.parse(yearCtrl.text.trim()),
+                            ownerId: ownerIdCtrl.text.trim(),
+                            imageUrl: imageCtrl.text.trim().isEmpty
+                                ? null
+                                : imageCtrl.text.trim(),
+                            // specs
+                            vin: vinCtrl.text.trim().isEmpty
+                                ? null
+                                : vinCtrl.text.trim(),
+                            make: makeCtrl.text.trim().isEmpty
+                                ? null
+                                : makeCtrl.text.trim(),
+                            peakPowerKw: _toInt(powerCtrl.text),
+                            speedLimiter: _toInt(limiterCtrl.text),
+                            mileage: _toInt(mileageCtrl.text),
+                            fuelTank: _toInt(tankCtrl.text),
+                            // keep optional existing owner meta if editing
+                            ownerName: widget.original?.ownerName,
+                            ownerGender: widget.original?.ownerGender,
+                          );
+
+                          Navigator.pop(context, v);
+                        },
+                        child: Text(isEdit ? 'Save' : 'Add'),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
+    );
+  }
+
+  // helpers
+  String? _req(String? v) =>
+      (v == null || v.trim().isEmpty) ? 'Required' : null;
+
+  Widget _field({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+    TextCapitalization capitalization = TextCapitalization.none,
+    TextInputType? keyboardType,
+    bool readOnly = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextFormField(
+        controller: controller,
+        readOnly: readOnly,
+        textCapitalization: capitalization,
+        validator: validator,
+        keyboardType: keyboardType,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          isDense: true,
+        ).copyWith(labelText: label),
+      ),
+    );
+  }
+
+  Widget _numField({
+    required TextEditingController controller,
+    required String label,
+  }) {
+    return _field(
+      controller: controller,
+      label: label,
+      keyboardType: TextInputType.number,
+      validator: (v) {
+        if (v == null || v.trim().isEmpty) return null;
+        return int.tryParse(v.trim()) == null ? 'Enter a number' : null;
+      },
     );
   }
 }

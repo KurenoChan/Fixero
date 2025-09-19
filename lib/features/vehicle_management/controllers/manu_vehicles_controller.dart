@@ -5,7 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/vehicle.dart';
 
-enum VehicleSort { plateAsc, plateDesc, ownerAsc, ownerDesc, modelAsc, modelDesc }
+enum VehicleSort {
+  plateAsc,
+  plateDesc,
+  ownerAsc,
+  ownerDesc,
+  modelAsc,
+  modelDesc,
+}
 
 class ManufacturerVehiclesController extends ChangeNotifier {
   ManufacturerVehiclesController(this.manufacturer);
@@ -22,10 +29,12 @@ class ManufacturerVehiclesController extends ChangeNotifier {
     Iterable<Vehicle> list = _all;
     if (_query.trim().isNotEmpty) {
       final q = _query.toLowerCase();
-      list = list.where((v) =>
-          v.plateNo.toLowerCase().contains(q) ||
-          (v.ownerName ?? '').toLowerCase().contains(q) ||
-          v.model.toLowerCase().contains(q));
+      list = list.where(
+        (v) =>
+            v.plateNo.toLowerCase().contains(q) ||
+            (v.ownerName ?? '').toLowerCase().contains(q) ||
+            v.model.toLowerCase().contains(q),
+      );
     }
     final l = list.toList();
     _sortList(l);
@@ -33,15 +42,31 @@ class ManufacturerVehiclesController extends ChangeNotifier {
   }
 
   VehicleSort get sort => _sort;
-  void setQuery(String q) { _query = q; notifyListeners(); }
+  void setQuery(String q) {
+    _query = q;
+    notifyListeners();
+  }
+
   void toggleSort() {
     switch (_sort) {
-      case VehicleSort.plateAsc:  _sort = VehicleSort.plateDesc; break;
-      case VehicleSort.plateDesc: _sort = VehicleSort.ownerAsc;  break;
-      case VehicleSort.ownerAsc:  _sort = VehicleSort.ownerDesc; break;
-      case VehicleSort.ownerDesc: _sort = VehicleSort.modelAsc;  break;
-      case VehicleSort.modelAsc:  _sort = VehicleSort.modelDesc; break;
-      case VehicleSort.modelDesc: _sort = VehicleSort.plateAsc;  break;
+      case VehicleSort.plateAsc:
+        _sort = VehicleSort.plateDesc;
+        break;
+      case VehicleSort.plateDesc:
+        _sort = VehicleSort.ownerAsc;
+        break;
+      case VehicleSort.ownerAsc:
+        _sort = VehicleSort.ownerDesc;
+        break;
+      case VehicleSort.ownerDesc:
+        _sort = VehicleSort.modelAsc;
+        break;
+      case VehicleSort.modelAsc:
+        _sort = VehicleSort.modelDesc;
+        break;
+      case VehicleSort.modelDesc:
+        _sort = VehicleSort.plateAsc;
+        break;
     }
     notifyListeners();
   }
@@ -49,13 +74,30 @@ class ManufacturerVehiclesController extends ChangeNotifier {
   void _sortList(List<Vehicle> l) {
     int cmp(String a, String b) => a.toLowerCase().compareTo(b.toLowerCase());
     switch (_sort) {
-      case VehicleSort.plateAsc:  l.sort((a,b)=>cmp(a.plateNo,b.plateNo)); break;
-      case VehicleSort.plateDesc: l.sort((a,b)=>cmp(b.plateNo,a.plateNo)); break;
-      case VehicleSort.ownerAsc:  l.sort((a,b)=>cmp(a.ownerName ?? '', b.ownerName ?? '')); break;
-      case VehicleSort.ownerDesc: l.sort((a,b)=>cmp(b.ownerName ?? '', a.ownerName ?? '')); break;
-      case VehicleSort.modelAsc:  l.sort((a,b)=>cmp(a.model,b.model)); break;
-      case VehicleSort.modelDesc: l.sort((a,b)=>cmp(b.model,a.model)); break;
+      case VehicleSort.plateAsc:
+        l.sort((a, b) => cmp(a.plateNo, b.plateNo));
+        break;
+      case VehicleSort.plateDesc:
+        l.sort((a, b) => cmp(b.plateNo, a.plateNo));
+        break;
+      case VehicleSort.ownerAsc:
+        l.sort((a, b) => cmp(a.ownerName ?? '', b.ownerName ?? ''));
+        break;
+      case VehicleSort.ownerDesc:
+        l.sort((a, b) => cmp(b.ownerName ?? '', a.ownerName ?? ''));
+        break;
+      case VehicleSort.modelAsc:
+        l.sort((a, b) => cmp(a.model, b.model));
+        break;
+      case VehicleSort.modelDesc:
+        l.sort((a, b) => cmp(b.model, a.model));
+        break;
     }
+  }
+
+  void setSort(VehicleSort s) {
+    _sort = s;
+    notifyListeners();
   }
 
   Future<void> listen() async {
@@ -72,7 +114,8 @@ class ManufacturerVehiclesController extends ChangeNotifier {
         if (data is Map) {
           // ⬇️ pass `fallbackKey: c.key` so plate comes from node key if absent in map
           final v = Vehicle.fromMap(data, fallbackKey: c.key);
-          if (v.manufacturer.toLowerCase().trim() == manufacturer.toLowerCase().trim()) {
+          if (v.manufacturer.toLowerCase().trim() ==
+              manufacturer.toLowerCase().trim()) {
             base.add(v);
             if (v.ownerId.trim().isNotEmpty) ownerIds.add(v.ownerId.trim());
           }
@@ -82,14 +125,16 @@ class ManufacturerVehiclesController extends ChangeNotifier {
       // load customers (users/customers) and index by both key and custID
       final Map<String, Map<dynamic, dynamic>> ownersById = {};
       if (ownerIds.isNotEmpty) {
-        final custSnap = await FirebaseDatabase.instance.ref('users/customers').get();
+        final custSnap = await FirebaseDatabase.instance
+            .ref('users/customers')
+            .get();
         if (custSnap.exists) {
           for (final c in custSnap.children) {
             if (c.value is! Map) continue;
             final map = Map<dynamic, dynamic>.from(c.value as Map);
-            final keyId   = (c.key ?? '').trim();
+            final keyId = (c.key ?? '').trim();
             final fieldId = (map['custID'] ?? '').toString().trim();
-            if (keyId.isNotEmpty)   ownersById[keyId] = map;
+            if (keyId.isNotEmpty) ownersById[keyId] = map;
             if (fieldId.isNotEmpty) ownersById[fieldId] = map;
           }
         }
@@ -107,7 +152,9 @@ class ManufacturerVehiclesController extends ChangeNotifier {
         debugPrint('[Vehicles:$manufacturer] items=${joined.length}');
         if (joined.isNotEmpty) {
           final a = joined.first;
-          debugPrint(' e.g. plate=${a.plateNo}, ownerId=${a.ownerId}, owner=${a.ownerName}, model=${a.model}');
+          debugPrint(
+            ' e.g. plate=${a.plateNo}, ownerId=${a.ownerId}, owner=${a.ownerName}, model=${a.model}',
+          );
         }
       }
 
@@ -128,7 +175,8 @@ class ManufacturerVehiclesController extends ChangeNotifier {
     final k = name.toLowerCase();
     if (k.contains('red')) return const Color(0xFFFF6B6B);
     if (k.contains('blue')) return const Color(0xFF4D9DE0);
-    if (k.contains('silver') || k.contains('grey') || k.contains('gray')) return const Color(0xFFB0B0B0);
+    if (k.contains('silver') || k.contains('grey') || k.contains('gray'))
+      return const Color(0xFFB0B0B0);
     if (k.contains('black')) return const Color(0xFF4A4A4A);
     if (k.contains('white')) return const Color(0xFFEDEDED);
     if (k.contains('maroon')) return const Color(0xFF8B1E3F);
