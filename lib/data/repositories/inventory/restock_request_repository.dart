@@ -30,11 +30,11 @@ class RestockRequestRepository {
   }
 
   Future<void> addRequest(RestockRequest request) async {
-    await _db.child(request.requestId).set(request.toMap());
+    await _db.child(request.requestID).set(request.toMap());
   }
 
   Future<void> updateRequest(RestockRequest request) async {
-    await _db.child(request.requestId).update(request.toMap());
+    await _db.child(request.requestID).update(request.toMap());
   }
 
   Future<void> deleteRequest(String requestId) async {

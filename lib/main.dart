@@ -1,7 +1,15 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
+import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
+import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import 'common/styles/dark_mode.dart';
 import 'common/styles/light_mode.dart';
@@ -16,21 +24,27 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-
-  // ************************
-  // TODO: REMOVE THIS LATER
-  // ************************
-  // Force logout for testing
-  // await FirebaseAuth.instance.signOut();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Read intro flag once
   final prefs = await SharedPreferences.getInstance();
   final seenIntro = prefs.getBool('seenIntro') ?? false;
 
-  runApp(MainApp(seenIntro: seenIntro));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ItemController()),
+        ChangeNotifierProvider(create: (_) => RequestedItemController()),
+        ChangeNotifierProvider(create: (_) => RestockRequestController()),
+        ChangeNotifierProvider(create: (_) => SupplierController()),
+        ChangeNotifierProvider(create: (_) => OrderController()),
+        ChangeNotifierProvider(create: (_) => ItemUsageController()),
+
+        ChangeNotifierProvider(create: (_) => JobController()),
+      ],
+      child: MainApp(seenIntro: seenIntro),
+    ),
+  );
 }
 
 class MainApp extends StatelessWidget {
@@ -44,7 +58,6 @@ class MainApp extends StatelessWidget {
       theme: lightMode,
       darkTheme: darkMode,
       themeMode: ThemeMode.system,
-      // initialRoute: HomePage.routeName,
       routes: {
         HomePage.routeName: (_) => const HomePage(),
         InventoryPage.routeName: (_) => const InventoryPage(),
@@ -62,7 +75,6 @@ class MainApp extends StatelessWidget {
   }
 }
 
-
 class AuthGate extends StatelessWidget {
   final bool seenIntro;
   const AuthGate({super.key, required this.seenIntro});
@@ -74,7 +86,9 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (!seenIntro) return const IntroPage();
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
         }
         if (snapshot.hasData) {
           return const HomePage();

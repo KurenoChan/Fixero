@@ -8,7 +8,7 @@ class SupplierDAO {
     return await _repo.fetchAllSuppliers();
   }
 
-  Future<Supplier?> getSupplierById(String supplierID) async {
+  Future<Supplier?> getSupplierByID(String supplierID) async {
     final suppliers = await _repo.fetchAllSuppliers();
     try {
       return suppliers.firstWhere((s) => s.supplierID == supplierID);

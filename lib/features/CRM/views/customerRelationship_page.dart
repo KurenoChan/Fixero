@@ -28,13 +28,6 @@ class _CrmHomePageState extends State<CrmHomePage> {
       child: Scaffold(
         appBar: FixeroMainAppBar(
           title: "Customer Relationship",
-          searchHints: ["Customer Name", "Vehicle Plate", "Phone Number"],
-          searchTerms: [
-            "John Tan",
-            "Toyota Vios",
-            "0123456789",
-            "Service Feedback",
-          ],
         ),
         body: Padding(
           padding: const EdgeInsets.all(15),

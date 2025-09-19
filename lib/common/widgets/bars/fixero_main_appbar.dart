@@ -1,18 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../utils/formatters/formatter.dart';
-import '../tools/fixero_searcher.dart';
 
 class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
-  final List<String> searchHints;
-  final List<String> searchTerms;
 
   const FixeroMainAppBar({
     super.key,
     required this.title,
-    required this.searchHints,
-    required this.searchTerms,
   });
 
   @override
@@ -35,9 +30,8 @@ class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.start,
             children: [
-              // LEFT SIDE
               Text(
                 // capitalize
                 Formatter.capitalize(title),
@@ -46,12 +40,6 @@ class FixeroMainAppBar extends StatelessWidget implements PreferredSizeWidget {
                   fontWeight: FontWeight.bold,
                   fontSize: 30,
                 ),
-              ),
-
-              // RIGHT SIDE
-              FixeroSearcher(
-                searchHints: searchHints,
-                searchTerms: searchTerms,
               ),
             ],
           ),

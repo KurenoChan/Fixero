@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../../../utils/formatters/formatter.dart';
-
 class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
@@ -35,60 +33,21 @@ class FixeroSubAppBar extends StatelessWidget implements PreferredSizeWidget {
             )
           : null,
       title: Text(
-        // capitalize
-        Formatter.capitalize(title),
+        title,
+        overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.titleLarge?.copyWith(
           color: Theme.of(context).colorScheme.onPrimary,
           fontSize: 25,
         ),
       ),
 
+      actions: [const SizedBox(width: 45)],
+
       centerTitle: true,
 
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
       ),
-
-      // flexibleSpace: Padding(
-      //   padding: const EdgeInsets.only(top: 0.0), // top spacing
-      //   child: Container(
-      //     padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 30),
-      //     decoration: BoxDecoration(
-      //       color: Theme.of(context).colorScheme.inversePrimary,
-      //       borderRadius: BorderRadius.only(
-      //         bottomLeft: Radius.circular(20),
-      //         bottomRight: Radius.circular(20),
-      //       ),
-      //     ),
-      //     child: Row(
-      //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      //       children: [
-      //         // LEFT SIDE
-      //         IconButton(
-      //           icons: Icon(
-      //             Icons.chevron_left,
-      //             color: theme.primaryColor,
-      //             size: 30,
-      //           ),
-      //           onPressed: () => Navigator.of(context).pop(),
-      //         ),
-      //
-      //         Text(
-      //           // capitalize
-      //           Formatter.capitalize(title),
-      //           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-      //             color: Theme.of(context).colorScheme.primary,
-      //             fontWeight: FontWeight.bold,
-      //             fontSize: 30,
-      //           ),
-      //         ),
-      //
-      //         // RIGHT SIDE
-      //         const SizedBox(width: 50),
-      //       ],
-      //     ),
-      //   ),
-      // ),
     );
   }
 }

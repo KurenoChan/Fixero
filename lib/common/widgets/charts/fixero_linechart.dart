@@ -20,12 +20,19 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (data.isEmpty || data.any((d) => !d.value.isFinite)) {
-      return const Center(child: Text("Invalid or empty data"));
+      return const Center(
+        child: Text(
+          "( No record )",
+          style: TextStyle(fontStyle: FontStyle.italic),
+        ),
+      );
     }
 
-    final spots = data.asMap().entries.map(
-          (e) => FlSpot(e.key.toDouble(), e.value.value),
-    ).toList();
+    final spots = data
+        .asMap()
+        .entries
+        .map((e) => FlSpot(e.key.toDouble(), e.value.value))
+        .toList();
 
     final maxY = data.map((e) => e.value).reduce((a, b) => a > b ? a : b);
     final minY = data.map((e) => e.value).reduce((a, b) => a < b ? a : b);
@@ -43,22 +50,52 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
               LineChartBarData(
                 spots: spots,
                 isCurved: true,
-                barWidth: 2,
-                dotData: FlDotData(show: showDot),
+                barWidth: 3,
+                dotData: FlDotData(
+                  show: showDot,
+                  getDotPainter: (spot, percent, barData, index) =>
+                      FlDotCirclePainter(
+                        radius: 4, // dot size
+                        color: color, // dot fill color
+                        strokeWidth: 1.5,
+                        strokeColor: Theme.of(
+                          context,
+                        ).colorScheme.primary, // optional border
+                      ),
+                ),
                 color: color,
                 belowBarData: BarAreaData(
                   show: showGradient,
                   gradient: LinearGradient(
-                    colors: [
-                      color.withAlpha(30),
-                      color.withAlpha(0),
-                    ],
+                    colors: [color.withAlpha(30), color.withAlpha(0)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
                 ),
               ),
             ],
+
+            lineTouchData: LineTouchData(
+              touchTooltipData: LineTouchTooltipData(
+                getTooltipColor: (LineBarSpot touchedSpot) {
+                  return Theme.of(context).colorScheme.primary;
+                },
+                tooltipBorderRadius: BorderRadius.circular(5),
+                fitInsideHorizontally:
+                    true, // <-- Fit tooltip inside horizontally
+                fitInsideVertically: true, // <-- Fit tooltip inside vertically
+                getTooltipItems: (touchedSpots) {
+                  return touchedSpots.map((touchedSpot) {
+                    final label = data[touchedSpot.spotIndex].label;
+                    final value = touchedSpot.y.toStringAsFixed(0);
+                    return LineTooltipItem(
+                      '$label\n$value',
+                      const TextStyle(color: Colors.white),
+                    );
+                  }).toList();
+                },
+              ),
+            ),
             titlesData: FlTitlesData(
               leftTitles: AxisTitles(
                 sideTitles: SideTitles(
@@ -75,6 +112,7 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
                 sideTitles: SideTitles(
                   showTitles: true,
                   interval: 2,
+                  reservedSize: 40, // more space below to prevent cutoff
                   getTitlesWidget: (value, _) {
                     final index = value.toInt();
                     if (index >= 0 && index < data.length) {
@@ -91,7 +129,9 @@ class FixeroLineChart<T extends ChartDataModel> extends StatelessWidget {
                 ),
               ),
               topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-              rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+              rightTitles: AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
             ),
             gridData: FlGridData(show: true),
             borderData: FlBorderData(show: true),

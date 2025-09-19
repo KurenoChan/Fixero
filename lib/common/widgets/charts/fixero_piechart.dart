@@ -8,6 +8,11 @@ class FixeroPieChart<T extends ChartDataModel> extends StatelessWidget {
 
   const FixeroPieChart({super.key, required this.data});
 
+  String _shortenLabel(String label, {int maxLength = 12}) {
+    if (label.length <= maxLength) return label;
+    return '${label.substring(0, maxLength)}…';
+  }
+
   @override
   Widget build(BuildContext context) {
     return PieChart(
@@ -16,10 +21,16 @@ class FixeroPieChart<T extends ChartDataModel> extends StatelessWidget {
           final item = e.value;
           return PieChartSectionData(
             value: item.value,
-            title: "${item.label} (${item.value.toStringAsFixed(0)}%)",
-            color: Colors.primaries[e.key % Colors.primaries.length].withAlpha(180),
+            title:
+                "${_shortenLabel(item.label)} (${item.value.toStringAsFixed(0)}%)",
+            color: Colors.primaries[e.key % Colors.primaries.length].withAlpha(
+              180,
+            ),
             radius: 60,
-            titleStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            titleStyle: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           );
         }).toList(),
       ),

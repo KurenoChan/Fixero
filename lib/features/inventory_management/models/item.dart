@@ -1,5 +1,5 @@
 class Item {
-  final String itemId;
+  final String itemID;
   final String itemName;
   final String itemDescription;
   final String itemCategory;
@@ -11,7 +11,7 @@ class Item {
   final String imageUrl;
 
   Item({
-    required this.itemId,
+    required this.itemID,
     required this.itemName,
     required this.itemDescription,
     required this.itemCategory,
@@ -23,10 +23,36 @@ class Item {
     required this.imageUrl,
   });
 
+  Item copyWith({
+    String? itemID,
+    String? itemName,
+    String? itemDescription,
+    String? itemCategory,
+    String? itemSubCategory,
+    double? itemPrice,
+    int? stockQuantity,
+    String? unit,
+    int? lowStockThreshold,
+    String? imageUrl,
+  }) {
+    return Item(
+      itemID: itemID ?? this.itemID,
+      itemName: itemName ?? this.itemName,
+      itemDescription: itemDescription ?? this.itemDescription,
+      itemCategory: itemCategory ?? this.itemCategory,
+      itemSubCategory: itemSubCategory ?? this.itemSubCategory,
+      itemPrice: itemPrice ?? this.itemPrice,
+      stockQuantity: stockQuantity ?? this.stockQuantity,
+      unit: unit ?? this.unit,
+      lowStockThreshold: lowStockThreshold ?? this.lowStockThreshold,
+      imageUrl: imageUrl ?? this.imageUrl,
+    );
+  }
+
   // To convert Firebase JSON into Item
   factory Item.fromMap(Map<dynamic, dynamic> map, String id) {
     return Item(
-      itemId: id,
+      itemID: id,
       itemName: map['itemName'] ?? '',
       itemDescription: map['itemDescription'] ?? '',
       itemCategory: map['itemCategory'] ?? '',
@@ -50,7 +76,7 @@ class Item {
       'stockQuantity': stockQuantity,
       'unit': unit,
       'lowStockThreshold': lowStockThreshold,
-      'imageUrl': imageUrl,
+      'itemImageUrl': imageUrl,
     };
   }
 }
