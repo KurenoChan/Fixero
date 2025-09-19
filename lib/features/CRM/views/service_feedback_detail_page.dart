@@ -4,6 +4,7 @@ import '../models/feedback_model.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import 'customer_profile_page.dart'; // make sure path correct
+import '../widgets/feedback_layout_widget.dart';
 
 class ServiceFeedbackDetailPage extends StatefulWidget {
   final FeedbackModel feedback;
@@ -106,171 +107,26 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
       bottomNavigationBar: const FixeroBottomAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: [
-            // 🔹 Customer & Job Info
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade50, Colors.blue.shade100],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Customer: ${fb.customerName}",
-                        style: const TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                    Text("Car Model: ${fb.carModel}",
-                        style: const TextStyle(color: Colors.black87)),
-                    Text("Service Type: ${fb.serviceType}",
-                        style: const TextStyle(color: Colors.black87)),
-                    Text("Service Date: ${fb.date}",
-                        style: const TextStyle(color: Colors.black87)),
-                    const SizedBox(height: 12),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (fb.customerId != null) {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => CustomerProfilePage(
-                                customerId: fb.customerId!,   // now filled
-                                customerData: {},             // can let profile fetch its own
-                              ),
-                            ),
-                          );
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text("No customer linked to this feedback")),
-                          );
-                        }
-                      },
-                      icon: const Icon(Icons.person),
-                      label: const Text("View Customer Profile"),
-                    )
-
-                  ],
-                ),
+        child: buildFeedbackLayout(
+          fb: fb,
+          replies: replies,
+          context: context,
+          actions: isClosed
+              ? [
+            ElevatedButton.icon(
+              onPressed: _reopenFeedback,
+              icon: const Icon(Icons.lock_open),
+              label: const Text("Reopen Feedback"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                foregroundColor: Colors.white,
               ),
-            ),
-            const SizedBox(height: 20),
-
-            // 🔹 Feedback ratings
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade50, Colors.blue.shade100],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Feedback Ratings",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    _buildRatingRow("Service Quality", fb.serviceQuality),
-                    _buildRatingRow("Completion Time", fb.completionEfficiency),
-                    _buildRatingRow("Engineering Attitude", fb.engineeringAttitude),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // 🔹 Feedback details (comment)
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade50, Colors.blue.shade100],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Comment",
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
-                    Text(fb.comment,
-                        style: const TextStyle(fontSize: 15, color: Colors.black87)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // 🔹 Replies
-            const Text("Replies",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            replies.isEmpty
-                ? const Text("No replies available.")
-                : Column(
-              children: replies.map((r) {
-                return Card(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    title: Text(
-                      r["from"],
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.blue),
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Text(r["message"],
-                          style: const TextStyle(color: Colors.black87)),
-                    ),
-                    trailing: Text(
-                      r["date"],
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-
-            const SizedBox(height: 20),
-
-            // 🔹 Reopen button if feedback is closed
-            if (isClosed)
-              ElevatedButton.icon(
-                onPressed: _reopenFeedback,
-                icon: const Icon(Icons.lock_open),
-                label: const Text("Reopen Feedback"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                ),
-              ),
-          ],
+            )
+          ]
+              : [],
         ),
       ),
+
     );
   }
 }

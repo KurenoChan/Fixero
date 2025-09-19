@@ -8,12 +8,12 @@ import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 
 class CustomerProfilePage extends StatefulWidget {
   final String customerId;
-  final Map<String, dynamic> customerData;
+  final Map<String, dynamic>? customerData; // nullable now
 
   const CustomerProfilePage({
     super.key,
     required this.customerId,
-    required this.customerData,
+    this.customerData,
   });
 
   @override
@@ -24,7 +24,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   final VehicleController _vehicleController = VehicleController();
   final CustomerController _customerController = CustomerController();
 
-  Map<String, dynamic>? customer;
+  Customer? customer;
   List<Vehicle> vehicles = [];
   bool isLoading = true;
 
@@ -35,18 +35,21 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
   }
 
   Future<void> _loadData() async {
-    // 1) If no customerData passed in, fetch from CustomerController
-    if (widget.customerData.isEmpty) {
-      final fetched = await _customerController.fetchCustomerById(widget.customerId);
+    // 🔹 1) If no customerData passed in → fetch from CustomerController
+    if (widget.customerData == null || widget.customerData!.isEmpty) {
+      final fetched =
+      await _customerController.fetchCustomerById(widget.customerId);
       if (fetched != null) {
-        customer = fetched.toMap();
+        customer = fetched;
       }
     } else {
-      customer = widget.customerData;
+      // 🔹 Construct Customer from provided map
+      customer = Customer.fromMap(widget.customerId, widget.customerData!);
     }
 
-    // 2) Load vehicles
-    final fetchedVehicles = await _vehicleController.fetchVehiclesByOwner(widget.customerId);
+    // 🔹 2) Load vehicles
+    final fetchedVehicles =
+    await _vehicleController.fetchVehiclesByOwner(widget.customerId);
 
     setState(() {
       vehicles = fetchedVehicles;
@@ -69,12 +72,12 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
     }
 
     final theme = Theme.of(context);
-    final isFemale = (customer?['gender']?.toLowerCase() == 'female');
+    final isFemale = customer!.gender.toLowerCase() == 'female';
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       appBar: FixeroSubAppBar(
-        title: customer?['custName'] ?? 'Customer Profile',
+        title: customer!.custName,
         showBackButton: true,
       ),
       body: SingleChildScrollView(
@@ -85,7 +88,8 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             // 🔹 Profile Header
             Card(
               elevation: 5,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16)),
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
@@ -110,7 +114,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                     ),
                     const SizedBox(height: 15),
                     Text(
-                      customer?['custName'] ?? '',
+                      customer!.custName,
                       style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
@@ -119,7 +123,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      customer?['custEmail'] ?? '',
+                      customer!.custEmail,
                       style: TextStyle(
                         color: Colors.blue.shade800,
                         fontSize: 16,
@@ -136,27 +140,18 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             // 🔹 Personal Info
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade50, Colors.blue.shade100],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    _infoTile(Icons.person, "Gender", customer?['gender'] ?? ''),
-                    _divider(),
-                    _infoTile(Icons.cake, "Date of Birth", customer?['dob'] ?? ''),
-                    _divider(),
-                    _infoTile(Icons.phone, "Phone", customer?['custTel'] ?? ''),
-                    _divider(),
-                    _infoTile(Icons.email, "Email", customer?['custEmail'] ?? ''),
-                  ],
-                ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                children: [
+                  _infoTile(Icons.person, "Gender", customer!.gender),
+                  _divider(),
+                  _infoTile(Icons.cake, "Date of Birth", customer!.dob),
+                  _divider(),
+                  _infoTile(Icons.phone, "Phone", customer!.custTel),
+                  _divider(),
+                  _infoTile(Icons.email, "Email", customer!.custEmail),
+                ],
               ),
             ),
             const SizedBox(height: 20),
@@ -164,26 +159,17 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             // 🔹 Address
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue.shade50, Colors.blue.shade100],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: ListTile(
-                  leading: const Icon(Icons.home, color: Colors.blue),
-                  title: const Text("Address",
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(
-                    "${customer?['address1'] ?? ''}, ${customer?['address2'] ?? ''}, "
-                        "${customer?['city'] ?? ''}, ${customer?['state'] ?? ''}, "
-                        "${customer?['postalCode'] ?? ''}, ${customer?['country'] ?? ''}",
-                    style: const TextStyle(fontSize: 15),
-                  ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+              child: ListTile(
+                leading: const Icon(Icons.home, color: Colors.blue),
+                title: const Text("Address",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                subtitle: Text(
+                  "${customer!.address1}, ${customer!.address2}, "
+                      "${customer!.city}, ${customer!.state}, "
+                      "${customer!.postalCode}, ${customer!.country}",
+                  style: const TextStyle(fontSize: 15),
                 ),
               ),
             ),
