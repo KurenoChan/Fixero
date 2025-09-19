@@ -6,7 +6,6 @@ import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 
 class ServiceFeedbackReplyPage extends StatefulWidget {
   final FeedbackModel feedback;
-
   const ServiceFeedbackReplyPage({super.key, required this.feedback});
 
   @override
