@@ -53,6 +53,15 @@ class Job {
     );
   }
 
+  static int _parseEstimatedDuration(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is String) {
+      return int.tryParse(value) ?? 0;
+    }
+    return 0;
+  }
+
   factory Job.fromMap(Map<dynamic, dynamic> map, String id) {
     return Job(
       jobID: id,
@@ -61,7 +70,7 @@ class Job {
       jobStatus: map['jobStatus'] ?? '',
       scheduledDate: map['scheduledDate'] ?? '',
       scheduledTime: map['scheduledTime'] ?? '',
-      estimatedDuration: (map['estimatedDuration'] ?? 0) as int,
+      estimatedDuration: _parseEstimatedDuration(map['estimatedDuration']),
       createdAt: map['createdAt'] ?? '',
       mechanicID: map['mechanicID'] ?? '',
       plateNo: map['plateNo'] ?? '',

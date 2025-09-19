@@ -1,3 +1,4 @@
+import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:flutter/material.dart';
 
 import '../../../features/inventory_management/views/inventory_page.dart';
@@ -39,8 +40,8 @@ class FixeroBottomAppBar extends StatelessWidget {
                 Icons.work,
                 'Jobs',
                 theme,
-                const HomePage(),
-                '/jobs',
+                const JobsPage(),
+                JobsPage.routeName,
                 currentRoute,
               ),
             ),
