@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fixero/common/widgets/bars/fixero_bottom_appbar.dart';
 import 'package:fixero/common/widgets/bars/fixero_main_appbar.dart';
+import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/data/dao/job_services/job_dao.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
@@ -518,7 +519,7 @@ class JobDetailsPage extends StatelessWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text('Job Details - ${job.jobID}')),
+      appBar: FixeroSubAppBar(title: 'Job Details', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
