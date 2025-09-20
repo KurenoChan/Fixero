@@ -160,13 +160,22 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                               onChanged: (value) {
                                 setState(() {}); // trigger filtering
                               },
+                              textAlignVertical: TextAlignVertical.center,
                               decoration: const InputDecoration(
+                                isCollapsed: true,
                                 icon: Icon(Icons.search, color: Colors.blue),
                                 hintText: "Search feedback...",
                                 border: InputBorder.none,
+                                enabledBorder: InputBorder.none,   // ✅ remove underline when not focused
+                                focusedBorder: InputBorder.none,   // ✅ remove underline when focused
+                                errorBorder: InputBorder.none,     // ✅ safety (in case of error state)
+                                disabledBorder: InputBorder.none,  // ✅ safety
+                                filled: false,
                               ),
                             ),
+
                           ),
+
 
                           // ↕️ Sort menu inside the search bar
                           PopupMenuButton<String>(
@@ -187,46 +196,89 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                   ),
 
                   // filters row
+                  // 🔹 Filters Row (same design as search bar)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                     child: Row(
                       children: [
+                        // Feedback Type Filter
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedFeedbackType,
-                            items: feedbackTypes
-                                .map((ft) => DropdownMenuItem(value: ft, child: Text(ft)))
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => selectedFeedbackType = value ?? "All");
-                            },
-                            decoration: const InputDecoration(
-                              labelText: "Feedback Type",
-                              border: OutlineInputBorder(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedFeedbackType,
+                                hint: const Text("Feedback Type"),
+                                icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                items: feedbackTypes
+                                    .map((ft) => DropdownMenuItem(
+                                  value: ft,
+                                  child: Text(ft),
+                                ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => selectedFeedbackType = value);
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
+
+                        // Service Type Filter
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedServiceType,
-                            items: serviceTypes
-                                .map((st) => DropdownMenuItem(value: st, child: Text(st)))
-                                .toList(),
-                            onChanged: (value) {
-                              setState(() => selectedServiceType = value ?? "All");
-                            },
-                            decoration: const InputDecoration(
-                              labelText: "Service Type",
-                              border: OutlineInputBorder(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedServiceType,
+                                hint: const Text("Service Type"),
+                                icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                items: serviceTypes
+                                    .map((st) => DropdownMenuItem(
+                                  value: st,
+                                  child: Text(st),
+                                ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => selectedServiceType = value);
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 10),
 
                   // list

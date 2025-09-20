@@ -6,6 +6,8 @@ import '../controllers/vehicle_controller.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import 'edit_customer_page.dart';
+import '../../vehicle_management/views/vehicle_details_view.dart';
+
 
 class CustomerProfilePage extends StatefulWidget {
   final String customerId;
@@ -34,6 +36,26 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
     super.initState();
     _loadData();
   }
+  Color _mapCarColor(String colorName) {
+    switch (colorName.toLowerCase()) {
+      case "red":
+        return Colors.red.shade200;
+      case "blue":
+        return Colors.blue.shade200;
+      case "black":
+        return Colors.black12;
+      case "white":
+        return Colors.grey.shade200;
+      case "silver":
+        return Colors.grey.shade400;
+      case "green":
+        return Colors.green.shade200;
+      case "yellow":
+        return Colors.yellow.shade200;
+      default:
+        return Colors.blue.shade50; // fallback if unknown
+    }
+  }
 
   Future<void> _loadData() async {
     // 🔹 1) If no customerData passed in → fetch from CustomerController
@@ -57,6 +79,14 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
       isLoading = false;
     });
   }
+  final BoxDecoration blueCardDecoration = BoxDecoration(
+    gradient: LinearGradient(
+      colors: [Colors.blue.shade50, Colors.blue.shade100],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    ),
+    borderRadius: BorderRadius.circular(16),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -103,7 +133,7 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
       ),
 
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 90),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -162,39 +192,45 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
             // 🔹 Personal Info
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: Column(
-                children: [
-                  _infoTile(Icons.person, "Gender", customer!.gender),
-                  _divider(),
-                  _infoTile(Icons.cake, "Date of Birth", customer!.dob),
-                  _divider(),
-                  _infoTile(Icons.phone, "Phone", customer!.custTel),
-                  _divider(),
-                  _infoTile(Icons.email, "Email", customer!.custEmail),
-                ],
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                decoration: blueCardDecoration,
+                child: Column(
+                  children: [
+                    _infoTile(Icons.person, "Gender", customer!.gender),
+                    _divider(),
+                    _infoTile(Icons.cake, "Date of Birth", customer!.dob),
+                    _divider(),
+                    _infoTile(Icons.phone, "Phone", customer!.custTel),
+                    _divider(),
+                    _infoTile(Icons.email, "Email", customer!.custEmail),
+                  ],
+                ),
               ),
             ),
+
             const SizedBox(height: 20),
 
             // 🔹 Address
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12)),
-              child: ListTile(
-                leading: const Icon(Icons.home, color: Colors.blue),
-                title: const Text("Address",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text(
-                  "${customer!.address1}, ${customer!.address2}, "
-                      "${customer!.city}, ${customer!.state}, "
-                      "${customer!.postalCode}, ${customer!.country}",
-                  style: const TextStyle(fontSize: 15),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Container(
+                decoration: blueCardDecoration,
+                child: ListTile(
+                  leading: const Icon(Icons.home, color: Colors.blue),
+                  title: const Text("Address",
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  subtitle: Text(
+                    "${customer!.address1}, ${customer!.address2}, "
+                        "${customer!.city}, ${customer!.state}, "
+                        "${customer!.postalCode}, ${customer!.country}",
+                    style: const TextStyle(fontSize: 15),
+                  ),
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
 
             // 🔹 Vehicles
@@ -213,27 +249,41 @@ class _CustomerProfilePageState extends State<CustomerProfilePage> {
                   return Card(
                     elevation: 2,
                     margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                    child: ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: Colors.redAccent.withOpacity(0.2),
-                        child: const Icon(Icons.directions_car,
-                            color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _mapCarColor(v.color), // 🎨 car-specific background
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      title: Text(
-                        v.plateNumber,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.bold, fontSize: 16),
-                      ),
-                      subtitle:
-                      Text("${v.manufacturer} ${v.model} (${v.year})"),
-                      trailing: Text(v.color,
+                      child: ListTile(
+                        leading: CircleAvatar(
+                          backgroundColor: Colors.white.withOpacity(0.7),
+                          child: const Icon(Icons.directions_car, color: Colors.black87),
+                        ),
+                        title: Text(
+                          v.plateNumber,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        subtitle: Text("${v.manufacturer} ${v.model} (${v.year})"),
+                        trailing: Text(
+                          v.color,
                           style: const TextStyle(
-                              fontWeight: FontWeight.w500,
-                              color: Colors.black87)),
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => VehicleDetailsView(plateNo: v.plateNumber),
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   );
+
                 }).toList(),
               ),
           ],

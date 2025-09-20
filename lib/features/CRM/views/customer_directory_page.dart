@@ -31,45 +31,58 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
       body: Column(
         children: [
           // 🔍 Search + Sort combined
+          // 🔍 Search + Sort combined
           Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: Card(
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16)),
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                child: Row(
-                  children: [
-                    // Search field
-                    Expanded(
-                      child: TextField(
-                        decoration: const InputDecoration(
-                          hintText: "Search name, phone, or email",
-                          prefixIcon: Icon(Icons.search),
-                          border: InputBorder.none,
-                        ),
-                        onChanged: (val) =>
-                            setState(() => searchQuery = val.toLowerCase()),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  // Search field (clean look, no background, centered)
+                  Expanded(
+                    child: TextField(
+                      onChanged: (val) =>
+                          setState(() => searchQuery = val.toLowerCase()),
+                      textAlignVertical: TextAlignVertical.center,
+                      decoration: const InputDecoration(
+                        icon: Icon(Icons.search, color: Colors.blue),
+                        hintText: "Search name, phone, or email",
+                        border: InputBorder.none,          // remove underline
+                        enabledBorder: InputBorder.none,   // remove when not focused
+                        focusedBorder: InputBorder.none,   // remove when focused
+                        isCollapsed: true,                 // tighter padding
+                        filled: false,                     // no background fill
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    // Sort dropdown
-                    DropdownButton<String>(
-                      value: sortOption,
-                      underline: const SizedBox(),
-                      items: const [
-                        DropdownMenuItem(value: "A-Z", child: Text("A → Z")),
-                        DropdownMenuItem(value: "Z-A", child: Text("Z → A")),
-                      ],
-                      onChanged: (val) =>
-                          setState(() => sortOption = val ?? "A-Z"),
-                    ),
-                  ],
-                ),
+                  ),
+
+
+                  // ↕️ Sort dropdown styled like the other page
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.sort, color: Colors.blue),
+                    onSelected: (val) =>
+                        setState(() => sortOption = val),
+                    itemBuilder: (context) => const [
+                      PopupMenuItem(value: "A-Z", child: Text("A → Z")),
+                      PopupMenuItem(value: "Z-A", child: Text("Z → A")),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
+
 
           // 🔹 Customer list
           Expanded(
