@@ -18,6 +18,8 @@ import 'firebase_options.dart';
 import 'home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'invoice_module.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -57,7 +59,10 @@ class MainApp extends StatelessWidget {
       routes: {
         HomePage.routeName: (_) => const HomePage(),
         InventoryPage.routeName: (_) => const InventoryPage(),
+        InvoiceModule.routeName: (_) => const InvoiceModule(),
       },
+
+      
 
       home: AnimatedSplashScreen(
         splash: 'assets/logo/splash_fixero.gif',

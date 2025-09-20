@@ -13,6 +13,9 @@ import 'data/dao/income_dao.dart';
 import 'data/dao/job_demand_dao.dart';
 import 'data/dao/service_dao.dart';
 
+import 'invoice_module.dart';
+import 'package:firebase_database/firebase_database.dart';
+
 class HomePage extends StatefulWidget {
   static const routeName = '/home';
 
@@ -29,12 +32,35 @@ class _HomePageState extends State<HomePage> {
   String? _managerName;
   String? _profileImgUrl;
 
+  int _unpaidInvoiceCount = 0;
+  StreamSubscription<DatabaseEvent>? _unpaidSub;
+
   @override
   void initState() {
     super.initState();
     _loadManagerData();
     _selectedInsightFilter = insightsFilterOptions[0];
+
+    final unpaidQuery = FirebaseDatabase.instance
+      .ref('invoices')
+      .orderByChild('status')
+      .equalTo('Unpaid');
+
+  _unpaidSub = unpaidQuery.onValue.listen((event) {
+    final val = event.snapshot.value;
+    // invoices node is an object keyed by invoiceNo → record
+    final map = (val is Map) ? val : <Object?, Object?>{};
+    setState(() => _unpaidInvoiceCount = map.length);
+  });
   }
+
+@override
+void dispose() {
+  _unpaidSub?.cancel();
+  super.dispose();
+}
+
+
 
   Future<void> _loadManagerData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -115,13 +141,10 @@ class _HomePageState extends State<HomePage> {
 
             // Dashboard Rows
             _buildDashboardRow(context, [
-              _dashboardCard(context, "Active Jobs", "10"),
-              _dashboardCard(context, "Low Stock Part", "Brake Pads"),
-            ]),
-            const SizedBox(height: 20),
-            _buildDashboardRow(context, [
-              _dashboardCard(context, "Invoices", "5"),
-              _dashboardCard(context, "Appointments", "3"),
+              _dashboardCard(context, "Unpaid Invoices", '$_unpaidInvoiceCount', onTap: () {
+    Navigator.of(context).pushNamed(InvoiceModule.routeName);
+  }),
+  _dashboardCard(context, "Appointments", "3"),
             ]),
 
             const SizedBox(height: 40),
@@ -321,49 +344,32 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Dashboard card
-  Widget _dashboardCard(BuildContext context, String title, String value) {
-    final theme = Theme.of(context);
-
-    return Container(
+Widget _dashboardCard(BuildContext context, String title, String value, {VoidCallback? onTap}) {
+  final theme = Theme.of(context);
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(10),
+    child: Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            theme.colorScheme.primary,
-            theme.colorScheme.primary.withValues(alpha: 0.5),
-          ],
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
+          colors: [ theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.5) ],
+          begin: Alignment.topCenter, end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              color: theme.colorScheme.inversePrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          Text(title, style: TextStyle(fontSize: 16, color: theme.colorScheme.inversePrimary)),
           const SizedBox(height: 5),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 25,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.inversePrimary,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          Text(value, style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: theme.colorScheme.inversePrimary)),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   /// Recommended Service Card
   Widget _recommendedServiceCard(
@@ -490,4 +496,26 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  // Counts invoices where status != 'Paid'
+  
+Stream<int> _pendingInvoiceCountStream() {
+  final ref = FirebaseDatabase.instance.ref('invoices');
+  return ref.onValue.map((event) {
+    final raw = event.snapshot.value;
+    if (raw is Map) {
+      int count = 0;
+      raw.forEach((_, v) {
+        if (v is Map) {
+          final status = (v['status'] ?? '').toString();
+          if (status.toLowerCase() != 'paid') count++;
+        }
+      });
+      return count;
+    }
+    return 0;
+  });
+}
+
+
 }

@@ -18,12 +18,12 @@ dependencies:
   gif: ^2.3.0
   sign_in_button: ^4.0.1
   cloud_firestore: ^5.6.11
-  firebase_auth: ^5.6.2
+  firebase_auth: ^5.7.0
   firebase_storage: ^12.4.9
   firebase_analytics: ^11.5.2
   firebase_messaging: ^15.2.9
-  firebase_core: ^3.15.1
-  firebase_ui_auth: ^1.17.0
+  firebase_core: ^3.15.2
+  firebase_ui_auth: ^2.0.0
   google_sign_in: ^7.1.1
   fl_chart: ^1.0.0
   firebase_database: ^11.3.10
