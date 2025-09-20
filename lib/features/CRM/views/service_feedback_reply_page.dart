@@ -20,12 +20,14 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _replyController = TextEditingController();
   List<Map<String, dynamic>> replies = [];
+  bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
     _loadReplies();
   }
+
   Future<void> _deleteReply(String replyID) async {
     final fbID = widget.feedback.feedbackID;
 
@@ -85,7 +87,6 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       });
     }
 
-    // 🔹 sort replies by date ascending (latest at bottom)
     temp.sort((a, b) {
       final dateA = DateTime.tryParse(a["date"]) ?? DateTime(1970);
       final dateB = DateTime.tryParse(b["date"]) ?? DateTime(1970);
@@ -94,7 +95,6 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
 
     setState(() => replies = temp);
   }
-
 
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty || _isSending) return;
@@ -124,26 +124,43 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     }
   }
 
+  Future<void> _confirmCloseFeedback() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Close Feedback"),
+        content: const Text("Are you sure you want to close this feedback?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
+    );
 
+    if (confirm == true) {
+      final fbID = widget.feedback.feedbackID;
+      await dbRef.child("communications/feedbacks/$fbID").update({
+        "status": "Closed",
+      });
 
-
-  Future<void> _closeFeedback() async {
-    final fbID = widget.feedback.feedbackID; // ✅ use model property
-
-    await dbRef.child("communications/feedbacks/$fbID").update({
-      "status": "Closed",
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Feedback has been closed.")),
-      );
-      Navigator.pop(context, true); // go back & refresh previous list
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Feedback has been closed.")),
+        );
+        Navigator.pop(context, true);
+      }
     }
   }
-  bool _isSending = false;
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -197,10 +214,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
               ),
             ),
 
-
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: _closeFeedback,
+              onPressed: _confirmCloseFeedback,
               icon: const Icon(Icons.lock),
               label: const Text("Close Feedback"),
               style: ElevatedButton.styleFrom(

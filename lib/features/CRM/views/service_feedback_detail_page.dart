@@ -46,7 +46,6 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
       };
     }).toList();
 
-    // 🔹 sort replies by date ascending (latest at bottom)
     temp.sort((a, b) {
       final dateA = DateTime.tryParse(a["date"]) ?? DateTime(1970);
       final dateB = DateTime.tryParse(b["date"]) ?? DateTime(1970);
@@ -56,19 +55,41 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
     setState(() => replies = temp);
   }
 
+  Future<void> _confirmReopenFeedback() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Reopen Feedback"),
+        content: const Text("Are you sure you want to reopen this feedback?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Reopen"),
+          ),
+        ],
+      ),
+    );
 
-  Future<void> _reopenFeedback() async {
-    final fbID = widget.feedback.feedbackID;
+    if (confirm == true) {
+      final fbID = widget.feedback.feedbackID;
+      await dbRef.child("communications/feedbacks/$fbID").update({
+        "status": "Open",
+      });
 
-    await dbRef.child("communications/feedbacks/$fbID").update({
-      "status": "Open",
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Feedback has been reopened.")),
-      );
-      Navigator.pop(context, true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Feedback has been reopened.")),
+        );
+        Navigator.pop(context, true);
+      }
     }
   }
 
@@ -90,7 +111,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
           actions: isClosed
               ? [
             ElevatedButton.icon(
-              onPressed: _reopenFeedback,
+              onPressed: _confirmReopenFeedback,
               icon: const Icon(Icons.lock_open),
               label: const Text("Reopen Feedback"),
               style: ElevatedButton.styleFrom(
@@ -102,7 +123,6 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
               : [],
         ),
       ),
-
     );
   }
 }
