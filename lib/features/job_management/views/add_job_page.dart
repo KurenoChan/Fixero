@@ -1,4 +1,3 @@
-// add_job_page.dart
 import 'package:flutter/material.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/models/vehicle_model.dart';
@@ -15,7 +14,6 @@ class AddJobPage extends StatefulWidget {
 
 class _AddJobPageState extends State<AddJobPage> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _serviceTypeController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _plateNoController = TextEditingController();
   final TextEditingController _managedByController = TextEditingController();
@@ -25,12 +23,22 @@ class _AddJobPageState extends State<AddJobPage> {
   String _generatedJobId = '';
   bool _isLoading = true;
 
+  // Added dropdown options for service type
+  final List<String> _serviceTypeOptions = [
+    'Car Repair',
+    'Vehicle Safety Check',
+    'Fuel Tank Maintenance',
+    'Battery Repair',
+    'Tire Repair',
+  ];
+  String? _selectedServiceType; // Changed from TextEditingController to String
+
   @override
   void initState() {
     super.initState();
     _loadVehicles();
     _generatedJobId = widget.addJobController.generateJobId();
-    _managedByController.text = 'Muhammad Fariz bin Syah';
+    _managedByController.text = 'Workshop Manager'; // Default value
   }
 
   Future<void> _loadVehicles() async {
@@ -55,7 +63,6 @@ class _AddJobPageState extends State<AddJobPage> {
 
   @override
   void dispose() {
-    _serviceTypeController.dispose();
     _descriptionController.dispose();
     _plateNoController.dispose();
     _managedByController.dispose();
@@ -105,11 +112,13 @@ class _AddJobPageState extends State<AddJobPage> {
   }
 
   Future<void> _submitForm() async {
-    if (_formKey.currentState!.validate() && _selectedVehicle != null) {
+    if (_formKey.currentState!.validate() &&
+        _selectedVehicle != null &&
+        _selectedServiceType != null) {
       try {
         final newJob = Job(
           jobID: _generatedJobId,
-          jobServiceType: _serviceTypeController.text,
+          jobServiceType: _selectedServiceType!, // Use selected service type
           jobDescription: _descriptionController.text,
           jobStatus: _selectedStatus,
           scheduledDate: '', // Removed - empty string
@@ -150,6 +159,10 @@ class _AddJobPageState extends State<AddJobPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Please select a vehicle')));
+    } else if (_selectedServiceType == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a service type')),
+      );
     }
   }
 
@@ -275,17 +288,35 @@ class _AddJobPageState extends State<AddJobPage> {
                         ],
                       ),
 
-                    // Service Type
-                    TextFormField(
-                      controller: _serviceTypeController,
+                    // Service Type Dropdown (Replaced TextFormField)
+                    const Text(
+                      'Service Type',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _selectedServiceType,
+                      items: _serviceTypeOptions.map((String serviceType) {
+                        return DropdownMenuItem<String>(
+                          value: serviceType,
+                          child: Text(serviceType),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _selectedServiceType = newValue;
+                        });
+                      },
                       decoration: const InputDecoration(
-                        labelText: 'Service Type',
-                        hintText: 'e.g., Oil Change, Brake Repair',
                         border: OutlineInputBorder(),
+                        hintText: 'Select service type',
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please enter a service type';
+                          return 'Please select a service type';
                         }
                         return null;
                       },
