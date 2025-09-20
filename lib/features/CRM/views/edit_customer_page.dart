@@ -13,6 +13,7 @@ class EditCustomerPage extends StatefulWidget {
 
 class _EditCustomerPageState extends State<EditCustomerPage> {
   final _formKey = GlobalKey<FormState>();
+
   late TextEditingController _nameCtrl;
   late TextEditingController _emailCtrl;
   late TextEditingController _telCtrl;
@@ -42,7 +43,7 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
     _postalCtrl = TextEditingController(text: widget.customer.postalCode);
     _countryCtrl = TextEditingController(text: widget.customer.country);
 
-    _selectedGender = widget.customer.gender; // set initial gender
+    _selectedGender = widget.customer.gender;
   }
 
   @override
@@ -63,17 +64,18 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    widget.customer.custName = _nameCtrl.text.trim();
-    widget.customer.custEmail = _emailCtrl.text.trim();
-    widget.customer.custTel = _telCtrl.text.trim();
-    widget.customer.dob = _dobCtrl.text.trim();
-    widget.customer.gender = _selectedGender ?? "Male";
-    widget.customer.address1 = _address1Ctrl.text.trim();
-    widget.customer.address2 = _address2Ctrl.text.trim();
-    widget.customer.city = _cityCtrl.text.trim();
-    widget.customer.state = _stateCtrl.text.trim();
-    widget.customer.postalCode = _postalCtrl.text.trim();
-    widget.customer.country = _countryCtrl.text.trim();
+    widget.customer
+      ..custName = _nameCtrl.text.trim()
+      ..custEmail = _emailCtrl.text.trim()
+      ..custTel = _telCtrl.text.trim()
+      ..dob = _dobCtrl.text.trim()
+      ..gender = _selectedGender ?? "Male"
+      ..address1 = _address1Ctrl.text.trim()
+      ..address2 = _address2Ctrl.text.trim()
+      ..city = _cityCtrl.text.trim()
+      ..state = _stateCtrl.text.trim()
+      ..postalCode = _postalCtrl.text.trim()
+      ..country = _countryCtrl.text.trim();
 
     await _customerController.updateCustomer(widget.customer);
 
@@ -81,98 +83,169 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Profile updated successfully")),
       );
-      Navigator.pop(context, widget.customer); // ✅ return updated customer
+      Navigator.pop(context, widget.customer);
     }
   }
 
+  // ✅ Reusable styled input decoration
+  InputDecoration kInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon, color: Colors.blue),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade400),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Colors.grey.shade400),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Colors.blue, width: 2),
+      ),
+    );
+  }
+
+  Widget _buildSectionCard({required String title, required List<Widget> children}) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: Colors.blue,
+                )),
+            const SizedBox(height: 12),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Edit Customer")),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameCtrl,
-                decoration: const InputDecoration(labelText: "Name"),
-                validator: (v) => v!.isEmpty ? "Enter name" : null,
-              ),
-              TextFormField(
-                controller: _emailCtrl,
-                decoration: const InputDecoration(labelText: "Email"),
-                validator: (v) =>
-                v!.isNotEmpty && v.contains("@") ? null : "Enter valid email",
-              ),
-              TextFormField(
-                controller: _telCtrl,
-                decoration: const InputDecoration(labelText: "Phone"),
-                validator: (v) => v!.isEmpty ? "Enter phone number" : null,
-              ),
-              TextFormField(
-                controller: _dobCtrl,
-                decoration: const InputDecoration(labelText: "Date of Birth"),
-                validator: (v) => v!.isEmpty ? "Enter DOB" : null,
-              ),
+      appBar: AppBar(title: const Text("Edit Profile")),
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Personal Information
+            _buildSectionCard(
+              title: "Personal Information",
+              children: [
+                TextFormField(
+                  controller: _nameCtrl,
+                  decoration: kInputDecoration("Name", Icons.person),
+                  validator: (v) => v!.isEmpty ? "Enter name" : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _emailCtrl,
+                  decoration: kInputDecoration("Email", Icons.email),
+                  validator: (v) =>
+                  v!.isNotEmpty && v.contains("@") ? null : "Enter valid email",
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _telCtrl,
+                  decoration: kInputDecoration("Phone", Icons.phone),
+                  validator: (v) => v!.isEmpty ? "Enter phone number" : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _dobCtrl,
+                  decoration: kInputDecoration("Date of Birth", Icons.calendar_today),
+                  validator: (v) => v!.isEmpty ? "Enter DOB" : null,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  decoration: kInputDecoration("Gender", Icons.wc),
+                  items: const [
+                    DropdownMenuItem(value: "Male", child: Text("Male")),
+                    DropdownMenuItem(value: "Female", child: Text("Female")),
+                  ],
+                  onChanged: (value) {
+                    setState(() => _selectedGender = value);
+                  },
+                  validator: (v) => v == null || v.isEmpty ? "Select gender" : null,
+                ),
+              ],
+            ),
 
-              // 🔹 Gender Dropdown
-              DropdownButtonFormField<String>(
-                value: _selectedGender,
-                decoration: const InputDecoration(labelText: "Gender"),
-                items: const [
-                  DropdownMenuItem(value: "Male", child: Text("Male")),
-                  DropdownMenuItem(value: "Female", child: Text("Female")),
-                ],
-                onChanged: (value) {
-                  setState(() => _selectedGender = value);
-                },
-                validator: (v) => v == null || v.isEmpty ? "Select gender" : null,
-              ),
+            // Address Information
+            _buildSectionCard(
+              title: "Address",
+              children: [
+                TextFormField(
+                  controller: _address1Ctrl,
+                  decoration: kInputDecoration("Address Line 1", Icons.home),
+                  validator: (v) => v!.isEmpty ? "Enter address line 1" : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _address2Ctrl,
+                  decoration: kInputDecoration("Address Line 2", Icons.home_outlined),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _cityCtrl,
+                  decoration: kInputDecoration("City", Icons.location_city),
+                  validator: (v) => v!.isEmpty ? "Enter city" : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _stateCtrl,
+                  decoration: kInputDecoration("State", Icons.map),
+                  validator: (v) => v!.isEmpty ? "Enter state" : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _postalCtrl,
+                  decoration: kInputDecoration("Postal Code", Icons.local_post_office),
+                  validator: (v) => v!.isEmpty ? "Enter postal code" : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _countryCtrl,
+                  decoration: kInputDecoration("Country", Icons.flag),
+                  validator: (v) => v!.isEmpty ? "Enter country" : null,
+                ),
+              ],
+            ),
+            const SizedBox(height: 80),
+          ],
+        ),
+      ),
 
-              const SizedBox(height: 20),
-              const Text("Address", style: TextStyle(fontWeight: FontWeight.bold)),
-
-              TextFormField(
-                controller: _address1Ctrl,
-                decoration: const InputDecoration(labelText: "Address Line 1"),
-                validator: (v) => v!.isEmpty ? "Enter address line 1" : null,
+      // ✅ Sticky Save button at bottom
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
-              TextFormField(
-                controller: _address2Ctrl,
-                decoration: const InputDecoration(labelText: "Address Line 2"),
-                validator: (v) => v!.isEmpty ? "Enter address line 2" : null,
-              ),
-              TextFormField(
-                controller: _cityCtrl,
-                decoration: const InputDecoration(labelText: "City"),
-                validator: (v) => v!.isEmpty ? "Enter city" : null,
-              ),
-              TextFormField(
-                controller: _stateCtrl,
-                decoration: const InputDecoration(labelText: "State"),
-                validator: (v) => v!.isEmpty ? "Enter state" : null,
-              ),
-              TextFormField(
-                controller: _postalCtrl,
-                decoration: const InputDecoration(labelText: "Postal Code"),
-                validator: (v) => v!.isEmpty ? "Enter postal code" : null,
-              ),
-              TextFormField(
-                controller: _countryCtrl,
-                decoration: const InputDecoration(labelText: "Country"),
-                validator: (v) => v!.isEmpty ? "Enter country" : null,
-              ),
-
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: _saveProfile,
-                icon: const Icon(Icons.save),
-                label: const Text("Save"),
-              ),
-            ],
+            ),
+            onPressed: _saveProfile,
+            icon: const Icon(Icons.save),
+            label: const Text("Save Profile", style: TextStyle(fontSize: 16)),
           ),
         ),
       ),

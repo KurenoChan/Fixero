@@ -97,18 +97,14 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
 
 
   Future<void> _addReply() async {
-    if (_replyController.text.trim().isEmpty) return;
+    if (_replyController.text.trim().isEmpty || _isSending) return;
+
+    setState(() => _isSending = true);
 
     final fbID = widget.feedback.feedbackID;
-
-    // 🔑 Always unique because of milliseconds
     final newReplyKey = "RPL-${DateTime.now().millisecondsSinceEpoch}";
-
-    // 🔹 Get logged in manager profile
     final currentManager = await ManagerController.getCurrentManager();
-
-    final formattedDate =
-    DateFormat("yyyy-MM-dd HH:mm").format(DateTime.now().toLocal());
+    final formattedDate = DateFormat("yyyy-MM-dd HH:mm").format(DateTime.now().toLocal());
 
     final replyData = {
       "from": currentManager != null
@@ -119,10 +115,13 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       "date": formattedDate,
     };
 
-    await dbRef.child("communications/replies/$fbID/$newReplyKey").set(replyData);
-
-    _replyController.clear();
-    _loadReplies();
+    try {
+      await dbRef.child("communications/replies/$fbID/$newReplyKey").set(replyData);
+      _replyController.clear();
+      await _loadReplies();
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
   }
 
 
@@ -142,6 +141,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       Navigator.pop(context, true); // go back & refresh previous list
     }
   }
+  bool _isSending = false;
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -161,29 +163,41 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
             // reply input
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Row(
                   children: [
-                    TextField(
-                      controller: _replyController,
-                      decoration: const InputDecoration(
-                        labelText: "Your Reply",
-                        border: OutlineInputBorder(),
+                    Expanded(
+                      child: TextField(
+                        controller: _replyController,
+                        maxLines: null,
+                        minLines: 1,
+                        decoration: const InputDecoration(
+                          hintText: "Write your reply...",
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
+                        ),
                       ),
-                      maxLines: 3,
                     ),
-                    const SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      onPressed: _addReply,
-                      icon: const Icon(Icons.send),
-                      label: const Text("Reply"),
+                    _isSending
+                        ? const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                        : IconButton(
+                      icon: const Icon(Icons.send, color: Colors.blue),
+                      onPressed: _isSending ? null : _addReply,
                     ),
                   ],
                 ),
               ),
             ),
+
+
             const SizedBox(height: 20),
             ElevatedButton.icon(
               onPressed: _closeFeedback,

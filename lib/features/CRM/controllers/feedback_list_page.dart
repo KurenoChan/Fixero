@@ -27,6 +27,19 @@ class FeedbackListPage extends StatefulWidget {
 
 class _FeedbackListPageState extends State<FeedbackListPage> {
   final FeedbackController feedbackController = FeedbackController();
+  Color _getCardColor(String feedbackType) {
+    switch (feedbackType) {
+      case "Positive":
+        return Colors.green.shade100;   // ✅ light pastel green
+      case "Complaint":
+        return Colors.red.shade100;     // ✅ light pastel red
+      case "Suggestion":
+        return Colors.blue.shade100;    // ✅ light pastel blue
+      default:
+        return Colors.grey.shade200;    // ✅ neutral light grey
+    }
+  }
+
 
   // Filters
   String searchQuery = "";
@@ -298,41 +311,46 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
+                          color: _getCardColor(fb.feedbackType), // ✅ custom background color
                           child: ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Colors.grey.shade200,
+                              backgroundColor: Colors.white, // keep contrast
                               child: Image.asset(iconPath, fit: BoxFit.contain),
                             ),
                             title: Text(
                               fb.customerName ?? "Unknown",
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 16),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black,   // ✅ stronger contrast
+                              ),
                             ),
                             subtitle: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("Service: ${fb.serviceType ?? '-'}"),
-                                Text("Feedback: ${fb.feedbackType}"),
-                                Text("Car: ${fb.carModel ?? '-'}"),
-                                Text("Date: ${fb.date}"),
+                                Text("Service: ${fb.serviceType ?? '-'}", style: const TextStyle(color: Colors.black87)),
+                                Text("Feedback: ${fb.feedbackType}", style: const TextStyle(color: Colors.black87)),
+                                Text("Car: ${fb.carModel ?? '-'}", style: const TextStyle(color: Colors.black87)),
+                                Text("Date: ${fb.date}", style: const TextStyle(color: Colors.black87)),
                               ],
                             ),
                             trailing: fb.seenStatus == "Unseen"
                                 ? Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                               decoration: BoxDecoration(
-                                color: Colors.red.shade100,
+                                color: Colors.red,          // ✅ solid red background
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: const Text(
                                 "Unseen",
                                 style: TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.bold),
+                                  color: Colors.white,       // ✅ white text on red
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             )
                                 : null,
+
                             onTap: () async {
                               if (fb.seenStatus == "Unseen") {
                                 await feedbackController.markSeen(fb.feedbackID);
@@ -346,6 +364,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                             },
                           ),
                         );
+
                       },
                     ),
                   ),
