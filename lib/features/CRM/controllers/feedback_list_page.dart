@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 // adjust these two imports if your file is in a different folder
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
-import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
-
 import '../controllers/customer_controller.dart';
 import '../controllers/feedback_controller.dart';
+import '../models/customer_model.dart'; // ✅ add this line
 import '../models/feedback_model.dart';
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);
@@ -150,7 +150,9 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                 if (dateA == null) return sortOrder == "Latest" ? 1 : -1;
                 if (dateB == null) return sortOrder == "Latest" ? -1 : 1;
 
-                return sortOrder == "Latest" ? dateB.compareTo(dateA) : dateA.compareTo(dateB);
+                return sortOrder == "Latest"
+                    ? dateB.compareTo(dateA)
+                    : dateA.compareTo(dateB);
               });
 
               return Column(
@@ -167,7 +169,11 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
-                          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
                         ],
                       ),
                       child: Row(
@@ -185,19 +191,20 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                 icon: Icon(Icons.search, color: Colors.blue),
                                 hintText: "Search feedback...",
                                 border: InputBorder.none,
-                                enabledBorder: InputBorder
-                                    .none, // ✅ remove underline when not focused
-                                focusedBorder: InputBorder
-                                    .none, // ✅ remove underline when focused
-                                errorBorder: InputBorder
-                                    .none, // ✅ safety (in case of error state)
-                                disabledBorder: InputBorder.none, // ✅ safety
+                                enabledBorder: InputBorder.none,
+                                // ✅ remove underline when not focused
+                                focusedBorder: InputBorder.none,
+                                // ✅ remove underline when focused
+                                errorBorder: InputBorder.none,
+                                // ✅ safety (in case of error state)
+                                disabledBorder: InputBorder.none,
+                                // ✅ safety
                                 filled: false,
                               ),
                             ),
                           ),
 
-                          // ↕️ Sort menu inside the search bar
+                          // ↕ Sort menu inside the search bar
                           PopupMenuButton<String>(
                             icon: const Icon(Icons.sort, color: Colors.blue),
                             onSelected: (value) {
@@ -236,7 +243,13 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
@@ -275,7 +288,13 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
@@ -295,7 +314,9 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                     )
                                     .toList(),
                                 onChanged: (value) {
-                                  if (value != null) setState(() => selectedServiceType = value);
+                                  if (value != null) {
+                                    setState(() => selectedServiceType = value);
+                                  }
                                 },
                               ),
                             ),
@@ -325,9 +346,8 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
-                                color: _getCardColor(
-                                  fb.feedbackType,
-                                ), // ✅ custom background color
+                                color: _getCardColor(fb.feedbackType),
+                                // ✅ custom background color
                                 child: ListTile(
                                   leading: CircleAvatar(
                                     backgroundColor:
@@ -337,15 +357,32 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                       fit: BoxFit.contain,
                                     ),
                                   ),
-                                  title: Text(
-                                    fb.customerName ?? "Unknown",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color:
-                                          Colors.black, // ✅ stronger contrast
-                                    ),
+                                  title: ValueListenableBuilder<int>(
+                                    valueListenable: customerController,
+                                    builder: (context, _, __) {
+                                      Customer? cust;
+                                      try {
+                                        cust = customerController.allCustomers
+                                            .firstWhere(
+                                              (c) => c.custID == fb.customerId,
+                                            );
+                                      } catch (_) {
+                                        cust = null;
+                                      }
+
+                                      return Text(
+                                        cust?.custName ??
+                                            fb.customerName ??
+                                            "Unknown",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    },
                                   ),
+
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
