@@ -24,7 +24,10 @@ class _SchedulePageState extends State<SchedulePage> {
   final JobDAO _jobDAO = JobDAO();
   final AuthService _authService = AuthService();
   DateTime _selectedDate = DateTime.now();
-  TimeOfDay _selectedTime = TimeOfDay(hour: 14, minute: 0); // 2:00 PM default
+  TimeOfDay _selectedTime = const TimeOfDay(
+    hour: 14,
+    minute: 0,
+  ); // Default 2 PM
   int _estimatedHours = 1;
   bool _isSubmitting = false;
 
@@ -38,14 +41,9 @@ class _SchedulePageState extends State<SchedulePage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Theme.of(context).colorScheme.inversePrimary,
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-              ),
             ),
           ),
           child: child!,
@@ -53,9 +51,7 @@ class _SchedulePageState extends State<SchedulePage> {
       },
     );
     if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+      setState(() => _selectedDate = picked);
     }
   }
 
@@ -67,14 +63,9 @@ class _SchedulePageState extends State<SchedulePage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(
-              primary: Theme.of(context).colorScheme.inversePrimary,
+              primary: Theme.of(context).colorScheme.primary,
               onPrimary: Colors.white,
               onSurface: Colors.black,
-            ),
-            textButtonTheme: TextButtonThemeData(
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.inversePrimary,
-              ),
             ),
           ),
           child: child!,
@@ -82,25 +73,17 @@ class _SchedulePageState extends State<SchedulePage> {
       },
     );
     if (picked != null && picked != _selectedTime) {
-      setState(() {
-        _selectedTime = picked;
-      });
+      setState(() => _selectedTime = picked);
     }
   }
 
   Future<void> _confirmSchedule() async {
-    setState(() {
-      _isSubmitting = true;
-    });
+    setState(() => _isSubmitting = true);
 
     try {
-      // Get the current logged-in manager ID
       final String? managerId = _authService.getCurrentUserId();
+      if (managerId == null) throw Exception('Manager not logged in');
 
-      if (managerId == null) {
-        throw Exception('Manager not logged in');
-      }
-      // Format the scheduled date and time
       final scheduledDateTime = DateTime(
         _selectedDate.year,
         _selectedDate.month,
@@ -109,7 +92,6 @@ class _SchedulePageState extends State<SchedulePage> {
         _selectedTime.minute,
       );
 
-      // Create updated job with new schedule and status
       final updatedJob = widget.job.copyWith(
         mechanicID: widget.selectedMechanic.mechanicID,
         jobStatus: 'Scheduled',
@@ -120,11 +102,9 @@ class _SchedulePageState extends State<SchedulePage> {
         managedBy: managerId,
       );
 
-      // Update job in Firebase
       await _jobDAO.updateJob(updatedJob);
 
       if (!mounted) return;
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Job scheduled successfully!'),
@@ -133,7 +113,6 @@ class _SchedulePageState extends State<SchedulePage> {
         ),
       );
 
-      // Navigate back to jobs page
       Navigator.popUntil(context, (route) => route.isFirst);
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -144,9 +123,7 @@ class _SchedulePageState extends State<SchedulePage> {
         ),
       );
     } finally {
-      setState(() {
-        _isSubmitting = false;
-      });
+      setState(() => _isSubmitting = false);
     }
   }
 
@@ -157,309 +134,159 @@ class _SchedulePageState extends State<SchedulePage> {
     return Scaffold(
       appBar: FixeroSubAppBar(title: 'Schedule Job', showBackButton: true),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Job and Mechanic Info - FIXED OVERFLOW
-            Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.build_circle_outlined,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          // Added Expanded to prevent overflow
-                          child: Text(
-                            widget.job.jobID,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.primary,
-                            ),
-                            overflow: TextOverflow.ellipsis, // Handle long text
-                          ),
-                        ),
-                      ],
-                    ),
-                    Divider(height: 24, color: Theme.of(context).dividerColor),
-                    _buildInfoRow(
-                      'Vehicle',
-                      widget.job.plateNo,
-                      Icons.directions_car,
-                    ),
-                    const SizedBox(height: 12),
-                    _buildInfoRow(
-                      'Service',
-                      widget.job.jobServiceType,
-                      Icons.build,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.person_outline,
-                          color: Colors.blueGrey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          // Added Expanded to prevent potential overflow
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.selectedMechanic.mechanicName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              Text(
-                                widget.selectedMechanic.mechanicSpecialty,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+            // Job + Mechanic Details
+            _buildSectionCard(
+              title: "Job & Mechanic Info",
+              icon: Icons.build_circle_outlined,
+              color: theme.colorScheme.primary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildInfoRow(
+                    "Job ID",
+                    widget.job.jobID,
+                    Icons.confirmation_number,
+                    theme.colorScheme.primary,
+                  ),
+                  const Divider(),
+                  _buildInfoRow(
+                    "Vehicle",
+                    widget.job.plateNo,
+                    Icons.directions_car,
+                    theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    "Service",
+                    widget.job.jobServiceType,
+                    Icons.build,
+                    theme.colorScheme.primary,
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow(
+                    "Mechanic",
+                    "${widget.selectedMechanic.mechanicName} (${widget.selectedMechanic.mechanicSpecialty})",
+                    Icons.person_outline,
+                    theme.colorScheme.primary,
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Schedule Section
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: Text(
-                'Schedule Details',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.inversePrimary,
-                ),
+            // Schedule Details Section
+            _buildSectionTitle("Schedule Details", theme.colorScheme.primary),
+
+            const SizedBox(height: 16),
+
+            // Date Picker
+            _buildSectionCard(
+              title: "Date",
+              icon: Icons.calendar_today_outlined,
+              color: theme.colorScheme.primary,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      DateFormat('EEE, MMM d, yyyy').format(_selectedDate),
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: _selectDate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Change"),
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Date Selection
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Date',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+            // Time Picker
+            _buildSectionCard(
+              title: "Start Time",
+              icon: Icons.access_time,
+              color: theme.colorScheme.primary,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _selectedTime.format(context),
+                      style: const TextStyle(fontSize: 16),
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            DateFormat(
-                              'EEE, MMM d, yyyy',
-                            ).format(_selectedDate),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _selectDate,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                          ),
-                          child: const Text(
-                            'Change',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
+                  ),
+                  ElevatedButton(
+                    onPressed: _selectTime,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
                     ),
-                  ],
-                ),
+                    child: const Text("Change"),
+                  ),
+                ],
               ),
             ),
 
             const SizedBox(height: 16),
 
-            // Time Selection
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            // Duration Selector
+            _buildSectionCard(
+              title: "Estimated Duration",
+              icon: Icons.timer_outlined,
+              color: theme.colorScheme.primary,
+              child: Center(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Start Time',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.remove_circle_outline),
+                      color: _estimatedHours > 1
+                          ? theme.colorScheme.primary
+                          : Colors.grey,
+                      iconSize: 32,
+                      onPressed: () {
+                        if (_estimatedHours > 1) {
+                          setState(() => _estimatedHours--);
+                        }
+                      },
                     ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            _selectedTime.format(context),
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        '$_estimatedHours Hour${_estimatedHours > 1 ? 's' : ''}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed: _selectTime,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.primary,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 10,
-                            ),
-                          ),
-                          child: const Text(
-                            'Change',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Estimated Duration
-            Card(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Estimated Duration',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Center(
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            color: _estimatedHours > 1
-                                ? theme.colorScheme.primary
-                                : Colors.grey,
-                            iconSize: 32,
-                            onPressed: () {
-                              if (_estimatedHours > 1) {
-                                setState(() {
-                                  _estimatedHours--;
-                                });
-                              }
-                            },
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .inversePrimary
-                                  .withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              '$_estimatedHours Hour${_estimatedHours > 1 ? 's' : ''}',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline),
-                            color: _estimatedHours < 8
-                                ? theme.colorScheme.primary
-                                : Colors.grey,
-                            iconSize: 32,
-                            onPressed: () {
-                              if (_estimatedHours < 8) {
-                                setState(() {
-                                  _estimatedHours++;
-                                });
-                              }
-                            },
-                          ),
-                        ],
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      color: _estimatedHours < 8
+                          ? theme.colorScheme.primary
+                          : Colors.grey,
+                      iconSize: 32,
+                      onPressed: () {
+                        if (_estimatedHours < 8) {
+                          setState(() => _estimatedHours++);
+                        }
+                      },
                     ),
                   ],
                 ),
@@ -469,51 +296,107 @@ class _SchedulePageState extends State<SchedulePage> {
             const SizedBox(height: 32),
 
             // Confirm Button
-            Center(
-              child: _isSubmitting
-                  ? CircularProgressIndicator(
+            _isSubmitting
+                ? Center(
+                    child: CircularProgressIndicator(
                       valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.inversePrimary,
+                        theme.colorScheme.primary,
                       ),
-                    )
-                  : SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _confirmSchedule,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 32,
-                            vertical: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 4,
+                    ),
+                  )
+                : SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _confirmSchedule,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: theme.colorScheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Text(
-                          'Confirm Schedule',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        elevation: 4,
+                      ),
+                      icon: const Icon(Icons.check_circle_outline, size: 22),
+                      label: const Text(
+                        "Confirm Schedule",
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
-            ),
-
-            const SizedBox(height: 16),
+                  ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildInfoRow(String label, String value, IconData icon) {
+  /// 🔹 Section Title with Icon
+  Widget _buildSectionTitle(String title, Color color) {
     return Row(
       children: [
-        Icon(icon, color: Colors.blueGrey, size: 20),
+        Icon(Icons.event_note, color: color, size: 24),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// 🔹 Reusable Card Section
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required Widget child,
+  }) {
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: color, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            child,
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 🔹 Reusable Info Row
+  Widget _buildInfoRow(
+    String label,
+    String value,
+    IconData icon,
+    Color iconColor,
+  ) {
+    return Row(
+      children: [
+        Icon(icon, color: iconColor, size: 20),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
@@ -527,8 +410,9 @@ class _SchedulePageState extends State<SchedulePage> {
                 value,
                 style: const TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),

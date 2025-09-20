@@ -10,7 +10,7 @@ class JobDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate end time for the job
+    // Calculate end time
     String endTime = '';
     try {
       final scheduledDateParts = job.scheduledDate.split('-');
@@ -24,27 +24,24 @@ class JobDetailsPage extends StatelessWidget {
           int.parse(scheduledTimeParts[0]),
           int.parse(scheduledTimeParts[1]),
         );
-
         final endDateTime = scheduledDateTime.add(
           Duration(hours: job.estimatedDuration),
         );
         endTime =
             '${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}';
       }
-    } catch (e) {
-      debugPrint('Error calculating end time: $e');
-    }
+    } catch (_) {}
 
     return Scaffold(
       appBar: FixeroSubAppBar(title: 'Job Details', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _DetailSection(
+              icon: Icons.work,
               title: 'Job Information',
-              children: [
+              items: [
                 _DetailItem(label: 'Job ID', value: job.jobID),
                 _DetailItem(label: 'Service Type', value: job.jobServiceType),
                 _DetailItem(
@@ -55,74 +52,68 @@ class JobDetailsPage extends StatelessWidget {
                 _DetailItem(label: 'Description', value: job.jobDescription),
               ],
             ),
-
-            const SizedBox(height: 20),
-
             _DetailSection(
+              icon: Icons.directions_car,
               title: 'Vehicle Information',
-              children: [_DetailItem(label: 'Vehicle', value: job.plateNo)],
+              items: [_DetailItem(label: 'Vehicle', value: job.plateNo)],
             ),
-
-            const SizedBox(height: 20),
-
             _DetailSection(
+              icon: Icons.schedule,
               title: 'Scheduling',
-              children: [
+              items: [
                 _DetailItem(label: 'Scheduled Date', value: job.scheduledDate),
                 _DetailItem(label: 'Scheduled Time', value: job.scheduledTime),
                 if (endTime.isNotEmpty)
-                  _DetailItem(
-                    label: 'Estimated End Time',
-                    value: endTime,
-                    valueColor: Colors.blue,
-                  ),
+                  _DetailItem(label: 'Estimated End Time', value: endTime),
                 _DetailItem(
                   label: 'Estimated Duration',
                   value: '${job.estimatedDuration} Hours',
                 ),
               ],
             ),
-
-            const SizedBox(height: 20),
-
             _DetailSection(
+              icon: Icons.access_time,
               title: 'Timestamps',
-              children: [
-                _DetailItem(label: 'Created At', value: job.createdAt),
-              ],
+              items: [_DetailItem(label: 'Created At', value: job.createdAt)],
             ),
-
-            const SizedBox(height: 20),
-
             _DetailSection(
+              icon: Icons.people,
               title: 'Personnel',
-              children: [
+              items: [
                 _DetailItem(label: 'Mechanic ID', value: job.mechanicID),
                 _DetailItem(label: 'Managed By', value: job.managedBy),
               ],
             ),
-
             const SizedBox(height: 30),
 
-            // Only show Assign Mechanic button for Pending status
+            // Action Button
             if (job.jobStatus.toLowerCase() == 'pending')
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    _navigateToMechanicSelection(context);
-                  },
-                  child: const Text('Assign Mechanic'),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: Theme.of(context).primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.assignment_ind, color: Colors.white),
+                  label: const Text(
+                    'Assign Mechanic',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: () => _navigateToMechanicSelection(context),
                 ),
               )
             else
-              Center(
-                child: Text(
-                  'Mechanic can only be assigned to Pending jobs',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
+              Text(
+                'Mechanic can only be assigned to Pending jobs',
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
                 ),
+                textAlign: TextAlign.center,
               ),
           ],
         ),
@@ -166,31 +157,47 @@ class JobDetailsPage extends StatelessWidget {
 }
 
 class _DetailSection extends StatelessWidget {
+  final IconData icon;
   final String title;
-  final List<Widget> children;
+  final List<_DetailItem> items;
 
-  const _DetailSection({required this.title, required this.children});
+  const _DetailSection({
+    required this.icon,
+    required this.title,
+    required this.items,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
+    final primary = Theme.of(context).primaryColor;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: primary), // only the icon uses primary color
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ),
+            const Divider(),
+            ...items,
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -209,23 +216,25 @@ class _DetailItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 150,
+          Expanded(
+            flex: 3,
             child: Text(
               label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
           ),
-          const SizedBox(width: 10),
           Expanded(
+            flex: 5,
             child: Text(
               value.isNotEmpty ? value : 'Not specified',
               style: TextStyle(
-                color: valueColor,
+                color: valueColor ?? Colors.black,
                 fontWeight: valueColor != null ? FontWeight.bold : null,
               ),
             ),

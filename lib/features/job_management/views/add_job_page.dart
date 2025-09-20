@@ -23,7 +23,6 @@ class _AddJobPageState extends State<AddJobPage> {
   String _generatedJobId = '';
   bool _isLoading = true;
 
-  // Added dropdown options for service type
   final List<String> _serviceTypeOptions = [
     'Car Repair',
     'Vehicle Safety Check',
@@ -31,29 +30,26 @@ class _AddJobPageState extends State<AddJobPage> {
     'Battery Repair',
     'Tire Repair',
   ];
-  String? _selectedServiceType; // Changed from TextEditingController to String
+  String? _selectedServiceType;
 
   @override
   void initState() {
     super.initState();
     _loadVehicles();
     _generatedJobId = widget.addJobController.generateJobId();
-    _managedByController.text = 'Workshop Manager'; // Default value
+    _managedByController.text = 'Workshop Manager';
   }
 
   Future<void> _loadVehicles() async {
     if (!mounted) return;
-
     setState(() => _isLoading = true);
 
     try {
       await widget.addJobController.loadVehicles();
-
       if (!mounted) return;
       setState(() => _isLoading = false);
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Failed to load vehicles: $e')));
@@ -61,21 +57,8 @@ class _AddJobPageState extends State<AddJobPage> {
     }
   }
 
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _plateNoController.dispose();
-    _managedByController.dispose();
-    super.dispose();
-  }
-
   String _formatDateOnly(DateTime date) {
-    // Format as YYYY-MM-DD
-    String year = date.year.toString();
-    String month = date.month.toString().padLeft(2, '0');
-    String day = date.day.toString().padLeft(2, '0');
-
-    return '$year-$month-$day';
+    return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
   void _onVehicleSelected(Vehicle vehicle) {
@@ -92,21 +75,18 @@ class _AddJobPageState extends State<AddJobPage> {
       try {
         final newJob = Job(
           jobID: _generatedJobId,
-          jobServiceType: _selectedServiceType!, // Use selected service type
+          jobServiceType: _selectedServiceType!,
           jobDescription: _descriptionController.text,
           jobStatus: _selectedStatus,
-          scheduledDate: '', // Removed - empty string
-          scheduledTime: '', // Removed - empty string
-          estimatedDuration: 0, // Removed - set to 0
-          createdAt: _formatDateOnly(
-            DateTime.now(),
-          ), // Date in YYYY-MM-DD format
-          mechanicID: '', // Removed - empty string
+          scheduledDate: '',
+          scheduledTime: '',
+          estimatedDuration: 0,
+          createdAt: _formatDateOnly(DateTime.now()),
+          mechanicID: '',
           plateNo: _plateNoController.text,
           managedBy: _managedByController.text,
         );
 
-        // Validate job data
         final validationError = widget.addJobController.validateJobData(newJob);
         if (validationError != null) {
           if (!mounted) return;
@@ -116,15 +96,11 @@ class _AddJobPageState extends State<AddJobPage> {
           return;
         }
 
-        // Add the job
         await widget.addJobController.addNewJob(newJob);
         if (!mounted) return;
-        // Show success message
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Job added successfully')));
-
-        // Navigate back
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(
@@ -144,8 +120,10 @@ class _AddJobPageState extends State<AddJobPage> {
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).primaryColor;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Add New Job')),
+      appBar: AppBar(title: const Text('Add New Job'), centerTitle: true),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Padding(
@@ -154,36 +132,31 @@ class _AddJobPageState extends State<AddJobPage> {
                 key: _formKey,
                 child: ListView(
                   children: [
-                    // Job ID Display
+                    // Job ID Card
                     Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Job ID',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              _generatedJobId,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
+                      elevation: 3,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: ListTile(
+                        leading: Icon(Icons.work, color: primary),
+                        title: const Text(
+                          'Job ID',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        subtitle: Text(
+                          _generatedJobId,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.green,
+                          ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 20),
 
-                    // Vehicle Selection
+                    // Vehicle Dropdown
                     const Text(
                       'Select Vehicle',
                       style: TextStyle(
@@ -199,72 +172,90 @@ class _AddJobPageState extends State<AddJobPage> {
                       ) {
                         return DropdownMenuItem<Vehicle>(
                           value: vehicle,
-                          child: Text(
-                            '${vehicle.plateNo} - ${vehicle.model} ${vehicle.year}',
+                          child: Row(
+                            children: [
+                              Icon(Icons.directions_car, color: primary),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${vehicle.plateNo} - ${vehicle.model} ${vehicle.year}',
+                              ),
+                            ],
                           ),
                         );
                       }).toList(),
                       onChanged: (Vehicle? newValue) {
-                        if (newValue != null) {
-                          _onVehicleSelected(newValue);
-                        }
+                        if (newValue != null) _onVehicleSelected(newValue);
                       },
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: 'Choose a vehicle',
                       ),
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a vehicle';
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          value == null ? 'Please select a vehicle' : null,
                     ),
 
                     const SizedBox(height: 20),
 
-                    // Vehicle Image
+                    // Vehicle Preview Card
                     if (_selectedVehicle != null)
-                      Column(
-                        children: [
-                          Container(
-                            width: double.infinity,
-                            height: 200,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: Colors.grey[200],
-                            ),
-                            child: _selectedVehicle!.vehicleImageUrl.isNotEmpty
-                                ? Image.network(
-                                    _selectedVehicle!.vehicleImageUrl,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return const Icon(
+                      Card(
+                        elevation: 4,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: const BorderRadius.vertical(
+                                top: Radius.circular(12),
+                              ),
+                              child:
+                                  _selectedVehicle!.vehicleImageUrl.isNotEmpty
+                                  ? Image.network(
+                                      _selectedVehicle!.vehicleImageUrl,
+                                      height: 180,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Container(
+                                              height: 180,
+                                              color: Colors.grey[200],
+                                              child: Icon(
+                                                Icons.car_repair,
+                                                size: 80,
+                                                color: Colors.grey,
+                                              ),
+                                            );
+                                          },
+                                    )
+                                  : Container(
+                                      height: 180,
+                                      color: Colors.grey[200],
+                                      child: const Icon(
                                         Icons.car_repair,
                                         size: 80,
                                         color: Colors.grey,
-                                      );
-                                    },
-                                  )
-                                : const Icon(
-                                    Icons.car_repair,
-                                    size: 80,
-                                    color: Colors.grey,
-                                  ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '${_selectedVehicle!.model} ${_selectedVehicle!.year}',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                                      ),
+                                    ),
                             ),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Text(
+                                '${_selectedVehicle!.model} ${_selectedVehicle!.year}',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
 
-                    // Service Type Dropdown (Replaced TextFormField)
+                    const SizedBox(height: 20),
+
+                    // Service Type Dropdown
                     const Text(
                       'Service Type',
                       style: TextStyle(
@@ -278,24 +269,24 @@ class _AddJobPageState extends State<AddJobPage> {
                       items: _serviceTypeOptions.map((String serviceType) {
                         return DropdownMenuItem<String>(
                           value: serviceType,
-                          child: Text(serviceType),
+                          child: Row(
+                            children: [
+                              Icon(Icons.build_circle, color: primary),
+                              const SizedBox(width: 8),
+                              Text(serviceType),
+                            ],
+                          ),
                         );
                       }).toList(),
                       onChanged: (String? newValue) {
-                        setState(() {
-                          _selectedServiceType = newValue;
-                        });
+                        setState(() => _selectedServiceType = newValue);
                       },
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: 'Select service type',
                       ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please select a service type';
-                        }
-                        return null;
-                      },
+                      validator: (value) =>
+                          value == null ? 'Please select a service type' : null,
                     ),
 
                     const SizedBox(height: 16),
@@ -303,10 +294,11 @@ class _AddJobPageState extends State<AddJobPage> {
                     // Description
                     TextFormField(
                       controller: _descriptionController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Description',
                         hintText: 'Job description details',
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.description, color: primary),
                       ),
                       maxLines: 3,
                     ),
@@ -314,13 +306,18 @@ class _AddJobPageState extends State<AddJobPage> {
                     const SizedBox(height: 30),
 
                     // Confirm Button
-                    ElevatedButton(
+                    ElevatedButton.icon(
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
+                        backgroundColor: primary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 4,
                       ),
-                      child: const Text(
+                      icon: const Icon(Icons.check_circle, color: Colors.white),
+                      label: const Text(
                         'Confirm & Create Job',
                         style: TextStyle(
                           fontSize: 16,

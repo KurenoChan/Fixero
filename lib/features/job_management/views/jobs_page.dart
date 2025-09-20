@@ -39,6 +39,7 @@ class _JobsPageState extends State<JobsPage> {
     super.initState();
     _loadJobsFuture = _loadJobs();
 
+    // periodic status update
     _statusUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       _checkAndUpdateJobStatuses();
     });
@@ -62,7 +63,7 @@ class _JobsPageState extends State<JobsPage> {
     try {
       final jobs = await _jobDAO.getAllJobs();
 
-      // Check and update statuses based on current time
+      // Update statuses based on current time
       final updatedJobs = await _updateJobStatusesBasedOnTime(jobs);
 
       if (!mounted) return;
@@ -72,6 +73,9 @@ class _JobsPageState extends State<JobsPage> {
         _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
         _isLoading = false;
       });
+
+      // ✅ Immediately re-check statuses after loading
+      _checkAndUpdateJobStatuses();
     } catch (e) {
       if (!mounted) return;
 
@@ -82,7 +86,6 @@ class _JobsPageState extends State<JobsPage> {
     }
   }
 
-  // Check and update job statuses based on current time
   Future<List<Job>> _updateJobStatusesBasedOnTime(List<Job> jobs) async {
     final now = DateTime.now();
     final updatedJobs = <Job>[];
@@ -91,7 +94,6 @@ class _JobsPageState extends State<JobsPage> {
     for (final job in jobs) {
       Job updatedJob = job;
 
-      // Skip if job is already completed or cancelled
       if (job.jobStatus.toLowerCase() == 'completed' ||
           job.jobStatus.toLowerCase() == 'cancelled') {
         updatedJobs.add(updatedJob);
@@ -99,7 +101,6 @@ class _JobsPageState extends State<JobsPage> {
       }
 
       try {
-        // Parse scheduled date and time
         final scheduledDateParts = job.scheduledDate.split('-');
         final scheduledTimeParts = job.scheduledTime.split(':');
 
@@ -112,14 +113,11 @@ class _JobsPageState extends State<JobsPage> {
             int.parse(scheduledTimeParts[1]),
           );
 
-          // Calculate end time
           final endDateTime = scheduledDateTime.add(
             Duration(hours: job.estimatedDuration),
           );
 
-          // Update status based on current time
           if (now.isAfter(endDateTime)) {
-            // Job should be marked as completed
             if (job.jobStatus.toLowerCase() != 'completed') {
               updatedJob = job.copyWith(jobStatus: 'Completed');
               needsUpdate = true;
@@ -127,7 +125,6 @@ class _JobsPageState extends State<JobsPage> {
             }
           } else if (now.isAfter(scheduledDateTime) &&
               now.isBefore(endDateTime)) {
-            // Job should be marked as ongoing
             if (job.jobStatus.toLowerCase() != 'ongoing') {
               updatedJob = job.copyWith(jobStatus: 'Ongoing');
               needsUpdate = true;
@@ -136,21 +133,18 @@ class _JobsPageState extends State<JobsPage> {
           } else if (now.isBefore(scheduledDateTime) &&
               job.jobStatus.toLowerCase() != 'scheduled' &&
               job.jobStatus.toLowerCase() != 'pending') {
-            // Job should be marked as scheduled if it's before the scheduled time
             updatedJob = job.copyWith(jobStatus: 'Scheduled');
             needsUpdate = true;
             debugPrint('Job ${job.jobID} marked as scheduled');
           }
         }
       } catch (e) {
-        // Handle date parsing errors gracefully
         debugPrint('Error parsing date for job ${job.jobID}: $e');
       }
 
       updatedJobs.add(updatedJob);
     }
 
-    // If any jobs were updated, save them to the database
     if (needsUpdate) {
       for (final job in updatedJobs) {
         final originalJob = jobs.firstWhere(
@@ -168,7 +162,6 @@ class _JobsPageState extends State<JobsPage> {
     return updatedJobs;
   }
 
-  // Periodically check and update job statuses
   void _checkAndUpdateJobStatuses() async {
     if (!mounted) return;
 
@@ -177,7 +170,6 @@ class _JobsPageState extends State<JobsPage> {
 
       if (!mounted) return;
 
-      // Only update state if there are actual changes
       final hasChanges =
           updatedJobs.length == _allJobs.length &&
           updatedJobs.asMap().entries.any((entry) {
@@ -198,21 +190,21 @@ class _JobsPageState extends State<JobsPage> {
 
   List<Job> _filterJobs(List<Job> jobs, int filterIndex) {
     switch (filterIndex) {
-      case 0: // All
+      case 0:
         return jobs;
-      case 1: // Ongoing
+      case 1:
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'ongoing')
             .toList();
-      case 2: // Scheduled
+      case 2:
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'scheduled')
             .toList();
-      case 3: // Completed
+      case 3:
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'completed')
             .toList();
-      case 4: // Pending
+      case 4:
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'pending')
             .toList();
@@ -232,7 +224,9 @@ class _JobsPageState extends State<JobsPage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => JobDetailsPage(job: job)),
-    );
+    ).then((_) {
+      _loadJobs(); // ✅ reload when returning
+    });
   }
 
   void _navigateToAddJob() {
@@ -242,7 +236,7 @@ class _JobsPageState extends State<JobsPage> {
         builder: (context) => AddJobPage(addJobController: _addJobController),
       ),
     ).then((_) {
-      _loadJobs();
+      _loadJobs(); // ✅ reload when returning
     });
   }
 
@@ -369,7 +363,6 @@ class _JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Calculate end time for the job
     String endTime = '';
     try {
       final scheduledDateParts = job.scheduledDate.split('-');
@@ -401,57 +394,40 @@ class _JobCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Car Plate - FIRST (larger and prominent)
             Text(
               job.plateNo,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-
             const SizedBox(height: 8),
-
-            // Job ID
             Text(
               'Job ID: ${job.jobID}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-
             const SizedBox(height: 4),
-
-            // Service Type
             Text(
               'Service Type: ${job.jobServiceType}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-
             const SizedBox(height: 4),
-
-            // Estimated End Time (only show for ongoing jobs)
             if (job.jobStatus.toLowerCase() == 'ongoing' && endTime.isNotEmpty)
               Text(
                 'Estimated Finish: $endTime',
-                style: const TextStyle(fontSize: 14, color: Colors.blue),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor,
+                ),
               ),
-
             const SizedBox(height: 4),
-
-            // Mechanic Name
             Text(
               'Mechanic: ${job.mechanicID}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-
             const SizedBox(height: 12),
-
-            // Divider
             const Divider(height: 1, color: Colors.grey),
-
             const SizedBox(height: 12),
-
-            // Status and Dates row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Status badge
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -466,8 +442,6 @@ class _JobCard extends StatelessWidget {
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-
-                // Dates
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
