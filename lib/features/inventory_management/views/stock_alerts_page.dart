@@ -22,6 +22,8 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
   late StockFilter _filter;
   String _searchQuery = "";
 
+  String _sortCriteria = 'Stock Low-High';
+
   @override
   void initState() {
     super.initState();
@@ -75,6 +77,32 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
           .toList();
     }
 
+    // Apply sorting
+    switch (_sortCriteria) {
+      case 'Name A-Z':
+        filteredItems.sort((a, b) => a.itemName.compareTo(b.itemName));
+        break;
+      case 'Name Z-A':
+        filteredItems.sort((a, b) => b.itemName.compareTo(a.itemName));
+        break;
+      case 'Price Low-High':
+        filteredItems.sort((a, b) => a.itemPrice.compareTo(b.itemPrice));
+        break;
+      case 'Price High-Low':
+        filteredItems.sort((a, b) => b.itemPrice.compareTo(a.itemPrice));
+        break;
+      case 'Stock Low-High':
+        filteredItems.sort(
+          (a, b) => a.stockQuantity.compareTo(b.stockQuantity),
+        );
+        break;
+      case 'Stock High-Low':
+        filteredItems.sort(
+          (a, b) => b.stockQuantity.compareTo(a.stockQuantity),
+        );
+        break;
+    }
+
     return filteredItems;
   }
 
@@ -117,85 +145,105 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
 
               return CustomScrollView(
                 slivers: [
-                  // Search bar
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      child: FixeroSearchBar(
-                        searchHints: ['Items'],
-                        searchTerms: controller.items
-                            .map((e) => e.itemName)
-                            .toList(),
-                        onItemSelected: (selected) {
-                          final matchedItem = controller.items.firstWhere(
-                            (e) => e.itemName == selected,
-                          );
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  ItemDetailsPage(itemID: matchedItem.itemID),
-                            ),
-                          );
-                        },
-                        onChanged: (query) {
-                          setState(() {
-                            _searchQuery = query;
-                          });
-                        },
-                      ),
-                    ),
-                  ),
-
-                  // Filter chips
                   SliverPersistentHeader(
                     pinned: true,
-                    delegate: _FilterHeaderDelegate(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        child: Wrap(
-                          spacing: 10,
-                          children: [
-                            ChoiceChip(
-                              label: Text(
-                                "All ($allCount)",
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                              selected: _filter == StockFilter.all,
-                              selectedColor: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.2),
-                              onSelected: (_) =>
-                                  setState(() => _filter = StockFilter.all),
+                    delegate: _StickyHeaderDelegate(
+                      child: Column(
+                        children: [
+                          // Search bar
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            child: FixeroSearchBar(
+                              searchHints: ['Items'],
+                              searchTerms: controller.items
+                                  .map((e) => e.itemName)
+                                  .toList(),
+                              onItemSelected: (selected) {
+                                final matchedItem = controller.items.firstWhere(
+                                  (e) => e.itemName == selected,
+                                );
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => ItemDetailsPage(
+                                      itemID: matchedItem.itemID,
+                                    ),
+                                  ),
+                                );
+                              },
+                              onChanged: (query) {
+                                setState(() {
+                                  _searchQuery = query;
+                                });
+                              },
                             ),
-                            ChoiceChip(
-                              label: Text(
-                                "Low Stock ($lowCount)",
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                              selected: _filter == StockFilter.lowStock,
-                              selectedColor: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.2),
-                              onSelected: (_) => setState(
-                                () => _filter = StockFilter.lowStock,
-                              ),
+                          ),
+
+                          // Filter chips
+                          SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              spacing: 10,
+                              children: [
+                                ChoiceChip(
+                                  label: Text("All ($allCount)"),
+                                  selected: _filter == StockFilter.all,
+                                  onSelected: (_) =>
+                                      setState(() => _filter = StockFilter.all),
+                                ),
+                                ChoiceChip(
+                                  label: Text("Low Stock ($lowCount)"),
+                                  selected: _filter == StockFilter.lowStock,
+                                  onSelected: (_) => setState(
+                                    () => _filter = StockFilter.lowStock,
+                                  ),
+                                ),
+                                ChoiceChip(
+                                  label: Text("Out of Stock ($outCount)"),
+                                  selected: _filter == StockFilter.outOfStock,
+                                  onSelected: (_) => setState(
+                                    () => _filter = StockFilter.outOfStock,
+                                  ),
+                                ),
+                              ],
                             ),
-                            ChoiceChip(
-                              label: Text(
-                                "Out of Stock ($outCount)",
-                                style: Theme.of(context).textTheme.labelMedium,
-                              ),
-                              selected: _filter == StockFilter.outOfStock,
-                              selectedColor: Theme.of(
-                                context,
-                              ).colorScheme.primary.withValues(alpha: 0.2),
-                              onSelected: (_) => setState(
-                                () => _filter = StockFilter.outOfStock,
-                              ),
+                          ),
+
+                          // Sort dropdown
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Row(
+                              children: [
+                                const Text("Sort by: "),
+                                const SizedBox(width: 10),
+                                DropdownButton<String>(
+                                  value: _sortCriteria,
+                                  items:
+                                      [
+                                            'Name A-Z',
+                                            'Name Z-A',
+                                            'Price Low-High',
+                                            'Price High-Low',
+                                            'Stock Low-High',
+                                            'Stock High-Low',
+                                          ]
+                                          .map(
+                                            (criteria) => DropdownMenuItem(
+                                              value: criteria,
+                                              child: Text(criteria),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() => _sortCriteria = value);
+                                    }
+                                  },
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -334,10 +382,10 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
   }
 }
 
-class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   final Widget child;
 
-  _FilterHeaderDelegate({required this.child});
+  _StickyHeaderDelegate({required this.child});
 
   @override
   Widget build(
@@ -352,9 +400,9 @@ class _FilterHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 60;
+  double get maxExtent => 180; // adjust according to your content height
   @override
-  double get minExtent => 60;
+  double get minExtent => 180;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       false;

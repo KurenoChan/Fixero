@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 
-import '../controllers/feedback_controller.dart';
+import 'feedback_controller.dart';
 import '../models/feedback_model.dart';
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);

@@ -1,7 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:fixero/features/CRM/views/customer_relationship_page.dart';
+import 'package:fixero/features/crm/views/customer_relationship_page.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';

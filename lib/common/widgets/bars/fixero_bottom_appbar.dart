@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../features/CRM/views/customer_relationship_page.dart';
+import '../../../features/crm/views/customer_relationship_page.dart';
 import '../../../features/inventory_management/views/inventory_page.dart';
 import '../../../home_page.dart';
 import '../../../features/vehicle_management/views/car_models_view.dart';
