@@ -2,6 +2,8 @@ import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/models/item_usage.dart';
 import 'package:fixero/features/inventory_management/views/item_details_page.dart';
+import 'package:fixero/features/job_management/controllers/job_controller.dart';
+import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -17,10 +19,26 @@ class UsageDetailsPage extends StatefulWidget {
 
 class _UsageDetailsPageState extends State<UsageDetailsPage> {
   @override
+  void initState() {
+    super.initState();
+
+    final jobController = context.read<JobController>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (jobController.jobs.isEmpty) {
+        await jobController.loadJobs();
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final itemController = context.watch<ItemController>();
     final item = itemController.getItemByID(widget.usage.itemID);
     final itemUsage = widget.usage;
+
+    final jobController = context.read<JobController>();
+    final job = jobController.getJobByJobID(widget.usage.jobID);
 
     return SafeArea(
       child: Scaffold(
@@ -278,7 +296,14 @@ class _UsageDetailsPageState extends State<UsageDetailsPage> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () {
-                        // TODO: Move to Job Details Page
+                        if (job != null) {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => JobDetailsPage(job: job),
+                            ),
+                          );
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(

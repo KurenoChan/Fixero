@@ -174,7 +174,8 @@ class _JobsPageState extends State<JobsPage> {
             ),
 
             // Filter chips
-            SizedBox(
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15.0),
               height: 50,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
@@ -216,9 +217,14 @@ class _JobsPageState extends State<JobsPage> {
                         itemCount: _filteredJobs.length,
                         itemBuilder: (context, index) {
                           final job = _filteredJobs[index];
-                          return InkWell(
-                            onTap: () => _navigateToJobDetails(job),
-                            child: _JobCard(job: job),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4.0,
+                            ),
+                            child: InkWell(
+                              onTap: () => _navigateToJobDetails(job),
+                              child: _JobCard(job: job),
+                            ),
                           );
                         },
                       ),
@@ -478,6 +484,7 @@ class JobDetailsPage extends StatelessWidget {
       MaterialPageRoute(builder: (context) => MechanicSelectionPage(job: job)),
     ).then((selectedMechanic) {
       if (selectedMechanic != null) {
+        if (!context.mounted) return;
         // Handle the selected mechanic here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
