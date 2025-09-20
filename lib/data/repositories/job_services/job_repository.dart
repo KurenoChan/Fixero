@@ -16,7 +16,9 @@ class JobRepository {
   Future<List<Job>> fetchAllJobs() async {
     final snapshot = await _db.get();
 
-    if (!snapshot.exists) return [];
+    if (!snapshot.exists) {
+      return [];
+    }
 
     final Map<dynamic, dynamic> data = snapshot.value as Map<dynamic, dynamic>;
     return data.entries.map((entry) {
@@ -25,7 +27,6 @@ class JobRepository {
   }
 
   Future<void> addJob(Job job) async {
-    // Save under your own ID instead of push()
     await _db.child(job.jobID).set({
       ...job.toMap(), // 🔹 expands the whole Job as key-value pairs
       "jobID": job.jobID, // 🔹 explicitly adds/overrides jobID

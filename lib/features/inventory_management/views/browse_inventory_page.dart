@@ -104,6 +104,8 @@ class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
   late List<T> _filteredItems;
   late List<Item> allSearchableItems; // all items for global search
 
+  String _sortCriteria = 'Name A-Z';
+
   @override
   void initState() {
     super.initState();
@@ -126,6 +128,41 @@ class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
         }
         return false;
       }).toList();
+    });
+  }
+
+  void _sortItems(String criteria) {
+    setState(() {
+      if (criteria == 'Name A-Z') {
+        _filteredItems.sort((a, b) {
+          if (a is Item && b is Item) {
+            return a.itemName.compareTo(b.itemName);
+          }
+          return 0;
+        });
+      } else if (criteria == 'Name Z-A') {
+        _filteredItems.sort((a, b) {
+          if (a is Item && b is Item) {
+            return b.itemName.compareTo(a.itemName);
+          }
+          return 0;
+        });
+      } else if (criteria == 'Price Low-High') {
+        _filteredItems.sort((a, b) {
+          if (a is Item && b is Item) {
+            return a.itemPrice.compareTo(b.itemPrice);
+          }
+          return 0;
+        });
+      } else if (criteria == 'Price High-Low') {
+        _filteredItems.sort((a, b) {
+          if (a is Item && b is Item) {
+            return b.itemPrice.compareTo(a.itemPrice);
+          }
+          return 0;
+        });
+      }
+      _sortCriteria = criteria;
     });
   }
 
@@ -156,6 +193,39 @@ class _InventoryListPageState<T> extends State<InventoryListPage<T>> {
                 onChanged: _onSearch,
               ),
             ),
+
+            if (_filteredItems.isNotEmpty && _filteredItems.first is Item)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
+                child: Row(
+                  children: [
+                    const Text("Sort by: "),
+                    const SizedBox(width: 10),
+                    DropdownButton<String>(
+                      value: _sortCriteria,
+                      items:
+                          [
+                            'Name A-Z',
+                            'Name Z-A',
+                            'Price Low-High',
+                            'Price High-Low',
+                          ].map((criteria) {
+                            return DropdownMenuItem(
+                              value: criteria,
+                              child: Text(criteria),
+                            );
+                          }).toList(),
+                      onChanged: (value) {
+                        if (value != null) _sortItems(value);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
             Expanded(
               child: _filteredItems.isEmpty
                   ? Center(child: Text("No ${widget.title} available"))

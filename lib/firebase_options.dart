@@ -25,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -77,4 +71,28 @@ class DefaultFirebaseOptions {
     iosClientId: '432176160698-gnsfhej6kbj3ot8p0dse0tkrqip0irbu.apps.googleusercontent.com',
     iosBundleId: 'com.fixero.fixero',
   );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyANtr91nWDAalDa0ieE-mXugKH_MYmCq6k',
+    appId: '1:432176160698:ios:75cc58c3f978b46e014783',
+    messagingSenderId: '432176160698',
+    projectId: 'fixero-9e0a9',
+    databaseURL: 'https://fixero-9e0a9-default-rtdb.firebaseio.com',
+    storageBucket: 'fixero-9e0a9.firebasestorage.app',
+    androidClientId: '432176160698-6lqgfib403u0olfeihhe5dr6crb9s5rf.apps.googleusercontent.com',
+    iosClientId: '432176160698-gnsfhej6kbj3ot8p0dse0tkrqip0irbu.apps.googleusercontent.com',
+    iosBundleId: 'com.fixero.fixero',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDBJPiEEOhAV5m45S_2Oc6sMfra7eeJmHI',
+    appId: '1:432176160698:web:cf5666bc50593cad014783',
+    messagingSenderId: '432176160698',
+    projectId: 'fixero-9e0a9',
+    authDomain: 'fixero-9e0a9.firebaseapp.com',
+    databaseURL: 'https://fixero-9e0a9-default-rtdb.firebaseio.com',
+    storageBucket: 'fixero-9e0a9.firebasestorage.app',
+    measurementId: 'G-JHDJZRSP7Z',
+  );
+
 }

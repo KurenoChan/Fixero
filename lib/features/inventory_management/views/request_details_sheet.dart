@@ -3,6 +3,7 @@ import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/authentication/controllers/manager_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/views/create_order_sheet.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:fixero/features/inventory_management/models/restock_request.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
@@ -273,7 +274,12 @@ class RequestDetailsSheet extends StatelessWidget {
                             children: [
                               Text(request.requestDate),
                               const SizedBox(width: 10),
-                              Text(request.requestTime),
+                              Text(
+                                Formatter.formatTime12Hour(
+                                  request.requestTime,
+                                  showSeconds: true,
+                                ),
+                              ),
                             ],
                           ),
 

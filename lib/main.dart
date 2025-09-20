@@ -1,6 +1,7 @@
 import 'package:animated_splash_screen/animated_splash_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fixero/features/crm/views/customer_relationship_page.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/order_controller.dart';
@@ -10,6 +11,7 @@ import 'package:fixero/features/inventory_management/controllers/supplier_contro
 import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:fixero/features/job_management/views/jobs_page.dart';
+import 'package:fixero/features/vehicle_management/views/car_models_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -64,7 +66,9 @@ class MainApp extends StatelessWidget {
       routes: {
         HomePage.routeName: (_) => const HomePage(),
         JobsPage.routeName: (_) => const JobsPage(),
+        CarModelsView.routeName: (_) => const CarModelsView(),
         InventoryPage.routeName: (_) => const InventoryPage(),
+        CrmHomePage.routeName: (_) => const CrmHomePage(),
       },
 
       home: AnimatedSplashScreen(

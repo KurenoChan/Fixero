@@ -12,6 +12,7 @@ import 'package:fixero/features/inventory_management/models/restock_request.dart
 import 'package:fixero/features/inventory_management/views/create_order_sheet.dart';
 import 'package:fixero/features/inventory_management/views/order_details_sheet.dart';
 import 'package:fixero/features/inventory_management/views/request_details_sheet.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
@@ -31,6 +32,9 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
     Tab(text: 'Pending Requests'),
     Tab(text: 'Pending Orders'),
   ];
+
+  String _requestSort = "Latest";
+  String _orderSort = "Latest";
 
   Future<void> _rejectRequest(
     BuildContext context,
@@ -353,7 +357,12 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
       ..sort((a, b) {
         final aDateTime = DateTime.parse("${a.requestDate} ${a.requestTime}");
         final bDateTime = DateTime.parse("${b.requestDate} ${b.requestTime}");
-        return bDateTime.compareTo(aDateTime); // Descending: latest first
+
+        if (_requestSort == "Latest") {
+          return bDateTime.compareTo(aDateTime);
+        } else {
+          return aDateTime.compareTo(bDateTime);
+        }
       });
 
     if (pendingRequests.isEmpty) {
@@ -361,7 +370,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.all(15),
+      padding: const EdgeInsets.symmetric(horizontal: 15),
       itemCount: pendingRequests.length,
       itemBuilder: (context, index) {
         final request = pendingRequests[index];
@@ -621,7 +630,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                                 borderRadius: BorderRadius.circular(5.0),
                               ),
                               child: Text(
-                                request.requestTime,
+                                Formatter.formatTime12Hour(request.requestTime),
                                 style: Theme.of(context).textTheme.labelSmall,
                               ),
                             ),
@@ -675,15 +684,20 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
       return const Center(child: CircularProgressIndicator());
     }
 
-    final pendingOrders =
-        orderController.orders
-            .where((order) => order.arrivalDate == null)
-            .toList()
-          ..sort((a, b) {
-            final aDateTime = DateTime.parse("${a.orderDate} ${a.orderTime}");
-            final bDateTime = DateTime.parse("${b.orderDate} ${b.orderTime}");
-            return bDateTime.compareTo(aDateTime); // Descending: latest first
-          });
+    var pendingOrders = orderController.orders
+        .where((order) => order.arrivalDate == null)
+        .toList();
+
+    // Apply sort
+    pendingOrders.sort((a, b) {
+      final aDateTime = DateTime.parse("${a.orderDate} ${a.orderTime}");
+      final bDateTime = DateTime.parse("${b.orderDate} ${b.orderTime}");
+      if (_orderSort == "Latest") {
+        return bDateTime.compareTo(aDateTime);
+      } else {
+        return aDateTime.compareTo(bDateTime);
+      }
+    });
 
     if (pendingOrders.isEmpty) {
       return const Center(child: Text("No pending orders"));
@@ -692,7 +706,7 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(15),
+          padding: const EdgeInsets.symmetric(horizontal: 15),
           sliver: SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
               final order = pendingOrders[index];
@@ -737,9 +751,9 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                         ),
 
                         Row(
-                          spacing: 10.0,
+                          spacing: 5.0,
                           children: [
-                            Icon(Icons.calendar_today, size: 20),
+                            Icon(Icons.calendar_month, size: 20),
                             Expanded(
                               child: Text(
                                 order.orderDate,
@@ -751,7 +765,21 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
                         ),
 
                         Row(
-                          spacing: 10.0,
+                          spacing: 5.0,
+                          children: [
+                            Icon(Icons.access_time, size: 20),
+                            Expanded(
+                              child: Text(
+                                Formatter.formatTime12Hour(order.orderTime),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Row(
+                          spacing: 5.0,
                           children: [
                             Icon(Icons.store, size: 20),
                             Expanded(
@@ -811,6 +839,34 @@ class _RequestsOrdersPageState extends State<RequestsOrdersPage>
               tabs: _tabs,
               labelColor: Theme.of(context).colorScheme.primary,
               indicatorColor: Theme.of(context).colorScheme.primary,
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 15),
+              child: Row(
+                children: [
+                  const Text("Sort by: "),
+                  DropdownButton<String>(
+                    value: _tabController.index == 0
+                        ? _requestSort
+                        : _orderSort,
+                    items: const [
+                      DropdownMenuItem(value: "Latest", child: Text("Latest")),
+                      DropdownMenuItem(value: "Oldest", child: Text("Oldest")),
+                    ],
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() {
+                        if (_tabController.index == 0) {
+                          _requestSort = value;
+                        } else {
+                          _orderSort = value;
+                        }
+                      });
+                    },
+                  ),
+                ],
+              ),
             ),
             Expanded(
               child: TabBarView(
