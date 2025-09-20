@@ -32,6 +32,9 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   String searchQuery = "";
   String selectedFeedbackType = "All";
   String selectedServiceType = "All";
+  String sortOrder = "Latest";
+
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> feedbackTypes = ["All", "Positive", "Complaint", "Suggestion"];
   final List<String> serviceTypes = [
@@ -56,15 +59,19 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // use your custom sub app bar (keeps your app's visual language)
       appBar: FixeroSubAppBar(
         title: widget.title,
         showBackButton: true,
       ),
 
-      // Outer: wait until controller.ready == true
       body: ValueListenableBuilder<bool>(
         valueListenable: feedbackController.ready,
         builder: (context, ready, _) {
@@ -72,7 +79,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // once ready, rebuild based on controller.value (unseen count) so list updates
           return ValueListenableBuilder<int>(
             valueListenable: feedbackController,
             builder: (context, _, __) {
@@ -82,8 +88,8 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                   .toList();
 
               // apply search filter
-              if (searchQuery.isNotEmpty) {
-                final q = searchQuery.toLowerCase();
+              if (_searchController.text.trim().isNotEmpty) {
+                final q = _searchController.text.toLowerCase().trim();
                 feedbacks = feedbacks.where((f) {
                   final cust = (f.customerName ?? '').toLowerCase();
                   final car = (f.carModel ?? '').toLowerCase();
@@ -103,27 +109,80 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                 feedbacks = feedbacks.where((f) => f.serviceType == selectedServiceType).toList();
               }
 
-              // sort unseen first
+              // sort unseen first, then by date according to sortOrder
               feedbacks.sort((a, b) {
-                if (a.seenStatus == "Unseen" && b.seenStatus != "Unseen") return -1;
-                if (a.seenStatus != "Unseen" && b.seenStatus == "Unseen") return 1;
-                return 0;
+                // 1. Unseen first
+                final unseenA = (a.seenStatus ?? "").toLowerCase() == "unseen";
+                final unseenB = (b.seenStatus ?? "").toLowerCase() == "unseen";
+                if (unseenA != unseenB) return unseenA ? -1 : 1;
+
+                // 2. Sort by date
+                DateTime? dateA;
+                DateTime? dateB;
+                try {
+                  dateA = DateTime.parse(a.date);
+                  dateB = DateTime.parse(b.date);
+                } catch (_) {}
+
+                if (dateA == null && dateB == null) return 0;
+                if (dateA == null) return sortOrder == "Latest" ? 1 : -1;
+                if (dateB == null) return sortOrder == "Latest" ? -1 : 1;
+
+                return sortOrder == "Latest"
+                    ? dateB.compareTo(dateA)
+                    : dateA.compareTo(dateB);
               });
 
               return Column(
                 children: [
-                  // search input
+                  // 🔹 Search + Sort Row
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search feedbacks...",
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      onChanged: (value) {
-                        setState(() => searchQuery = value.trim());
-                      },
+                      child: Row(
+                        children: [
+                          // 🔎 Search input
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() {}); // trigger filtering
+                              },
+                              decoration: const InputDecoration(
+                                icon: Icon(Icons.search, color: Colors.blue),
+                                hintText: "Search feedback...",
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+
+                          // ↕️ Sort menu inside the search bar
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.sort, color: Colors.blue),
+                            onSelected: (value) {
+                              setState(() {
+                                sortOrder = value;
+                              });
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(value: "Latest", child: Text("Latest")),
+                              const PopupMenuItem(value: "Oldest", child: Text("Oldest")),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
@@ -223,23 +282,15 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                             )
                                 : null,
                             onTap: () async {
-                              // Mark seen locally + DB (optimistic)
                               if (fb.seenStatus == "Unseen") {
                                 await feedbackController.markSeen(fb.feedbackID);
                               }
-
-                              // Navigate; pass the model to the detail builder
-                              final result = await Navigator.push(
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (_) => widget.detailPageBuilder(fb),
                                 ),
                               );
-
-                              // controller is already synced, so no extra reload needed
-                              if (result == true) {
-                                // no-op
-                              }
                             },
                           ),
                         );
@@ -252,8 +303,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
           );
         },
       ),
-
-      // bottom bar (your custom app bottom bar)
       bottomNavigationBar: const FixeroBottomAppBar(),
     );
   }
