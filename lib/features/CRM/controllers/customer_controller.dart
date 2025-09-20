@@ -29,6 +29,13 @@ class CustomerController extends ValueNotifier<int> {
     }
     notifyListeners();
   }
+  Future<void> updateCustomer(Customer customer) async {
+    await _dbRef.child(customer.custID).update(customer.toMap());
+    _byId[customer.custID] = customer; // ✅ update cache too
+    notifyListeners();
+  }
+
+
 
   /// 🔹 Fetch a customer by ID (used by Feedback Detail, Replies, etc.)
   Future<Customer?> fetchCustomerById(String customerId) async {

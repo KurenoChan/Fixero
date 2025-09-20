@@ -36,18 +36,26 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
 
     final replyData = Map<String, dynamic>.from(replySnap.value as Map);
 
-    setState(() {
-      replies = replyData.entries.map((e) {
-        final data = Map<String, dynamic>.from(e.value);
-        return {
-          "replyID": e.key,
-          "from": data["from"] ?? "Unknown",
-          "message": data["message"] ?? "",
-          "date": data["date"] ?? "-",
-        };
-      }).toList();
+    List<Map<String, dynamic>> temp = replyData.entries.map((e) {
+      final data = Map<String, dynamic>.from(e.value);
+      return {
+        "replyID": e.key,
+        "from": data["from"] ?? "Unknown",
+        "message": data["message"] ?? "",
+        "date": data["date"] ?? "-",
+      };
+    }).toList();
+
+    // 🔹 sort replies by date ascending (latest at bottom)
+    temp.sort((a, b) {
+      final dateA = DateTime.tryParse(a["date"]) ?? DateTime(1970);
+      final dateB = DateTime.tryParse(b["date"]) ?? DateTime(1970);
+      return dateA.compareTo(dateB);
     });
+
+    setState(() => replies = temp);
   }
+
 
   Future<void> _reopenFeedback() async {
     final fbID = widget.feedback.feedbackID;

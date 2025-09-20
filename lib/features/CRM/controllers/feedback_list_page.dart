@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 
-import 'feedback_controller.dart';
+import '../controllers/feedback_controller.dart';
 import '../models/feedback_model.dart';
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);
@@ -27,25 +27,36 @@ class FeedbackListPage extends StatefulWidget {
 
 class _FeedbackListPageState extends State<FeedbackListPage> {
   final FeedbackController feedbackController = FeedbackController();
+  Color _getCardColor(String feedbackType) {
+    switch (feedbackType) {
+      case "Positive":
+        return Colors.green.shade100;   // ✅ light pastel green
+      case "Complaint":
+        return Colors.red.shade100;     // ✅ light pastel red
+      case "Suggestion":
+        return Colors.blue.shade100;    // ✅ light pastel blue
+      default:
+        return Colors.grey.shade200;    // ✅ neutral light grey
+    }
+  }
+
 
   // Filters
   String searchQuery = "";
   String selectedFeedbackType = "All";
   String selectedServiceType = "All";
+  String sortOrder = "Latest";
 
-  final List<String> feedbackTypes = [
-    "All",
-    "Positive",
-    "Complaint",
-    "Suggestion",
-  ];
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<String> feedbackTypes = ["All", "Positive", "Complaint", "Suggestion"];
   final List<String> serviceTypes = [
     "All",
     "Vehicle Safety Check",
     "Car Repair",
     "Battery Repair",
     "Fuel Tank Maintenance",
-    "Tire Repair",
+    "Tire Repair"
   ];
 
   String _getServiceIcon(String serviceType) {
@@ -61,12 +72,19 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // use your custom sub app bar (keeps your app's visual language)
-      appBar: FixeroSubAppBar(title: widget.title, showBackButton: true),
+      appBar: FixeroSubAppBar(
+        title: widget.title,
+        showBackButton: true,
+      ),
 
-      // Outer: wait until controller.ready == true
       body: ValueListenableBuilder<bool>(
         valueListenable: feedbackController.ready,
         builder: (context, ready, _) {
@@ -74,22 +92,17 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // once ready, rebuild based on controller.value (unseen count) so list updates
           return ValueListenableBuilder<int>(
             valueListenable: feedbackController,
             builder: (context, _, __) {
               // get feedbacks with correct status
               var feedbacks = feedbackController.allFeedbacks
-                  .where(
-                    (f) =>
-                        f.status.toLowerCase() ==
-                        widget.statusFilter.toLowerCase(),
-                  )
+                  .where((f) => f.status.toLowerCase() == widget.statusFilter.toLowerCase())
                   .toList();
 
               // apply search filter
-              if (searchQuery.isNotEmpty) {
-                final q = searchQuery.toLowerCase();
+              if (_searchController.text.trim().isNotEmpty) {
+                final q = _searchController.text.toLowerCase().trim();
                 feedbacks = feedbacks.where((f) {
                   final cust = (f.customerName ?? '').toLowerCase();
                   final car = (f.carModel ?? '').toLowerCase();
@@ -103,99 +116,182 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
 
               // apply dropdown filters
               if (selectedFeedbackType != "All") {
-                feedbacks = feedbacks
-                    .where((f) => f.feedbackType == selectedFeedbackType)
-                    .toList();
+                feedbacks = feedbacks.where((f) => f.feedbackType == selectedFeedbackType).toList();
               }
               if (selectedServiceType != "All") {
-                feedbacks = feedbacks
-                    .where((f) => f.serviceType == selectedServiceType)
-                    .toList();
+                feedbacks = feedbacks.where((f) => f.serviceType == selectedServiceType).toList();
               }
 
-              // sort unseen first
+              // sort unseen first, then by date according to sortOrder
               feedbacks.sort((a, b) {
-                if (a.seenStatus == "Unseen" && b.seenStatus != "Unseen") {
-                  return -1;
-                }
-                if (a.seenStatus != "Unseen" && b.seenStatus == "Unseen") {
-                  return 1;
-                }
-                return 0;
+                // 1. Unseen first
+                final unseenA = (a.seenStatus ?? "").toLowerCase() == "unseen";
+                final unseenB = (b.seenStatus ?? "").toLowerCase() == "unseen";
+                if (unseenA != unseenB) return unseenA ? -1 : 1;
+
+                // 2. Sort by date
+                DateTime? dateA;
+                DateTime? dateB;
+                try {
+                  dateA = DateTime.parse(a.date);
+                  dateB = DateTime.parse(b.date);
+                } catch (_) {}
+
+                if (dateA == null && dateB == null) return 0;
+                if (dateA == null) return sortOrder == "Latest" ? 1 : -1;
+                if (dateB == null) return sortOrder == "Latest" ? -1 : 1;
+
+                return sortOrder == "Latest"
+                    ? dateB.compareTo(dateA)
+                    : dateA.compareTo(dateB);
               });
 
               return Column(
                 children: [
-                  // search input
+                  // 🔹 Search + Sort Row
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search feedbacks...",
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      onChanged: (value) {
-                        setState(() => searchQuery = value.trim());
-                      },
+                      child: Row(
+                        children: [
+                          // 🔎 Search input
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() {}); // trigger filtering
+                              },
+                              textAlignVertical: TextAlignVertical.center,
+                              decoration: const InputDecoration(
+                                isCollapsed: true,
+                                icon: Icon(Icons.search, color: Colors.blue),
+                                hintText: "Search feedback...",
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,   // ✅ remove underline when not focused
+                                focusedBorder: InputBorder.none,   // ✅ remove underline when focused
+                                errorBorder: InputBorder.none,     // ✅ safety (in case of error state)
+                                disabledBorder: InputBorder.none,  // ✅ safety
+                                filled: false,
+                              ),
+                            ),
+
+                          ),
+
+
+                          // ↕️ Sort menu inside the search bar
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.sort, color: Colors.blue),
+                            onSelected: (value) {
+                              setState(() {
+                                sortOrder = value;
+                              });
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(value: "Latest", child: Text("Latest")),
+                              const PopupMenuItem(value: "Oldest", child: Text("Oldest")),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
                   // filters row
+                  // 🔹 Filters Row (same design as search bar)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
                     child: Row(
                       children: [
+                        // Feedback Type Filter
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedFeedbackType,
-                            items: feedbackTypes
-                                .map(
-                                  (ft) => DropdownMenuItem(
-                                    value: ft,
-                                    child: Text(ft),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(
-                                () => selectedFeedbackType = value ?? "All",
-                              );
-                            },
-                            decoration: const InputDecoration(
-                              labelText: "Feedback Type",
-                              border: OutlineInputBorder(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedFeedbackType,
+                                hint: const Text("Feedback Type"),
+                                icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                items: feedbackTypes
+                                    .map((ft) => DropdownMenuItem(
+                                  value: ft,
+                                  child: Text(ft),
+                                ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => selectedFeedbackType = value);
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
+
+                        // Service Type Filter
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedServiceType,
-                            items: serviceTypes
-                                .map(
-                                  (st) => DropdownMenuItem(
-                                    value: st,
-                                    child: Text(st),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(
-                                () => selectedServiceType = value ?? "All",
-                              );
-                            },
-                            decoration: const InputDecoration(
-                              labelText: "Service Type",
-                              border: OutlineInputBorder(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedServiceType,
+                                hint: const Text("Service Type"),
+                                icon: const Icon(Icons.arrow_drop_down, color: Colors.blue),
+                                items: serviceTypes
+                                    .map((st) => DropdownMenuItem(
+                                  value: st,
+                                  child: Text(st),
+                                ))
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => selectedServiceType = value);
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 10),
 
                   // list
@@ -203,93 +299,74 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                     child: feedbacks.isEmpty
                         ? const Center(child: Text("No feedbacks found."))
                         : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: feedbacks.length,
-                            itemBuilder: (context, index) {
-                              final fb = feedbacks[index];
-                              final iconPath = _getServiceIcon(
-                                fb.serviceType ?? "",
-                              );
+                      padding: const EdgeInsets.all(16),
+                      itemCount: feedbacks.length,
+                      itemBuilder: (context, index) {
+                        final fb = feedbacks[index];
+                        final iconPath = _getServiceIcon(fb.serviceType ?? "");
 
-                              return Card(
-                                elevation: 3,
-                                margin: const EdgeInsets.only(bottom: 16),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
+                        return Card(
+                          elevation: 3,
+                          margin: const EdgeInsets.only(bottom: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          color: _getCardColor(fb.feedbackType), // ✅ custom background color
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.white, // keep contrast
+                              child: Image.asset(iconPath, fit: BoxFit.contain),
+                            ),
+                            title: Text(
+                              fb.customerName ?? "Unknown",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                                color: Colors.black,   // ✅ stronger contrast
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text("Service: ${fb.serviceType ?? '-'}", style: const TextStyle(color: Colors.black87)),
+                                Text("Feedback: ${fb.feedbackType}", style: const TextStyle(color: Colors.black87)),
+                                Text("Car: ${fb.carModel ?? '-'}", style: const TextStyle(color: Colors.black87)),
+                                Text("Date: ${fb.date}", style: const TextStyle(color: Colors.black87)),
+                              ],
+                            ),
+                            trailing: fb.seenStatus == "Unseen"
+                                ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.red,          // ✅ solid red background
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                "Unseen",
+                                style: TextStyle(
+                                  color: Colors.white,       // ✅ white text on red
+                                  fontWeight: FontWeight.bold,
                                 ),
-                                child: ListTile(
-                                  leading: CircleAvatar(
-                                    backgroundColor: Colors.grey.shade200,
-                                    child: Image.asset(
-                                      iconPath,
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                  title: Text(
-                                    fb.customerName ?? "Unknown",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text("Service: ${fb.serviceType ?? '-'}"),
-                                      Text("Feedback: ${fb.feedbackType}"),
-                                      Text("Car: ${fb.carModel ?? '-'}"),
-                                      Text("Date: ${fb.date}"),
-                                    ],
-                                  ),
-                                  trailing: fb.seenStatus == "Unseen"
-                                      ? Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 10,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red.shade100,
-                                            borderRadius: BorderRadius.circular(
-                                              12,
-                                            ),
-                                          ),
-                                          child: const Text(
-                                            "Unseen",
-                                            style: TextStyle(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        )
-                                      : null,
-                                  onTap: () async {
-                                    // Mark seen locally + DB (optimistic)
-                                    if (fb.seenStatus == "Unseen") {
-                                      await feedbackController.markSeen(
-                                        fb.feedbackID,
-                                      );
-                                    }
+                              ),
+                            )
+                                : null,
 
-                                    // Navigate; pass the model to the detail builder
-                                    if (!context.mounted) return;
-                                    final result = await Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) =>
-                                            widget.detailPageBuilder(fb),
-                                      ),
-                                    );
-
-                                    // controller is already synced, so no extra reload needed
-                                    if (result == true) {
-                                      // no-op
-                                    }
-                                  },
+                            onTap: () async {
+                              if (fb.seenStatus == "Unseen") {
+                                await feedbackController.markSeen(fb.feedbackID);
+                              }
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => widget.detailPageBuilder(fb),
                                 ),
                               );
                             },
                           ),
+                        );
+
+                      },
+                    ),
                   ),
                 ],
               );
@@ -297,8 +374,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
           );
         },
       ),
-
-      // bottom bar (your custom app bottom bar)
       bottomNavigationBar: const FixeroBottomAppBar(),
     );
   }
