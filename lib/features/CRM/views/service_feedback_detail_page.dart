@@ -36,31 +36,60 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
 
     final replyData = Map<String, dynamic>.from(replySnap.value as Map);
 
-    setState(() {
-      replies = replyData.entries.map((e) {
-        final data = Map<String, dynamic>.from(e.value);
-        return {
-          "replyID": e.key,
-          "from": data["from"] ?? "Unknown",
-          "message": data["message"] ?? "",
-          "date": data["date"] ?? "-",
-        };
-      }).toList();
+    List<Map<String, dynamic>> temp = replyData.entries.map((e) {
+      final data = Map<String, dynamic>.from(e.value);
+      return {
+        "replyID": e.key,
+        "from": data["from"] ?? "Unknown",
+        "message": data["message"] ?? "",
+        "date": data["date"] ?? "-",
+      };
+    }).toList();
+
+    temp.sort((a, b) {
+      final dateA = DateTime.tryParse(a["date"]) ?? DateTime(1970);
+      final dateB = DateTime.tryParse(b["date"]) ?? DateTime(1970);
+      return dateA.compareTo(dateB);
     });
+
+    setState(() => replies = temp);
   }
 
-  Future<void> _reopenFeedback() async {
-    final fbID = widget.feedback.feedbackID;
+  Future<void> _confirmReopenFeedback() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Reopen Feedback"),
+        content: const Text("Are you sure you want to reopen this feedback?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.orange,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Reopen"),
+          ),
+        ],
+      ),
+    );
 
-    await dbRef.child("communications/feedbacks/$fbID").update({
-      "status": "Open",
-    });
+    if (confirm == true) {
+      final fbID = widget.feedback.feedbackID;
+      await dbRef.child("communications/feedbacks/$fbID").update({
+        "status": "Open",
+      });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Feedback has been reopened.")),
-      );
-      Navigator.pop(context, true);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Feedback has been reopened.")),
+        );
+        Navigator.pop(context, true);
+      }
     }
   }
 
@@ -82,7 +111,7 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
           actions: isClosed
               ? [
             ElevatedButton.icon(
-              onPressed: _reopenFeedback,
+              onPressed: _confirmReopenFeedback,
               icon: const Icon(Icons.lock_open),
               label: const Text("Reopen Feedback"),
               style: ElevatedButton.styleFrom(
@@ -94,7 +123,6 @@ class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {
               : [],
         ),
       ),
-
     );
   }
 }

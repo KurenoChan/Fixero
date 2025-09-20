@@ -47,4 +47,23 @@ class FeedbackModel {
       seenStatus: data['seenStatus'] ?? 'Seen',
     );
   }
+  Map<String, dynamic> toMap() {
+    return {
+      'feedbackType': feedbackType,
+      'comment': comment,
+      'completionEfficiency': completionEfficiency,
+      'date': date,
+      'engineeringAttitude': engineeringAttitude,
+      'jobID': jobID,
+      'serviceQuality': serviceQuality,
+      'status': status,
+      'seenStatus': seenStatus,
+      if (customerId != null) 'customerId': customerId,
+      if (customerName != null) 'customerName': customerName,
+      if (carModel != null) 'carModel': carModel,
+      if (serviceType != null) 'serviceType': serviceType,
+    };
+  }
+
+
 }

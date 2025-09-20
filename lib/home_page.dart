@@ -214,48 +214,6 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 // Service Cards
-                // SingleChildScrollView(
-                //   scrollDirection: Axis.horizontal,
-                //   child: Row(
-                //     children: [
-                //       SingleChildScrollView(
-                //         scrollDirection: Axis.horizontal,
-                //         child: Row(
-                //           spacing: 10.0,
-                //           children: [
-                //             _serviceCard(
-                //               context,
-                //               "Oil Change",
-                //               Icons.oil_barrel,
-                //             ),
-                //             _serviceCard(
-                //               context,
-                //               "Tire Rotation",
-                //               Icons.sync,
-                //             ),
-                //             _serviceCard(
-                //               context,
-                //               "Battery Check",
-                //               Icons.battery_full,
-                //             ),
-                //             _serviceCard(
-                //               context,
-                //               "Brake Inspection",
-                //               Icons.car_repair,
-                //             ),
-                //             _serviceCard(
-                //               context,
-                //               "Alignment",
-                //               Icons.construction,
-                //             ),
-                //           ],
-                //         ),
-                //       ),
-                //     ],
-                //   ),
-                // ),
-
-                // Service Cards (dynamic)
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(

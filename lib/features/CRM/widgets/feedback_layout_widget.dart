@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/feedback_model.dart';
+import '../controllers/customer_controller.dart';
+import '../models/customer_model.dart';
 import '../views/customer_profile_page.dart'; // ✅ adjust path if needed
 
 /// 🔹 Reusable feedback layout for both Detail & Reply pages
@@ -10,6 +12,8 @@ Widget buildFeedbackLayout({
   required BuildContext context,
   Function(String replyID)? onDeleteReply,
 }) {
+  final CustomerController customerController = CustomerController();
+
   return ListView(
     children: [
       // 🔹 Customer & Job Info
@@ -29,38 +33,78 @@ Widget buildFeedbackLayout({
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Customer: ${fb.customerName ?? '-'}",
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold)),
-              Text("Car Model: ${fb.carModel ?? '-'}"),
-              Text("Service Type: ${fb.serviceType ?? '-'}"),
-              Text("Service Date: ${fb.date}"),
-              const SizedBox(height: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  if (fb.customerId != null) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CustomerProfilePage(
-                          customerId: fb.customerId!,
-                          customerData: {}, // let profile fetch itself
-                        ),
-                      ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("No customer linked")),
-                    );
+              Row(
+                children: const [
+                  Icon(Icons.info, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text("Customer & Job Info",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(height: 20, thickness: 1),
+
+              // 🔹 Fetch live customer info
+              ValueListenableBuilder<int>(
+                valueListenable: customerController,
+                builder: (context, _, __) {
+                  Customer? cust;
+                  try {
+                    cust = customerController.allCustomers
+                        .firstWhere((c) => c.custID == fb.customerId);
+                  } catch (_) {
+                    cust = null;
                   }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow("Customer", cust?.custName ?? fb.customerName ?? "-"),
+                      _buildInfoRow("Email", cust?.custEmail ?? "-"),
+                      _buildInfoRow("Car Model", fb.carModel ?? "-"),
+                      _buildInfoRow("Service Type", fb.serviceType ?? "-"),
+                      _buildInfoRow("Service Date", fb.date),
+                    ],
+                  );
                 },
-                icon: const Icon(Icons.person),
-                label: const Text("View Customer Profile"),
+              ),
+
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.blue,
+                    side: const BorderSide(color: Colors.blue),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () {
+                    if (fb.customerId != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => CustomerProfilePage(
+                            customerId: fb.customerId!,
+                            customerData: {},
+                          ),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("No customer linked")),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.person),
+                  label: const Text("View Profile"),
+                ),
               )
             ],
           ),
         ),
       ),
+
       const SizedBox(height: 20),
 
       // 🔹 Ratings
@@ -109,16 +153,37 @@ Widget buildFeedbackLayout({
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Comment",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              Text(fb.comment,
-                  style:
-                  const TextStyle(fontSize: 15, color: Colors.black87)),
+              Row(
+                children: const [
+                  Icon(Icons.comment, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text("Customer Comment",
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ],
+              ),
+              const Divider(height: 20, thickness: 1),
+
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  fb.comment,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontStyle: FontStyle.italic,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
+
       const SizedBox(height: 20),
 
       // 🔹 Replies
@@ -172,33 +237,45 @@ Widget buildFeedbackLayout({
   );
 }
 
+Widget _buildInfoRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.symmetric(vertical: 4),
+    child: Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Text("$label:",
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600, color: Colors.black87)),
+        ),
+        Expanded(
+          flex: 3,
+          child: Text(value,
+              style: const TextStyle(fontSize: 15, color: Colors.black87)),
+        ),
+      ],
+    ),
+  );
+}
+
 /// 🔹 Helper for displaying rating stars
 Widget _buildRatingRow(String label, int value) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
-          flex: 3,
-          child: Text(
-            "$label:",
+        Text(label,
             style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87),
-          ),
-        ),
-        Expanded(
-          flex: 4,
-          child: Row(
-            children: List.generate(5, (index) {
-              return Icon(
-                index < value ? Icons.star : Icons.star_border,
-                color: Colors.amber.shade700,
-                size: 22,
-              );
-            }),
-          ),
+                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+        Row(
+          children: List.generate(5, (index) {
+            return Icon(
+              index < value ? Icons.star : Icons.star_border,
+              color: Colors.amber.shade700,
+              size: 22,
+            );
+          }),
         ),
       ],
     ),

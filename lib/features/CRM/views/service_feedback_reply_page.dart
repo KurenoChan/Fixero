@@ -20,6 +20,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
   final DatabaseReference dbRef = FirebaseDatabase.instance.ref();
   final TextEditingController _replyController = TextEditingController();
   List<Map<String, dynamic>> replies = [];
+  bool _isSending = false;
 
   @override
   void initState() {
@@ -54,13 +55,18 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       ),
     );
 
+    if (!mounted) return;
+
     if (confirm == true) {
       await dbRef.child("communications/replies/$fbID/$replyID").remove();
 
-      if (!mounted) return;
+      if (!mounted) return; // check again before setState
+
       setState(() {
         replies.removeWhere((r) => r["replyID"] == replyID);
       });
+
+      if (!mounted) return; // check again before showing SnackBar
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Reply deleted successfully.")),
@@ -89,7 +95,6 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       });
     }
 
-    // 🔹 sort replies by date ascending (latest at bottom)
     temp.sort((a, b) {
       final dateA = DateTime.tryParse(a["date"]) ?? DateTime(1970);
       final dateB = DateTime.tryParse(b["date"]) ?? DateTime(1970);
@@ -100,16 +105,13 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
   }
 
   Future<void> _addReply() async {
-    if (_replyController.text.trim().isEmpty) return;
+    if (_replyController.text.trim().isEmpty || _isSending) return;
+
+    setState(() => _isSending = true);
 
     final fbID = widget.feedback.feedbackID;
-
-    // 🔑 Always unique because of milliseconds
     final newReplyKey = "RPL-${DateTime.now().millisecondsSinceEpoch}";
-
-    // 🔹 Get logged in manager profile
     final currentManager = await ManagerController.getCurrentManager();
-
     final formattedDate = DateFormat(
       "yyyy-MM-dd HH:mm",
     ).format(DateTime.now().toLocal());
@@ -123,26 +125,52 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       "date": formattedDate,
     };
 
-    await dbRef
-        .child("communications/replies/$fbID/$newReplyKey")
-        .set(replyData);
-
-    _replyController.clear();
-    _loadReplies();
+    try {
+      await dbRef
+          .child("communications/replies/$fbID/$newReplyKey")
+          .set(replyData);
+      _replyController.clear();
+      await _loadReplies();
+    } finally {
+      if (mounted) setState(() => _isSending = false);
+    }
   }
 
-  Future<void> _closeFeedback() async {
-    final fbID = widget.feedback.feedbackID; // ✅ use model property
+  Future<void> _confirmCloseFeedback() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Close Feedback"),
+        content: const Text("Are you sure you want to close this feedback?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text("Close"),
+          ),
+        ],
+      ),
+    );
 
-    await dbRef.child("communications/feedbacks/$fbID").update({
-      "status": "Closed",
-    });
+    if (confirm == true) {
+      final fbID = widget.feedback.feedbackID;
+      await dbRef.child("communications/feedbacks/$fbID").update({
+        "status": "Closed",
+      });
 
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Feedback has been closed.")),
-      );
-      Navigator.pop(context, true); // go back & refresh previous list
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Feedback has been closed.")),
+        );
+        Navigator.pop(context, true);
+      }
     }
   }
 
@@ -168,33 +196,47 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
             Card(
               elevation: 3,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                child: Row(
                   children: [
-                    TextField(
-                      controller: _replyController,
-                      decoration: const InputDecoration(
-                        labelText: "Your Reply",
-                        border: OutlineInputBorder(),
+                    Expanded(
+                      child: TextField(
+                        controller: _replyController,
+                        maxLines: null,
+                        minLines: 1,
+                        decoration: const InputDecoration(
+                          hintText: "Write your reply...",
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          filled: false,
+                        ),
                       ),
-                      maxLines: 3,
                     ),
-                    const SizedBox(height: 10),
-                    ElevatedButton.icon(
-                      onPressed: _addReply,
-                      icon: const Icon(Icons.send),
-                      label: const Text("Reply"),
-                    ),
+                    _isSending
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : IconButton(
+                            icon: const Icon(Icons.send, color: Colors.blue),
+                            onPressed: _isSending ? null : _addReply,
+                          ),
                   ],
                 ),
               ),
             ),
+
             const SizedBox(height: 20),
             ElevatedButton.icon(
-              onPressed: _closeFeedback,
+              onPressed: _confirmCloseFeedback,
               icon: const Icon(Icons.lock),
               label: const Text("Close Feedback"),
               style: ElevatedButton.styleFrom(

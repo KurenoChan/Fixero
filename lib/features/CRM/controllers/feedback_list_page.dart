@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 
+import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 // adjust these two imports if your file is in a different folder
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
-import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
-
-import 'feedback_controller.dart';
+import '../controllers/customer_controller.dart';
+import '../controllers/feedback_controller.dart';
+import '../models/customer_model.dart'; // ✅ add this line
 import '../models/feedback_model.dart';
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);
@@ -26,12 +27,29 @@ class FeedbackListPage extends StatefulWidget {
 }
 
 class _FeedbackListPageState extends State<FeedbackListPage> {
+  final CustomerController customerController = CustomerController();
   final FeedbackController feedbackController = FeedbackController();
+
+  Color _getCardColor(String feedbackType) {
+    switch (feedbackType) {
+      case "Positive":
+        return Colors.green.shade100; // light pastel green
+      case "Complaint":
+        return Colors.red.shade100; // light pastel red
+      case "Suggestion":
+        return Colors.blue.shade100; // light pastel blue
+      default:
+        return Colors.grey.shade200; // neutral light grey
+    }
+  }
 
   // Filters
   String searchQuery = "";
   String selectedFeedbackType = "All";
   String selectedServiceType = "All";
+  String sortOrder = "Latest";
+
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> feedbackTypes = [
     "All",
@@ -49,9 +67,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   ];
 
   String _getServiceIcon(String serviceType) {
-    if (serviceType.isEmpty) {
-      return "assets/icons/services_Icon/default.png";
-    }
+    if (serviceType.isEmpty) return "assets/icons/services_Icon/default.png";
     final fileName = serviceType
         .toLowerCase()
         .replaceAll(" ", "_")
@@ -61,12 +77,15 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // use your custom sub app bar (keeps your app's visual language)
       appBar: FixeroSubAppBar(title: widget.title, showBackButton: true),
-
-      // Outer: wait until controller.ready == true
       body: ValueListenableBuilder<bool>(
         valueListenable: feedbackController.ready,
         builder: (context, ready, _) {
@@ -74,7 +93,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // once ready, rebuild based on controller.value (unseen count) so list updates
           return ValueListenableBuilder<int>(
             valueListenable: feedbackController,
             builder: (context, _, __) {
@@ -88,8 +106,8 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                   .toList();
 
               // apply search filter
-              if (searchQuery.isNotEmpty) {
-                final q = searchQuery.toLowerCase();
+              if (_searchController.text.trim().isNotEmpty) {
+                final q = _searchController.text.toLowerCase().trim();
                 feedbacks = feedbacks.where((f) {
                   final cust = (f.customerName ?? '').toLowerCase();
                   final car = (f.carModel ?? '').toLowerCase();
@@ -113,89 +131,201 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                     .toList();
               }
 
-              // sort unseen first
+              // sort unseen first, then by date according to sortOrder
               feedbacks.sort((a, b) {
-                if (a.seenStatus == "Unseen" && b.seenStatus != "Unseen") {
-                  return -1;
-                }
-                if (a.seenStatus != "Unseen" && b.seenStatus == "Unseen") {
-                  return 1;
-                }
-                return 0;
+                // 1. Unseen first
+                final unseenA = (a.seenStatus).toLowerCase() == "unseen";
+                final unseenB = (b.seenStatus).toLowerCase() == "unseen";
+                if (unseenA != unseenB) return unseenA ? -1 : 1;
+
+                // 2. Sort by date
+                DateTime? dateA;
+                DateTime? dateB;
+                try {
+                  dateA = DateTime.parse(a.date);
+                  dateB = DateTime.parse(b.date);
+                } catch (_) {}
+
+                if (dateA == null && dateB == null) return 0;
+                if (dateA == null) return sortOrder == "Latest" ? 1 : -1;
+                if (dateB == null) return sortOrder == "Latest" ? -1 : 1;
+
+                return sortOrder == "Latest"
+                    ? dateB.compareTo(dateA)
+                    : dateA.compareTo(dateB);
               });
 
               return Column(
                 children: [
-                  // search input
+                  // 🔹 Search + Sort Row
                   Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search feedbacks...",
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 4,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                      onChanged: (value) {
-                        setState(() => searchQuery = value.trim());
-                      },
+                      child: Row(
+                        children: [
+                          // 🔎 Search input
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (value) {
+                                setState(() {}); // trigger filtering
+                              },
+                              textAlignVertical: TextAlignVertical.center,
+                              decoration: const InputDecoration(
+                                isCollapsed: true,
+                                icon: Icon(Icons.search, color: Colors.blue),
+                                hintText: "Search feedback...",
+                                border: InputBorder.none,
+                                enabledBorder: InputBorder.none,
+                                // ✅ remove underline when not focused
+                                focusedBorder: InputBorder.none,
+                                // ✅ remove underline when focused
+                                errorBorder: InputBorder.none,
+                                // ✅ safety (in case of error state)
+                                disabledBorder: InputBorder.none,
+                                // ✅ safety
+                                filled: false,
+                              ),
+                            ),
+                          ),
+
+                          // ↕ Sort menu inside the search bar
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.sort, color: Colors.blue),
+                            onSelected: (value) {
+                              setState(() {
+                                sortOrder = value;
+                              });
+                            },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: "Latest",
+                                child: Text("Latest"),
+                              ),
+                              const PopupMenuItem(
+                                value: "Oldest",
+                                child: Text("Oldest"),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
 
                   // filters row
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
+                        // Feedback Type Filter
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedFeedbackType,
-                            items: feedbackTypes
-                                .map(
-                                  (ft) => DropdownMenuItem(
-                                    value: ft,
-                                    child: Text(ft),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(
-                                () => selectedFeedbackType = value ?? "All",
-                              );
-                            },
-                            decoration: const InputDecoration(
-                              labelText: "Feedback Type",
-                              border: OutlineInputBorder(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedFeedbackType,
+                                hint: const Text("Feedback Type"),
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.blue,
+                                ),
+                                items: feedbackTypes
+                                    .map(
+                                      (ft) => DropdownMenuItem(
+                                        value: ft,
+                                        child: Text(ft),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(
+                                      () => selectedFeedbackType = value,
+                                    );
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
+
+                        // Service Type Filter
                         Expanded(
-                          child: DropdownButtonFormField<String>(
-                            isExpanded: true,
-                            value: selectedServiceType,
-                            items: serviceTypes
-                                .map(
-                                  (st) => DropdownMenuItem(
-                                    value: st,
-                                    child: Text(st),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) {
-                              setState(
-                                () => selectedServiceType = value ?? "All",
-                              );
-                            },
-                            decoration: const InputDecoration(
-                              labelText: "Service Type",
-                              border: OutlineInputBorder(),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black12,
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<String>(
+                                isExpanded: true,
+                                value: selectedServiceType,
+                                hint: const Text("Service Type"),
+                                icon: const Icon(
+                                  Icons.arrow_drop_down,
+                                  color: Colors.blue,
+                                ),
+                                items: serviceTypes
+                                    .map(
+                                      (st) => DropdownMenuItem(
+                                        value: st,
+                                        child: Text(st),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    setState(() => selectedServiceType = value);
+                                  }
+                                },
+                              ),
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 10),
 
                   // list
@@ -210,36 +340,77 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                               final iconPath = _getServiceIcon(
                                 fb.serviceType ?? "",
                               );
-
                               return Card(
                                 elevation: 3,
                                 margin: const EdgeInsets.only(bottom: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
+                                color: _getCardColor(fb.feedbackType),
+                                // ✅ custom background color
                                 child: ListTile(
                                   leading: CircleAvatar(
-                                    backgroundColor: Colors.grey.shade200,
+                                    backgroundColor:
+                                        Colors.white, // keep contrast
                                     child: Image.asset(
                                       iconPath,
                                       fit: BoxFit.contain,
                                     ),
                                   ),
-                                  title: Text(
-                                    fb.customerName ?? "Unknown",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
+                                  title: ValueListenableBuilder<int>(
+                                    valueListenable: customerController,
+                                    builder: (context, _, __) {
+                                      Customer? cust;
+                                      try {
+                                        cust = customerController.allCustomers
+                                            .firstWhere(
+                                              (c) => c.custID == fb.customerId,
+                                            );
+                                      } catch (_) {
+                                        cust = null;
+                                      }
+
+                                      return Text(
+                                        cust?.custName ??
+                                            fb.customerName ??
+                                            "Unknown",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    },
                                   ),
+
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Text("Service: ${fb.serviceType ?? '-'}"),
-                                      Text("Feedback: ${fb.feedbackType}"),
-                                      Text("Car: ${fb.carModel ?? '-'}"),
-                                      Text("Date: ${fb.date}"),
+                                      Text(
+                                        "Service: ${fb.serviceType ?? '-'}",
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Feedback: ${fb.feedbackType}",
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Car: ${fb.carModel ?? '-'}",
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Date: ${fb.date}",
+                                        style: const TextStyle(
+                                          color: Colors.black87,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   trailing: fb.seenStatus == "Unseen"
@@ -249,7 +420,8 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                             vertical: 4,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.red.shade100,
+                                            color: Colors
+                                                .red, // ✅ solid red background
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
@@ -257,34 +429,28 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                           child: const Text(
                                             "Unseen",
                                             style: TextStyle(
-                                              color: Colors.red,
+                                              color: Colors
+                                                  .white, // ✅ white text on red
                                               fontWeight: FontWeight.bold,
                                             ),
                                           ),
                                         )
                                       : null,
+
                                   onTap: () async {
-                                    // Mark seen locally + DB (optimistic)
                                     if (fb.seenStatus == "Unseen") {
                                       await feedbackController.markSeen(
                                         fb.feedbackID,
                                       );
                                     }
-
-                                    // Navigate; pass the model to the detail builder
                                     if (!context.mounted) return;
-                                    final result = await Navigator.push(
+                                    await Navigator.push(
                                       context,
                                       MaterialPageRoute(
                                         builder: (_) =>
                                             widget.detailPageBuilder(fb),
                                       ),
                                     );
-
-                                    // controller is already synced, so no extra reload needed
-                                    if (result == true) {
-                                      // no-op
-                                    }
                                   },
                                 ),
                               );
@@ -297,8 +463,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
           );
         },
       ),
-
-      // bottom bar (your custom app bottom bar)
       bottomNavigationBar: const FixeroBottomAppBar(),
     );
   }

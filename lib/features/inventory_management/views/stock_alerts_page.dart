@@ -190,6 +190,7 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                                   selected: _filter == StockFilter.all,
                                   onSelected: (_) =>
                                       setState(() => _filter = StockFilter.all),
+                                  selectedColor: Theme.of(context).colorScheme.primary,
                                 ),
                                 ChoiceChip(
                                   label: Text("Low Stock ($lowCount)"),
@@ -197,6 +198,7 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                                   onSelected: (_) => setState(
                                     () => _filter = StockFilter.lowStock,
                                   ),
+                                  selectedColor: Theme.of(context).colorScheme.primary,
                                 ),
                                 ChoiceChip(
                                   label: Text("Out of Stock ($outCount)"),
@@ -204,6 +206,7 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                                   onSelected: (_) => setState(
                                     () => _filter = StockFilter.outOfStock,
                                   ),
+                                  selectedColor: Theme.of(context).colorScheme.primary,
                                 ),
                               ],
                             ),

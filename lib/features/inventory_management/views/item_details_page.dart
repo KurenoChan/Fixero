@@ -246,6 +246,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage>
                     // Item Name + ID
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(
                           width: 220,
