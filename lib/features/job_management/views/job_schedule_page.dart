@@ -80,7 +80,7 @@ class _SchedulePageState extends State<SchedulePage> {
         scheduledDate: scheduledDateTime.toIso8601String().split('T')[0],
         scheduledTime:
             '${_selectedTime.hour}:${_selectedTime.minute.toString().padLeft(2, '0')}',
-        estimatedDuration: _estimatedHours * 60, // Convert hours to minutes
+        estimatedDuration: _estimatedHours,
         managedBy: managerId,
       );
 

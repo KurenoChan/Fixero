@@ -402,7 +402,7 @@ class JobDetailsPage extends StatelessWidget {
                 _DetailItem(label: 'Scheduled Time', value: job.scheduledTime),
                 _DetailItem(
                   label: 'Estimated Duration',
-                  value: '${job.estimatedDuration} minutes',
+                  value: '${job.estimatedDuration} Hours',
                 ),
               ],
             ),
@@ -428,15 +428,27 @@ class JobDetailsPage extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navigate to Mechanic Selection Page
-                  _navigateToMechanicSelection(context);
-                },
-                child: const Text('Assign Mechanic'),
+            // Only show Assign Mechanic button for Pending status
+            if (job.jobStatus.toLowerCase() == 'pending')
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    // Navigate to Mechanic Selection Page
+                    _navigateToMechanicSelection(context);
+                  },
+                  child: const Text('Assign Mechanic'),
+                ),
+              )
+            else
+              Center(
+                child: Text(
+                  'Mechanic can only be assigned to Pending jobs',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
               ),
-            ),
           ],
         ),
       ),
