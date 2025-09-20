@@ -7,7 +7,6 @@ import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../controllers/customer_controller.dart';
 import '../controllers/feedback_controller.dart';
 import '../models/feedback_model.dart';
-import '../models/customer_model.dart'; // <-- ADD THIS IMPORT
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);
 
