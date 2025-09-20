@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:fixero/features/job_management/models/mechanic_model.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/models/auth_service.dart';
+import 'package:intl/intl.dart';
+import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 
 class SchedulePage extends StatefulWidget {
   final Job job;
@@ -32,6 +34,23 @@ class _SchedulePageState extends State<SchedulePage> {
       initialDate: _selectedDate,
       firstDate: DateTime.now(),
       lastDate: DateTime(2026),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.inversePrimary,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedDate) {
       setState(() {
@@ -44,6 +63,23 @@ class _SchedulePageState extends State<SchedulePage> {
     final TimeOfDay? picked = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).colorScheme.inversePrimary,
+              onPrimary: Colors.white,
+              onSurface: Colors.black,
+            ),
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.inversePrimary,
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null && picked != _selectedTime) {
       setState(() {
@@ -92,6 +128,7 @@ class _SchedulePageState extends State<SchedulePage> {
         const SnackBar(
           content: Text('Job scheduled successfully!'),
           backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
         ),
       );
 
@@ -102,6 +139,7 @@ class _SchedulePageState extends State<SchedulePage> {
         SnackBar(
           content: Text('Failed to schedule job: $e'),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     } finally {
@@ -113,35 +151,94 @@ class _SchedulePageState extends State<SchedulePage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Schedule Job')),
+      appBar: FixeroSubAppBar(title: 'Schedule Job', showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Job and Mechanic Info
+            // Job and Mechanic Info - FIXED OVERFLOW
             Card(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'Job: ${widget.job.jobID}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.build_circle_outlined,
+                          color: theme.colorScheme.inversePrimary,
+                          size: 24,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          // Added Expanded to prevent overflow
+                          child: Text(
+                            '${widget.job.jobID}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.inversePrimary,
+                            ),
+                            overflow: TextOverflow.ellipsis, // Handle long text
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text('Vehicle: ${widget.job.plateNo}'),
-                    const SizedBox(height: 8),
-                    Text('Service: ${widget.job.jobServiceType}'),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Mechanic: ${widget.selectedMechanic.mechanicName}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    const Divider(height: 24),
+                    _buildInfoRow(
+                      'Vehicle',
+                      widget.job.plateNo,
+                      Icons.directions_car,
                     ),
-                    Text(
-                      'Specialty: ${widget.selectedMechanic.mechanicSpecialty}',
+                    const SizedBox(height: 12),
+                    _buildInfoRow(
+                      'Service',
+                      widget.job.jobServiceType,
+                      Icons.build,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person_outline,
+                          color: Colors.blueGrey,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          // Added Expanded to prevent potential overflow
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.selectedMechanic.mechanicName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                widget.selectedMechanic.mechanicSpecialty,
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontSize: 14,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -151,86 +248,218 @@ class _SchedulePageState extends State<SchedulePage> {
             const SizedBox(height: 24),
 
             // Schedule Section
-            const Text(
-              'Schedule',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: Text(
+                'Schedule Details',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.inversePrimary,
+                ),
+              ),
             ),
 
             const SizedBox(height: 16),
 
-            // Selected Date Display
-            Text(
-              '${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            // Date Selection
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Date',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            DateFormat(
+                              'EEE, MMM d, yyyy',
+                            ).format(_selectedDate),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _selectDate,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.inversePrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                          ),
+                          child: const Text(
+                            'Change',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ),
 
-            const SizedBox(height: 8),
-
-            // Date Picker Button
-            ElevatedButton(
-              onPressed: _selectDate,
-              child: const Text('Select Date'),
-            ),
-
-            const SizedBox(height: 24),
+            const SizedBox(height: 16),
 
             // Time Selection
-            const Text(
-              'Start Time',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              '${_selectedTime.format(context)}',
-              style: const TextStyle(fontSize: 16),
-            ),
-
-            const SizedBox(height: 8),
-
-            ElevatedButton(
-              onPressed: _selectTime,
-              child: const Text('Select Time'),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Estimated Time
-            const Text(
-              'Estimated Duration',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 8),
-
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.remove),
-                  onPressed: () {
-                    if (_estimatedHours > 1) {
-                      setState(() {
-                        _estimatedHours--;
-                      });
-                    }
-                  },
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Start Time',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _selectedTime.format(context),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: _selectTime,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: theme.colorScheme.inversePrimary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                          ),
+                          child: const Text(
+                            'Change',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                Text(
-                  '$_estimatedHours Hour${_estimatedHours > 1 ? 's' : ''}',
-                  style: const TextStyle(fontSize: 16),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Estimated Duration
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Estimated Duration',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline),
+                            color: _estimatedHours > 1
+                                ? theme.colorScheme.inversePrimary
+                                : Colors.grey,
+                            iconSize: 32,
+                            onPressed: () {
+                              if (_estimatedHours > 1) {
+                                setState(() {
+                                  _estimatedHours--;
+                                });
+                              }
+                            },
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$_estimatedHours Hour${_estimatedHours > 1 ? 's' : ''}',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.add_circle_outline),
+                            color: _estimatedHours < 8
+                                ? theme.colorScheme.inversePrimary
+                                : Colors.grey,
+                            iconSize: 32,
+                            onPressed: () {
+                              if (_estimatedHours < 8) {
+                                setState(() {
+                                  _estimatedHours++;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    if (_estimatedHours < 8) {
-                      setState(() {
-                        _estimatedHours++;
-                      });
-                    }
-                  },
-                ),
-              ],
+              ),
             ),
 
             const SizedBox(height: 32),
@@ -238,19 +467,34 @@ class _SchedulePageState extends State<SchedulePage> {
             // Confirm Button
             Center(
               child: _isSubmitting
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _confirmSchedule,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 32,
-                          vertical: 16,
-                        ),
+                  ? CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.inversePrimary,
                       ),
-                      child: const Text(
-                        'Confirm Schedule',
-                        style: TextStyle(fontSize: 18, color: Colors.white),
+                    )
+                  : SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _confirmSchedule,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.inversePrimary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 4,
+                        ),
+                        child: const Text(
+                          'Confirm Schedule',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
             ),
@@ -259,6 +503,33 @@ class _SchedulePageState extends State<SchedulePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, color: Colors.blueGrey, size: 20),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+              ),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
