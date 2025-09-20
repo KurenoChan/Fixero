@@ -226,4 +226,56 @@ class AuthHandler {
       MaterialPageRoute(builder: (context) => const LoginPage()),
     );
   }
+
+  /// 🔹 Added: Forgot Password handler (does NOT change your existing code)
+  static Future<void> handlePasswordReset(
+    BuildContext context,
+    String email,
+  ) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter your email address.')),
+        );
+      }
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: trimmed);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Reset link sent! Check your inbox.')),
+        );
+        Navigator.of(context).maybePop();
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case 'user-not-found':
+          message = 'No account found for that email.';
+          break;
+        case 'invalid-email':
+          message = 'That email address is invalid.';
+          break;
+        case 'missing-email':
+          message = 'Please enter your email address.';
+          break;
+        default:
+          message =
+              e.message ?? 'Could not send reset email. Please try again.';
+      }
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Something went wrong. Please try again.')),
+        );
+      }
+    }
+  }
 }

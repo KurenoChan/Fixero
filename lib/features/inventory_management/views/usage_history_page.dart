@@ -2,6 +2,7 @@ import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/item_usage_controller.dart';
 import 'package:fixero/features/inventory_management/models/item.dart';
+import 'package:fixero/features/inventory_management/models/item_usage.dart';
 import 'package:fixero/features/inventory_management/views/usage_details_page.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,8 @@ class UsageHistoryPage extends StatefulWidget {
 }
 
 class _UsageHistoryPageState extends State<UsageHistoryPage> {
+  String _sortCriteria = 'Latest';
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +32,46 @@ class _UsageHistoryPageState extends State<UsageHistoryPage> {
         itemController.loadItems();
       }
     });
+  }
+
+  List<ItemUsage> _applySorting(List<ItemUsage> usages) {
+    List<ItemUsage> sorted = List.of(usages);
+
+    switch (_sortCriteria) {
+      case "Latest":
+        sorted.sort((a, b) {
+          final dateTimeA = DateTime.parse("${a.usageDate} ${a.usageTime}");
+          final dateTimeB = DateTime.parse("${b.usageDate} ${b.usageTime}");
+          return dateTimeB.compareTo(dateTimeA); // newest first
+        });
+        break;
+
+      case "Oldest":
+        sorted.sort((a, b) {
+          final dateTimeA = DateTime.parse("${a.usageDate} ${a.usageTime}");
+          final dateTimeB = DateTime.parse("${b.usageDate} ${b.usageTime}");
+          return dateTimeA.compareTo(dateTimeB); // oldest first
+        });
+        break;
+
+      case "Quantity Low-High":
+        sorted.sort((a, b) {
+          final qtyA = a.quantityUsed ?? 0;
+          final qtyB = b.quantityUsed ?? 0;
+          return qtyA.compareTo(qtyB);
+        });
+        break;
+
+      case "Quantity High-Low":
+        sorted.sort((a, b) {
+          final qtyA = a.quantityUsed ?? 0;
+          final qtyB = b.quantityUsed ?? 0;
+          return qtyB.compareTo(qtyA);
+        });
+        break;
+    }
+
+    return sorted;
   }
 
   @override
@@ -51,20 +94,55 @@ class _UsageHistoryPageState extends State<UsageHistoryPage> {
 
             final itemController = context.read<ItemController>();
 
-            final itemUsages = List.of(usageController.itemUsages);
-
-            itemUsages.sort((a, b) {
-              // Parse strings to DateTime
-              final dateTimeA = DateTime.parse("${a.usageDate} ${a.usageTime}");
-              final dateTimeB = DateTime.parse("${b.usageDate} ${b.usageTime}");
-
-              return dateTimeB.compareTo(dateTimeA); // descending
-            });
+            final itemUsages = _applySorting(usageController.itemUsages);
 
             return CustomScrollView(
               slivers: [
+                // 🔹 Sticky Sorting Dropdown
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyHeaderDelegate(
+                    child: Container(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 15,
+                      ),
+                      child: Row(
+                        children: [
+                          const Text("Sort by: "),
+                          const SizedBox(width: 10),
+                          DropdownButton<String>(
+                            value: _sortCriteria,
+                            items:
+                                [
+                                      "Latest",
+                                      "Oldest",
+                                      "Quantity Low-High",
+                                      "Quantity High-Low",
+                                    ]
+                                    .map(
+                                      (criteria) => DropdownMenuItem(
+                                        value: criteria,
+                                        child: Text(criteria),
+                                      ),
+                                    )
+                                    .toList(),
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _sortCriteria = value;
+                                });
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
                 SliverPadding(
-                  padding: const EdgeInsets.all(15),
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final itemUsage = itemUsages[index];
@@ -188,4 +266,31 @@ class _UsageHistoryPageState extends State<UsageHistoryPage> {
       ),
     );
   }
+}
+
+class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final Widget child;
+
+  _StickyHeaderDelegate({required this.child});
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: child,
+    );
+  }
+
+  @override
+  double get maxExtent => 60; // adjust based on your dropdown height
+  @override
+  double get minExtent => 60;
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
+      true;
 }

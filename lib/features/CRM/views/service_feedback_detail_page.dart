@@ -3,7 +3,6 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/feedback_model.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
-import 'customer_profile_page.dart'; // make sure path correct
 import '../widgets/feedback_layout_widget.dart';
 
 class ServiceFeedbackDetailPage extends StatefulWidget {
@@ -14,37 +13,6 @@ class ServiceFeedbackDetailPage extends StatefulWidget {
   @override
   State<ServiceFeedbackDetailPage> createState() =>
       _ServiceFeedbackDetailPageState();
-}
-
-// 🔹 Feedback ratings section
-Widget _buildRatingRow(String label, int value) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      children: [
-        Expanded(
-          flex: 3,
-          child: Text(
-            "$label:",
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87),
-          ),
-        ),
-        Expanded(
-          flex: 4,
-          child: Row(
-            children: List.generate(5, (index) {
-              return Icon(
-                index < value ? Icons.star : Icons.star_border,
-                color: Colors.amber.shade700,
-                size: 22,
-              );
-            }),
-          ),
-        ),
-      ],
-    ),
-  );
 }
 
 class _ServiceFeedbackDetailPageState extends State<ServiceFeedbackDetailPage> {

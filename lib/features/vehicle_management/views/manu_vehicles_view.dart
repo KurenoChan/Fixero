@@ -102,6 +102,7 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
       );
       return;
     }
+    if (!mounted) return;
     final updated = await showDialog<Vehicle>(
       context: context,
       barrierDismissible: false,
@@ -329,7 +330,7 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 8,
                               offset: const Offset(0, 3),
                             ),
@@ -346,10 +347,10 @@ class _ManufacturerVehiclesViewState extends State<ManufacturerVehiclesView> {
                               height: 42,
                               width: 42,
                               decoration: BoxDecoration(
-                                color: bubble.withOpacity(0.22),
+                                color: bubble.withValues(alpha: 0.22),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: bubble.withOpacity(.65),
+                                  color: bubble.withValues(alpha: .65),
                                   width: 1,
                                 ),
                               ),

@@ -222,7 +222,7 @@ class _TitleCard extends StatelessWidget {
         ? Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: t.colorScheme.primary.withOpacity(0.10),
+              color: t.colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -333,7 +333,7 @@ class _StatTile extends StatelessWidget {
             ),
             Text(
               label,
-              style: TextStyle(color: on.withOpacity(0.85), fontSize: 11),
+              style: TextStyle(color: on.withValues(alpha: 0.85), fontSize: 11),
             ),
           ],
         ),
@@ -353,7 +353,7 @@ class _VehicleDetailsCard extends StatelessWidget {
     Widget chip(String text) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: t.colorScheme.primary.withOpacity(0.10),
+        color: t.colorScheme.primary.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -387,7 +387,7 @@ class _VehicleDetailsCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: t.colorScheme.primary.withOpacity(0.12),
+                color: t.colorScheme.primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: t.colorScheme.primary),
@@ -400,7 +400,7 @@ class _VehicleDetailsCard extends StatelessWidget {
                   Text(
                     label,
                     style: t.textTheme.labelMedium?.copyWith(
-                      color: t.colorScheme.onSurface.withOpacity(0.6),
+                      color: t.colorScheme.onSurface.withValues(alpha: 0.6),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -603,7 +603,7 @@ class _ServiceTile extends StatelessWidget {
       ),
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: vis.color.withOpacity(.15),
+          backgroundColor: vis.color.withValues(alpha: 0.15),
           child: Icon(vis.icon, color: vis.color),
         ),
         title: Text(
@@ -620,7 +620,7 @@ class _ServiceTile extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: t.textTheme.bodySmall?.copyWith(
-              color: t.colorScheme.onSurface.withOpacity(.75),
+              color: t.colorScheme.onSurface.withValues(alpha: 0.75),
             ),
           ),
         ),
@@ -648,9 +648,9 @@ class _ServiceTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: vis.color.withOpacity(.12),
+        color: vis.color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: vis.color.withOpacity(.35)),
+        border: Border.all(color: vis.color.withValues(alpha: .35)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -796,7 +796,7 @@ class _ServiceDetailCardState extends State<_ServiceDetailCard> {
     final header = Row(
       children: [
         CircleAvatar(
-          backgroundColor: vis.color.withOpacity(.15),
+          backgroundColor: vis.color.withValues(alpha: 0.15),
           child: Icon(vis.icon, color: vis.color),
         ),
         const SizedBox(width: 10),
@@ -817,7 +817,7 @@ class _ServiceDetailCardState extends State<_ServiceDetailCard> {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: t.textTheme.bodySmall?.copyWith(
-                  color: t.colorScheme.onSurface.withOpacity(.75),
+                  color: t.colorScheme.onSurface.withValues(alpha: 0.75),
                 ),
               ),
             ],
@@ -836,7 +836,7 @@ class _ServiceDetailCardState extends State<_ServiceDetailCard> {
             child: Text(
               label,
               style: t.textTheme.bodySmall?.copyWith(
-                color: t.colorScheme.onSurface.withOpacity(.7),
+                color: t.colorScheme.onSurface.withValues(alpha: 0.7),
                 fontWeight: FontWeight.w600,
               ),
             ),

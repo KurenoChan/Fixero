@@ -10,6 +10,7 @@ import 'package:fixero/features/inventory_management/models/order.dart';
 import 'package:fixero/features/inventory_management/models/requested_item.dart';
 import 'package:fixero/features/inventory_management/models/restock_request.dart';
 import 'package:fixero/features/inventory_management/views/request_details_sheet.dart';
+import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -396,6 +397,27 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                       child: Row(
                         children: [
                           Text(
+                            "Order Time: ",
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+
+                          Text(
+                            Formatter.formatTime12Hour(
+                              widget.order.orderTime,
+                              showSeconds: true,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          Text(
                             "Supplied By: ",
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
@@ -427,7 +449,7 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                         controller: scrollController,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 15,
-                          vertical: 10,
+                          vertical: 30,
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -592,7 +614,9 @@ class _OrderDetailsSheetState extends State<OrderDetailsSheet> {
                                                           ),
                                                     ),
                                                     child: Text(
-                                                      request.requestTime,
+                                                      Formatter.formatTime12Hour(
+                                                        request.requestTime,
+                                                      ),
                                                       style: Theme.of(
                                                         context,
                                                       ).textTheme.labelSmall,

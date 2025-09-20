@@ -1,5 +1,6 @@
+import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:flutter/material.dart';
-import '../../../features/CRM/views/customerRelationship_page.dart';
+import '../../../features/crm/views/customer_relationship_page.dart';
 import '../../../features/inventory_management/views/inventory_page.dart';
 import '../../../home_page.dart';
 import '../../../features/vehicle_management/views/car_models_view.dart';
@@ -25,7 +26,7 @@ class FixeroBottomAppBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Expanded(child: _navItem(context, Icons.home, 'Home', theme, const HomePage(), HomePage.routeName, currentRoute)),
-            Expanded(child: _navItem(context, Icons.work, 'Jobs', theme, const HomePage(), '/jobs', currentRoute)),
+            Expanded(child: _navItem(context, Icons.work, 'Jobs', theme, const JobsPage(), JobsPage.routeName, currentRoute)),
             Expanded(child: _navItem(context, Icons.directions_car, 'Vehicles', theme, const CarModelsView(), CarModelsView.routeName, currentRoute)),
             Expanded(child: _navItem(context, Icons.inventory, 'Inventory', theme, const InventoryPage(), InventoryPage.routeName, currentRoute)),
             Expanded(child: _navItem(context, Icons.people, 'CRM', theme, const CrmHomePage(), CrmHomePage.routeName, currentRoute)),

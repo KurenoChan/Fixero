@@ -20,8 +20,6 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
       appBar: const FixeroSubAppBar(
@@ -148,8 +146,6 @@ class _CustomerDirectoryPageState extends State<CustomerDirectoryPage> {
                         trailing:
                         const Icon(Icons.arrow_forward_ios, size: 18),
                           onTap: () {
-                            final vehicles = vehicleController.fetchVehiclesByOwner(c.custID);
-
                             Navigator.push(
                               context,
                               MaterialPageRoute(

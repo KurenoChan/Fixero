@@ -26,9 +26,6 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final List<String> insightsFilterOptions = const ["This Month", "This Year"];
-  // late String _selectedInsightFilter;
-
   String? _managerName;
   String? _profileImgUrl;
 
@@ -36,7 +33,6 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadManagerData();
-    // _selectedInsightFilter = insightsFilterOptions[0];
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final itemController = context.read<ItemController>();
@@ -47,9 +43,11 @@ class _HomePageState extends State<HomePage> {
         if (!context.mounted) return;
       }
 
+      debugPrint(jobController.jobs.isEmpty.toString());
       if (jobController.jobs.isEmpty) {
         await jobController.loadJobs();
         if (!context.mounted) return;
+        debugPrint(jobController.jobs.length.toString());
       }
     });
   }
@@ -289,38 +287,6 @@ class _HomePageState extends State<HomePage> {
                 // Section Title
                 const Text("Insights", style: TextStyle(fontSize: 17)),
 
-                // Insights Filter Dropdown (This Month / This Year)
-                // Container(
-                //   width: double.infinity,
-                //   padding: const EdgeInsets.symmetric(horizontal: 15),
-                //   decoration: BoxDecoration(
-                //     border: Border(
-                //       top: BorderSide(
-                //         color: theme.colorScheme.inversePrimary,
-                //         width: 1,
-                //       ),
-                //       right: BorderSide(
-                //         color: theme.colorScheme.inversePrimary,
-                //         width: 1,
-                //       ),
-                //       bottom: BorderSide(
-                //         color: theme.colorScheme.inversePrimary,
-                //         width: 1,
-                //       ),
-                //       left: BorderSide(
-                //         color: theme.colorScheme.inversePrimary,
-                //         width: 1,
-                //       ),
-                //     ),
-                //     borderRadius: BorderRadius.circular(10),
-                //   ),
-                //   child: FixeroDropdown(
-                //     options: insightsFilterOptions,
-                //     selectedOption: _selectedInsightFilter,
-                //     onChanged: _handleInsightFilterChange,
-                //   ),
-                // ),
-
                 // Insights Cards List
                 Column(
                   spacing: 20.0,
@@ -337,7 +303,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    // 2. Job Demand by year (job.createdAt)
+                    // 2. Job Demand by year
                     _insightsCard(
                       context: context,
                       title: "Job Demand",
@@ -349,8 +315,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-
-                    // 3. Popular Service (only chart)
+                    // 3. Popular Service
                     _insightsCard(
                       context: context,
                       value: "Popular Services",
