@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 // adjust these two imports if your file is in a different folder
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
-
 import '../controllers/customer_controller.dart';
 import '../controllers/feedback_controller.dart';
 import '../models/feedback_model.dart';
+import '../models/customer_model.dart';   // ✅ add this line
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);
 
@@ -337,15 +337,30 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                       fit: BoxFit.contain,
                                     ),
                                   ),
-                                  title: Text(
-                                    fb.customerName ?? "Unknown",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color:
-                                          Colors.black, // ✅ stronger contrast
-                                    ),
+                                  title: ValueListenableBuilder<int>(
+                                    valueListenable: customerController,
+                                    builder: (context, _, __) {
+                                      Customer? cust;
+                                      try {
+                                        cust = customerController.allCustomers.firstWhere(
+                                              (c) => c.custID == fb.customerId,
+                                        );
+                                      } catch (_) {
+                                        cust = null;
+                                      }
+
+                                      return Text(
+                                        cust?.custName ?? fb.customerName ?? "Unknown",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.black,
+                                        ),
+                                      );
+                                    },
                                   ),
+
+
                                   subtitle: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
