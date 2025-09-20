@@ -50,17 +50,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       body: SafeArea(
         child: Stack(
           children: [
-            // Background Image
-            // Container(
-            //   decoration: BoxDecoration(
-            //     image: DecorationImage(
-            //       image: AssetImage(
-            //         'assets/images/background/bg_login_register.jpg',
-            //       ),
-            //       fit: BoxFit.cover,
-            //     ),
-            //   ),
-            // ),
+            // Background
             Container(
               decoration: BoxDecoration(
                 image: DecorationImage(
@@ -72,7 +62,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
             ),
 
-            // Blurred Overlay
+            // Blur overlay
             BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
               child: Container(
@@ -93,7 +83,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        // Heading
                         const Text(
                           "Login",
                           style: TextStyle(
@@ -105,10 +94,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                         const SizedBox(height: 50),
 
-                        // ============
-                        // Login Fields
-                        // ============
-                        // 1. Email Address
+                        // Email
                         TextFormField(
                           keyboardType: TextInputType.emailAddress,
                           controller: _emailController,
@@ -140,7 +126,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
                         const SizedBox(height: 15),
 
-                        // 2. Password
+                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: !showPassword,
@@ -166,11 +152,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     ? Icons.visibility
                                     : Icons.visibility_off,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  showPassword = !showPassword;
-                                });
-                              },
+                              onPressed: () =>
+                                  setState(() => showPassword = !showPassword),
                             ),
                             filled: true,
                             fillColor: Theme.of(context)
@@ -186,14 +169,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            // style: ButtonStyle(
-                            //   backgroundColor: WidgetStateProperty.all<Color>(Colors.white30),
-                            // ),
                             onPressed: () {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) => ForgotPasswordPage(),
+                                  builder: (context) =>
+                                      const ForgotPasswordPage(),
                                 ),
                               );
                             },
@@ -207,10 +188,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           ),
                         ),
 
-                        // =======
-                        // Buttons
-                        // =======
-                        // 1. Login Button
+                        // Login button
                         SizedBox(
                           width: double.infinity,
                           height: 70.0,
@@ -228,7 +206,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
                         const SizedBox(height: 20),
 
-                        // Or Section
+                        // OR divider
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 20.0),
                           child: Row(
@@ -239,33 +217,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   thickness: 1,
                                 ),
                               ),
-
                               Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 0.0),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 0.0,
+                                ),
                                 child: Container(
-                                  padding: EdgeInsets.all(10.0),
+                                  padding: const EdgeInsets.all(10.0),
                                   decoration: BoxDecoration(
-                                    border: Border(
-                                      top: BorderSide(
-                                        color: Colors.white24,
-                                        width: 1,
-                                      ),
-                                      right: BorderSide(
-                                        color: Colors.white24,
-                                        width: 1,
-                                      ),
-                                      bottom: BorderSide(
-                                        color: Colors.white24,
-                                        width: 1,
-                                      ),
-                                      left: BorderSide(
-                                        color: Colors.white24,
-                                        width: 1,
-                                      ),
+                                    border: Border.all(
+                                      color: Colors.white24,
+                                      width: 1,
                                     ),
                                     borderRadius: BorderRadius.circular(5),
                                   ),
-                                  child: Text(
+                                  child: const Text(
                                     "OR",
                                     style: TextStyle(
                                       fontSize: 15,
@@ -274,7 +239,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   ),
                                 ),
                               ),
-
                               Expanded(
                                 child: Divider(
                                   color: Colors.white24,
@@ -285,7 +249,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           ),
                         ),
 
-                        // 2. Google Login Button
+                        // Google login
                         SignInButton(
                           Buttons.google,
                           onPressed: _handleGoogleLogin,
@@ -293,7 +257,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
                         const SizedBox(height: 10.0),
 
-                        // 3. Register Text Link
+                        // Register link
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
@@ -304,7 +268,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                 color: Colors.white,
                               ),
                             ),
-
                             GestureDetector(
                               onTap: () {
                                 Navigator.pushReplacement(
