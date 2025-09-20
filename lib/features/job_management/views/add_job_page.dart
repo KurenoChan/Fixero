@@ -20,7 +20,7 @@ class _AddJobPageState extends State<AddJobPage> {
   final TextEditingController _plateNoController = TextEditingController();
   final TextEditingController _managedByController = TextEditingController();
 
-  String _selectedStatus = 'Pending';
+  final String _selectedStatus = 'Pending';
   Vehicle? _selectedVehicle;
   String _generatedJobId = '';
   bool _isLoading = true;
@@ -124,6 +124,7 @@ class _AddJobPageState extends State<AddJobPage> {
         // Validate job data
         final validationError = widget.addJobController.validateJobData(newJob);
         if (validationError != null) {
+          if (!mounted) return;
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(validationError)));
@@ -132,7 +133,7 @@ class _AddJobPageState extends State<AddJobPage> {
 
         // Add the job
         await widget.addJobController.addNewJob(newJob);
-
+        if (!mounted) return;
         // Show success message
         ScaffoldMessenger.of(
           context,

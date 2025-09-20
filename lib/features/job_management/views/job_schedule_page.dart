@@ -123,6 +123,7 @@ class _SchedulePageState extends State<SchedulePage> {
       // Update job in Firebase
       await _jobDAO.updateJob(updatedJob);
 
+      if (!mounted) return;
       // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -175,25 +176,25 @@ class _SchedulePageState extends State<SchedulePage> {
                       children: [
                         Icon(
                           Icons.build_circle_outlined,
-                          color: theme.colorScheme.inversePrimary,
+                          color: theme.colorScheme.primary,
                           size: 24,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           // Added Expanded to prevent overflow
                           child: Text(
-                            '${widget.job.jobID}',
+                            widget.job.jobID,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: theme.colorScheme.inversePrimary,
+                              color: theme.colorScheme.primary,
                             ),
                             overflow: TextOverflow.ellipsis, // Handle long text
                           ),
                         ),
                       ],
                     ),
-                    const Divider(height: 24),
+                    Divider(height: 24, color: Theme.of(context).dividerColor),
                     _buildInfoRow(
                       'Vehicle',
                       widget.job.plateNo,
@@ -298,7 +299,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         ElevatedButton(
                           onPressed: _selectDate,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.inversePrimary,
+                            backgroundColor: theme.colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -359,7 +360,7 @@ class _SchedulePageState extends State<SchedulePage> {
                         ElevatedButton(
                           onPressed: _selectTime,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.colorScheme.inversePrimary,
+                            backgroundColor: theme.colorScheme.primary,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -412,7 +413,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
                             color: _estimatedHours > 1
-                                ? theme.colorScheme.inversePrimary
+                                ? theme.colorScheme.primary
                                 : Colors.grey,
                             iconSize: 32,
                             onPressed: () {
@@ -429,7 +430,10 @@ class _SchedulePageState extends State<SchedulePage> {
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.grey[100],
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .inversePrimary
+                                  .withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -443,7 +447,7 @@ class _SchedulePageState extends State<SchedulePage> {
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
                             color: _estimatedHours < 8
-                                ? theme.colorScheme.inversePrimary
+                                ? theme.colorScheme.primary
                                 : Colors.grey,
                             iconSize: 32,
                             onPressed: () {
@@ -477,7 +481,7 @@ class _SchedulePageState extends State<SchedulePage> {
                       child: ElevatedButton(
                         onPressed: _confirmSchedule,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: theme.colorScheme.inversePrimary,
+                          backgroundColor: theme.colorScheme.primary,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(
                             horizontal: 32,

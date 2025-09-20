@@ -1,27 +1,28 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/features/job_management/models/vehicle_model.dart';
+import 'package:flutter/material.dart';
 
 class VehicleRepository {
   final DatabaseReference _databaseRef = FirebaseDatabase.instance.ref();
 
   Future<List<Vehicle>> fetchAllVehicles() async {
     try {
-      print('🟡 [VehicleRepository] Fetching vehicles from Firebase...');
-      print('🟡 Database path: vehicles');
+      debugPrint('🟡 [VehicleRepository] Fetching vehicles from Firebase...');
+      debugPrint('🟡 Database path: vehicles');
 
       final snapshot = await _databaseRef.child('vehicles').get();
-      print('🟡 Snapshot exists: ${snapshot.exists}');
+      debugPrint('🟡 Snapshot exists: ${snapshot.exists}');
 
       if (snapshot.exists) {
         final Map<dynamic, dynamic> vehiclesData =
             snapshot.value as Map<dynamic, dynamic>;
-        print('🟢 Found ${vehiclesData.length} vehicles in Firebase');
+        debugPrint('🟢 Found ${vehiclesData.length} vehicles in Firebase');
 
         final List<Vehicle> vehicles = [];
 
         vehiclesData.forEach((plateNo, vehicleData) {
-          print('📦 Processing vehicle: $plateNo');
-          print('📦 Raw vehicle data: $vehicleData');
+          debugPrint('📦 Processing vehicle: $plateNo');
+          debugPrint('📦 Raw vehicle data: $vehicleData');
 
           try {
             final vehicle = Vehicle.fromMap(
@@ -29,45 +30,45 @@ class VehicleRepository {
               plateNo as String,
             );
             vehicles.add(vehicle);
-            print(
+            debugPrint(
               '✅ Successfully parsed: ${vehicle.plateNo} - ${vehicle.model}',
             );
           } catch (e) {
-            print('🔴 Error parsing vehicle $plateNo: $e');
-            print('🔴 Vehicle data: $vehicleData');
+            debugPrint('🔴 Error parsing vehicle $plateNo: $e');
+            debugPrint('🔴 Vehicle data: $vehicleData');
           }
         });
 
-        print('🟢 Total vehicles parsed: ${vehicles.length}');
+        debugPrint('🟢 Total vehicles parsed: ${vehicles.length}');
         return vehicles;
       } else {
-        print('🟡 No vehicles found in Firebase database');
+        debugPrint('🟡 No vehicles found in Firebase database');
         return [];
       }
     } catch (e) {
-      print('🔴 [VehicleRepository] Error fetching vehicles: $e');
-      print('🔴 Error type: ${e.runtimeType}');
+      debugPrint('🔴 [VehicleRepository] Error fetching vehicles: $e');
+      debugPrint('🔴 Error type: ${e.runtimeType}');
       throw Exception('Failed to fetch vehicles: $e');
     }
   }
 
   Future<Vehicle?> fetchVehicleByPlateNo(String plateNo) async {
     try {
-      print('🟡 Fetching vehicle by plate: $plateNo');
+      debugPrint('🟡 Fetching vehicle by plate: $plateNo');
       final snapshot = await _databaseRef.child('vehicles/$plateNo').get();
 
       if (snapshot.exists) {
         final vehicleData = Map<String, dynamic>.from(
           snapshot.value as Map<dynamic, dynamic>,
         );
-        print('🟢 Found vehicle: $vehicleData');
+        debugPrint('🟢 Found vehicle: $vehicleData');
         return Vehicle.fromMap(vehicleData, plateNo);
       } else {
-        print('🟡 No vehicle found with plate: $plateNo');
+        debugPrint('🟡 No vehicle found with plate: $plateNo');
         return null;
       }
     } catch (e) {
-      print('🔴 Error fetching vehicle $plateNo: $e');
+      debugPrint('🔴 Error fetching vehicle $plateNo: $e');
       throw Exception('Failed to fetch vehicle: $e');
     }
   }

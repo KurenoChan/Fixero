@@ -24,19 +24,19 @@ class AddJobController with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('🟡 [AddJobController] Loading vehicles from DAO...');
+      debugPrint('🟡 [AddJobController] Loading vehicles from DAO...');
       _vehicles = await _vehicleDAO.getAllVehicles();
-      print(
+      debugPrint(
         '🟢 [AddJobController] Successfully loaded ${_vehicles.length} vehicles',
       );
 
       // Debug: Print all loaded vehicles
       for (var vehicle in _vehicles) {
-        print('🚗 ${vehicle.plateNo} - ${vehicle.model} ${vehicle.year}');
+        debugPrint('🚗 ${vehicle.plateNo} - ${vehicle.model} ${vehicle.year}');
       }
     } catch (e) {
       _errorMessage = 'Failed to load vehicles: $e';
-      print('🔴 [AddJobController] Error loading vehicles: $e');
+      debugPrint('🔴 [AddJobController] Error loading vehicles: $e');
     } finally {
       _isLoadingVehicles = false;
       notifyListeners();
