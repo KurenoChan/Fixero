@@ -62,6 +62,52 @@ class AuthHandler {
       }
     }
   }
+  static Future<void> handleForgotPassword(
+      BuildContext context, String email) async {
+    try {
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Password reset email sent! Check your inbox."),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.of(context).maybePop(); // back to login after sending
+      }
+    } on FirebaseAuthException catch (e) {
+      String message;
+      switch (e.code) {
+        case "invalid-email":
+          message = "The email address is not valid.";
+          break;
+        case "user-not-found":
+          message = "No user found with this email.";
+          break;
+        default:
+          message = "Something went wrong. Please try again.";
+      }
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("An error occurred. Try again later."),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
 
   static Future<void> handleEmailAndPasswordRegister(
     BuildContext context,

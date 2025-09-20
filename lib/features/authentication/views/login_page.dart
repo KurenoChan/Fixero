@@ -192,9 +192,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             onPressed: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(
-                                  builder: (context) => ForgotPasswordPage(),
-                                ),
+                                MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
                               );
                             },
                             child: const Text(
