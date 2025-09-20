@@ -8,7 +8,9 @@ import 'package:fixero/features/inventory_management/controllers/order_controlle
 import 'package:fixero/features/inventory_management/controllers/requested_item_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
+import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
+import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:fixero/features/vehicle_management/views/car_models_view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +45,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ItemUsageController()),
 
         ChangeNotifierProvider(create: (_) => JobController()),
+        ChangeNotifierProvider(create: (_) => AddJobController()),
       ],
       child: MainApp(seenIntro: seenIntro),
     ),
@@ -62,6 +65,7 @@ class MainApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       routes: {
         HomePage.routeName: (_) => const HomePage(),
+        JobsPage.routeName: (_) => const JobsPage(),
         CarModelsView.routeName: (_) => const CarModelsView(),
         InventoryPage.routeName: (_) => const InventoryPage(),
         CrmHomePage.routeName: (_) => const CrmHomePage(),
