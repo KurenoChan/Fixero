@@ -61,6 +61,7 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
     super.dispose();
   }
 
+  // ✅ Save profile logic
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -84,6 +85,30 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
         const SnackBar(content: Text("Profile updated successfully")),
       );
       Navigator.pop(context, widget.customer);
+    }
+  }
+
+  // ✅ Ask for confirmation before saving
+  Future<void> _confirmSave() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirm Save"),
+        content: const Text("Are you sure you want to save the changes?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Save"),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      _saveProfile();
     }
   }
 
@@ -156,14 +181,21 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
                 TextFormField(
                   controller: _emailCtrl,
                   decoration: kInputDecoration("Email", Icons.email),
-                  validator: (v) =>
-                  v!.isNotEmpty && v.contains("@") ? null : "Enter valid email",
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return "Enter email";
+                    final emailRegex = RegExp(r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$');
+                    return emailRegex.hasMatch(v) ? null : "Enter valid email";
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _telCtrl,
                   decoration: kInputDecoration("Phone", Icons.phone),
-                  validator: (v) => v!.isEmpty ? "Enter phone number" : null,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return "Enter phone number";
+                    final phoneRegex = RegExp(r'^\d{10,15}$'); // 10–15 digits
+                    return phoneRegex.hasMatch(v) ? null : "Enter valid phone number";
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -217,7 +249,11 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
                 TextFormField(
                   controller: _postalCtrl,
                   decoration: kInputDecoration("Postal Code", Icons.local_post_office),
-                  validator: (v) => v!.isEmpty ? "Enter postal code" : null,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return "Enter postal code";
+                    final postalRegex = RegExp(r'^\d{5}$'); // exactly 5 digits
+                    return postalRegex.hasMatch(v) ? null : "Enter valid 5-digit postal code";
+                  },
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
@@ -232,7 +268,7 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
         ),
       ),
 
-      // ✅ Sticky Save button at bottom
+      // ✅ Sticky Save button at bottom with confirmation
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -243,7 +279,7 @@ class _EditCustomerPageState extends State<EditCustomerPage> {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            onPressed: _saveProfile,
+            onPressed: _confirmSave,
             icon: const Icon(Icons.save),
             label: const Text("Save Profile", style: TextStyle(fontSize: 16)),
           ),

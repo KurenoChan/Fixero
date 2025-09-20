@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import '../../../common/widgets/bars/fixero_sub_appbar.dart';
 import '../../../common/widgets/bars/fixero_bottom_appbar.dart';
 
+import '../controllers/customer_controller.dart';
 import '../controllers/feedback_controller.dart';
 import '../models/feedback_model.dart';
+import '../models/customer_model.dart'; // <-- ADD THIS IMPORT
 
 typedef FeedbackDetailBuilder = Widget Function(FeedbackModel feedback);
 
@@ -26,17 +28,19 @@ class FeedbackListPage extends StatefulWidget {
 }
 
 class _FeedbackListPageState extends State<FeedbackListPage> {
+  final CustomerController customerController = CustomerController();
   final FeedbackController feedbackController = FeedbackController();
+
   Color _getCardColor(String feedbackType) {
     switch (feedbackType) {
       case "Positive":
-        return Colors.green.shade100; // ✅ light pastel green
+        return Colors.green.shade100; // light pastel green
       case "Complaint":
-        return Colors.red.shade100; // ✅ light pastel red
+        return Colors.red.shade100; // light pastel red
       case "Suggestion":
-        return Colors.blue.shade100; // ✅ light pastel blue
+        return Colors.blue.shade100; // light pastel blue
       default:
-        return Colors.grey.shade200; // ✅ neutral light grey
+        return Colors.grey.shade200; // neutral light grey
     }
   }
 
@@ -64,9 +68,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   ];
 
   String _getServiceIcon(String serviceType) {
-    if (serviceType.isEmpty) {
-      return "assets/icons/services_Icon/default.png";
-    }
+    if (serviceType.isEmpty) return "assets/icons/services_Icon/default.png";
     final fileName = serviceType
         .toLowerCase()
         .replaceAll(" ", "_")
@@ -85,7 +87,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: FixeroSubAppBar(title: widget.title, showBackButton: true),
-
       body: ValueListenableBuilder<bool>(
         valueListenable: feedbackController.ready,
         builder: (context, ready, _) {
@@ -150,9 +151,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                 if (dateA == null) return sortOrder == "Latest" ? 1 : -1;
                 if (dateB == null) return sortOrder == "Latest" ? -1 : 1;
 
-                return sortOrder == "Latest"
-                    ? dateB.compareTo(dateA)
-                    : dateA.compareTo(dateB);
+                return sortOrder == "Latest" ? dateB.compareTo(dateA) : dateA.compareTo(dateB);
               });
 
               return Column(
@@ -169,11 +168,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 4,
-                            offset: Offset(0, 2),
-                          ),
+                          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
                         ],
                       ),
                       child: Row(
@@ -228,7 +223,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                   ),
 
                   // filters row
-                  // 🔹 Filters Row (same design as search bar)
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16.0,
@@ -243,13 +237,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
@@ -288,13 +276,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black12,
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
+                              boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: const Offset(0, 2))],
                             ),
                             child: DropdownButtonHideUnderline(
                               child: DropdownButton<String>(
@@ -314,9 +296,7 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                                     )
                                     .toList(),
                                 onChanged: (value) {
-                                  if (value != null) {
-                                    setState(() => selectedServiceType = value);
-                                  }
+                                  if (value != null) setState(() => selectedServiceType = value);
                                 },
                               ),
                             ),
@@ -340,7 +320,6 @@ class _FeedbackListPageState extends State<FeedbackListPage> {
                               final iconPath = _getServiceIcon(
                                 fb.serviceType ?? "",
                               );
-
                               return Card(
                                 elevation: 3,
                                 margin: const EdgeInsets.only(bottom: 16),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/feedback_model.dart';
+import '../controllers/customer_controller.dart';
+import '../models/customer_model.dart';
 import '../views/customer_profile_page.dart'; // ✅ adjust path if needed
 
 /// 🔹 Reusable feedback layout for both Detail & Reply pages
@@ -10,9 +12,10 @@ Widget buildFeedbackLayout({
   required BuildContext context,
   Function(String replyID)? onDeleteReply,
 }) {
+  final CustomerController customerController = CustomerController();
+
   return ListView(
     children: [
-      // 🔹 Customer & Job Info
       // 🔹 Customer & Job Info
       Card(
         elevation: 4,
@@ -40,11 +43,30 @@ Widget buildFeedbackLayout({
               ),
               const Divider(height: 20, thickness: 1),
 
-              // 🔹 Info rows
-              _buildInfoRow("Customer", fb.customerName ?? "-"),
-              _buildInfoRow("Car Model", fb.carModel ?? "-"),
-              _buildInfoRow("Service Type", fb.serviceType ?? "-"),
-              _buildInfoRow("Service Date", fb.date),
+              // 🔹 Fetch live customer info
+              ValueListenableBuilder<int>(
+                valueListenable: customerController,
+                builder: (context, _, __) {
+                  Customer? cust;
+                  try {
+                    cust = customerController.allCustomers
+                        .firstWhere((c) => c.custID == fb.customerId);
+                  } catch (_) {
+                    cust = null;
+                  }
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildInfoRow("Customer", cust?.custName ?? fb.customerName ?? "-"),
+                      _buildInfoRow("Email", cust?.custEmail ?? "-"),
+                      _buildInfoRow("Car Model", fb.carModel ?? "-"),
+                      _buildInfoRow("Service Type", fb.serviceType ?? "-"),
+                      _buildInfoRow("Service Date", fb.date),
+                    ],
+                  );
+                },
+              ),
 
               const SizedBox(height: 12),
               Align(
@@ -214,6 +236,7 @@ Widget buildFeedbackLayout({
     ],
   );
 }
+
 Widget _buildInfoRow(String label, String value) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
@@ -258,4 +281,3 @@ Widget _buildRatingRow(String label, int value) {
     ),
   );
 }
-
