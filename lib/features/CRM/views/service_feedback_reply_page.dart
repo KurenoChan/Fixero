@@ -26,6 +26,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     super.initState();
     _loadReplies();
   }
+
   Future<void> _deleteReply(String replyID) async {
     final fbID = widget.feedback.feedbackID;
 
@@ -33,7 +34,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text("Delete Reply"),
-        content: const Text("Are you sure you want to delete this reply for everyone?"),
+        content: const Text(
+          "Are you sure you want to delete this reply for everyone?",
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -51,12 +54,18 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       ),
     );
 
+    if (!mounted) return;
+
     if (confirm == true) {
       await dbRef.child("communications/replies/$fbID/$replyID").remove();
+
+      if (!mounted) return; // check again before setState
 
       setState(() {
         replies.removeWhere((r) => r["replyID"] == replyID);
       });
+
+      if (!mounted) return; // check again before showing SnackBar
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Reply deleted successfully.")),
@@ -95,7 +104,6 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     setState(() => replies = temp);
   }
 
-
   Future<void> _addReply() async {
     if (_replyController.text.trim().isEmpty || _isSending) return;
 
@@ -104,7 +112,9 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     final fbID = widget.feedback.feedbackID;
     final newReplyKey = "RPL-${DateTime.now().millisecondsSinceEpoch}";
     final currentManager = await ManagerController.getCurrentManager();
-    final formattedDate = DateFormat("yyyy-MM-dd HH:mm").format(DateTime.now().toLocal());
+    final formattedDate = DateFormat(
+      "yyyy-MM-dd HH:mm",
+    ).format(DateTime.now().toLocal());
 
     final replyData = {
       "from": currentManager != null
@@ -116,16 +126,15 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
     };
 
     try {
-      await dbRef.child("communications/replies/$fbID/$newReplyKey").set(replyData);
+      await dbRef
+          .child("communications/replies/$fbID/$newReplyKey")
+          .set(replyData);
       _replyController.clear();
       await _loadReplies();
     } finally {
       if (mounted) setState(() => _isSending = false);
     }
   }
-
-
-
 
   Future<void> _closeFeedback() async {
     final fbID = widget.feedback.feedbackID; // ✅ use model property
@@ -141,9 +150,8 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
       Navigator.pop(context, true); // go back & refresh previous list
     }
   }
+
   bool _isSending = false;
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -151,7 +159,10 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F6FA),
-      appBar: const FixeroSubAppBar(title: "Feedback Detail", showBackButton: true),
+      appBar: const FixeroSubAppBar(
+        title: "Feedback Detail",
+        showBackButton: true,
+      ),
       bottomNavigationBar: const FixeroBottomAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -163,9 +174,14 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
             // reply input
             Card(
               elevation: 3,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -184,19 +200,18 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
                     ),
                     _isSending
                         ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
                         : IconButton(
-                      icon: const Icon(Icons.send, color: Colors.blue),
-                      onPressed: _isSending ? null : _addReply,
-                    ),
+                            icon: const Icon(Icons.send, color: Colors.blue),
+                            onPressed: _isSending ? null : _addReply,
+                          ),
                   ],
                 ),
               ),
             ),
-
 
             const SizedBox(height: 20),
             ElevatedButton.icon(
@@ -207,7 +222,7 @@ class _ServiceFeedbackReplyPageState extends State<ServiceFeedbackReplyPage> {
                 backgroundColor: Colors.red,
                 foregroundColor: Colors.white,
               ),
-            )
+            ),
           ],
           onDeleteReply: _deleteReply,
         ),
