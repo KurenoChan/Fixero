@@ -39,8 +39,7 @@ class _JobsPageState extends State<JobsPage> {
     super.initState();
     _loadJobsFuture = _loadJobs();
 
-    // Set up a timer to check and update job statuses every minute
-    _statusUpdateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+    _statusUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
       _checkAndUpdateJobStatuses();
     });
   }
@@ -92,6 +91,13 @@ class _JobsPageState extends State<JobsPage> {
     for (final job in jobs) {
       Job updatedJob = job;
 
+      // Skip if job is already completed or cancelled
+      if (job.jobStatus.toLowerCase() == 'completed' ||
+          job.jobStatus.toLowerCase() == 'cancelled') {
+        updatedJobs.add(updatedJob);
+        continue;
+      }
+
       try {
         // Parse scheduled date and time
         final scheduledDateParts = job.scheduledDate.split('-');
@@ -112,18 +118,28 @@ class _JobsPageState extends State<JobsPage> {
           );
 
           // Update status based on current time
-          if (job.jobStatus.toLowerCase() != 'completed' &&
-              job.jobStatus.toLowerCase() != 'cancelled') {
-            if (now.isAfter(endDateTime)) {
-              // Job should be marked as completed
+          if (now.isAfter(endDateTime)) {
+            // Job should be marked as completed
+            if (job.jobStatus.toLowerCase() != 'completed') {
               updatedJob = job.copyWith(jobStatus: 'Completed');
               needsUpdate = true;
-            } else if (now.isAfter(scheduledDateTime) &&
-                now.isBefore(endDateTime)) {
-              // Job should be marked as ongoing
+              debugPrint('Job ${job.jobID} marked as completed');
+            }
+          } else if (now.isAfter(scheduledDateTime) &&
+              now.isBefore(endDateTime)) {
+            // Job should be marked as ongoing
+            if (job.jobStatus.toLowerCase() != 'ongoing') {
               updatedJob = job.copyWith(jobStatus: 'Ongoing');
               needsUpdate = true;
+              debugPrint('Job ${job.jobID} marked as ongoing');
             }
+          } else if (now.isBefore(scheduledDateTime) &&
+              job.jobStatus.toLowerCase() != 'scheduled' &&
+              job.jobStatus.toLowerCase() != 'pending') {
+            // Job should be marked as scheduled if it's before the scheduled time
+            updatedJob = job.copyWith(jobStatus: 'Scheduled');
+            needsUpdate = true;
+            debugPrint('Job ${job.jobID} marked as scheduled');
           }
         }
       } catch (e) {
@@ -137,9 +153,14 @@ class _JobsPageState extends State<JobsPage> {
     // If any jobs were updated, save them to the database
     if (needsUpdate) {
       for (final job in updatedJobs) {
-        if (job.jobStatus !=
-            jobs.firstWhere((j) => j.jobID == job.jobID).jobStatus) {
+        final originalJob = jobs.firstWhere(
+          (j) => j.jobID == job.jobID,
+          orElse: () => job,
+        );
+
+        if (job.jobStatus != originalJob.jobStatus) {
           await _jobDAO.updateJob(job);
+          debugPrint('Updated job ${job.jobID} status to ${job.jobStatus}');
         }
       }
     }
@@ -156,10 +177,20 @@ class _JobsPageState extends State<JobsPage> {
 
       if (!mounted) return;
 
-      setState(() {
-        _allJobs = updatedJobs;
-        _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
-      });
+      // Only update state if there are actual changes
+      final hasChanges =
+          updatedJobs.length == _allJobs.length &&
+          updatedJobs.asMap().entries.any((entry) {
+            final index = entry.key;
+            return entry.value.jobStatus != _allJobs[index].jobStatus;
+          });
+
+      if (hasChanges) {
+        setState(() {
+          _allJobs = updatedJobs;
+          _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
+        });
+      }
     } catch (e) {
       debugPrint('Error updating job statuses: $e');
     }

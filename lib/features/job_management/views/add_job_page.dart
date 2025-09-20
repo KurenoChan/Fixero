@@ -70,38 +70,12 @@ class _AddJobPageState extends State<AddJobPage> {
   }
 
   String _formatDateOnly(DateTime date) {
-    return "${date.day} ${_getMonthName(date.month)} ${date.year}";
-  }
+    // Format as YYYY-MM-DD
+    String year = date.year.toString();
+    String month = date.month.toString().padLeft(2, '0');
+    String day = date.day.toString().padLeft(2, '0');
 
-  String _getMonthName(int month) {
-    switch (month) {
-      case 1:
-        return 'January';
-      case 2:
-        return 'February';
-      case 3:
-        return 'March';
-      case 4:
-        return 'April';
-      case 5:
-        return 'May';
-      case 6:
-        return 'June';
-      case 7:
-        return 'July';
-      case 8:
-        return 'August';
-      case 9:
-        return 'September';
-      case 10:
-        return 'October';
-      case 11:
-        return 'November';
-      case 12:
-        return 'December';
-      default:
-        return '';
-    }
+    return '$year-$month-$day';
   }
 
   void _onVehicleSelected(Vehicle vehicle) {
@@ -124,7 +98,9 @@ class _AddJobPageState extends State<AddJobPage> {
           scheduledDate: '', // Removed - empty string
           scheduledTime: '', // Removed - empty string
           estimatedDuration: 0, // Removed - set to 0
-          createdAt: _formatDateOnly(DateTime.now()), // Date only
+          createdAt: _formatDateOnly(
+            DateTime.now(),
+          ), // Date in YYYY-MM-DD format
           mechanicID: '', // Removed - empty string
           plateNo: _plateNoController.text,
           managedBy: _managedByController.text,
@@ -341,7 +317,7 @@ class _AddJobPageState extends State<AddJobPage> {
                     ElevatedButton(
                       onPressed: _submitForm,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
+                        backgroundColor: Theme.of(context).primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                       ),
                       child: const Text(
