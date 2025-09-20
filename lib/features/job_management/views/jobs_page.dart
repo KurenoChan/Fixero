@@ -6,6 +6,7 @@ import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
 import 'add_job_page.dart';
 import 'mechanic_selection_page.dart';
+import 'dart:async';
 
 class JobsPage extends StatefulWidget {
   static const routeName = '/jobs';
@@ -25,28 +26,33 @@ class _JobsPageState extends State<JobsPage> {
     'Pending',
   ];
   final JobDAO _jobDAO = JobDAO();
-  final AddJobController _addJobController =
-      AddJobController(); // Add controller instance
+  final AddJobController _addJobController = AddJobController();
   List<Job> _allJobs = [];
   List<Job> _filteredJobs = [];
   bool _isLoading = true;
   String? _errorMessage;
   Future? _loadJobsFuture;
+  Timer? _statusUpdateTimer;
 
   @override
   void initState() {
     super.initState();
     _loadJobsFuture = _loadJobs();
+
+    // Set up a timer to check and update job statuses every minute
+    _statusUpdateTimer = Timer.periodic(const Duration(minutes: 1), (timer) {
+      _checkAndUpdateJobStatuses();
+    });
   }
 
   @override
   void dispose() {
-    _loadJobsFuture?.ignore(); // Cancel the future if it's still running
+    _loadJobsFuture?.ignore();
+    _statusUpdateTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _loadJobs() async {
-    // Return early if widget is disposed
     if (!mounted) return;
 
     setState(() {
@@ -57,22 +63,105 @@ class _JobsPageState extends State<JobsPage> {
     try {
       final jobs = await _jobDAO.getAllJobs();
 
-      // Check if widget is still mounted before updating UI
+      // Check and update statuses based on current time
+      final updatedJobs = await _updateJobStatusesBasedOnTime(jobs);
+
       if (!mounted) return;
 
       setState(() {
-        _allJobs = jobs;
+        _allJobs = updatedJobs;
         _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
         _isLoading = false;
       });
     } catch (e) {
-      // Check if widget is still mounted before showing error
       if (!mounted) return;
 
       setState(() {
         _errorMessage = 'Failed to load jobs: $e';
         _isLoading = false;
       });
+    }
+  }
+
+  // Check and update job statuses based on current time
+  Future<List<Job>> _updateJobStatusesBasedOnTime(List<Job> jobs) async {
+    final now = DateTime.now();
+    final updatedJobs = <Job>[];
+    bool needsUpdate = false;
+
+    for (final job in jobs) {
+      Job updatedJob = job;
+
+      try {
+        // Parse scheduled date and time
+        final scheduledDateParts = job.scheduledDate.split('-');
+        final scheduledTimeParts = job.scheduledTime.split(':');
+
+        if (scheduledDateParts.length == 3 && scheduledTimeParts.length >= 2) {
+          final scheduledDateTime = DateTime(
+            int.parse(scheduledDateParts[0]),
+            int.parse(scheduledDateParts[1]),
+            int.parse(scheduledDateParts[2]),
+            int.parse(scheduledTimeParts[0]),
+            int.parse(scheduledTimeParts[1]),
+          );
+
+          // Calculate end time
+          final endDateTime = scheduledDateTime.add(
+            Duration(hours: job.estimatedDuration),
+          );
+
+          // Update status based on current time
+          if (job.jobStatus.toLowerCase() != 'completed' &&
+              job.jobStatus.toLowerCase() != 'cancelled') {
+            if (now.isAfter(endDateTime)) {
+              // Job should be marked as completed
+              updatedJob = job.copyWith(jobStatus: 'Completed');
+              needsUpdate = true;
+            } else if (now.isAfter(scheduledDateTime) &&
+                now.isBefore(endDateTime)) {
+              // Job should be marked as ongoing
+              updatedJob = job.copyWith(jobStatus: 'Ongoing');
+              needsUpdate = true;
+            }
+          }
+        }
+      } catch (e) {
+        // Handle date parsing errors gracefully
+        debugPrint('Error parsing date for job ${job.jobID}: $e');
+      }
+
+      updatedJobs.add(updatedJob);
+    }
+
+    // If any jobs were updated, save them to the database
+    if (needsUpdate) {
+      for (final job in updatedJobs) {
+        if (job.jobStatus !=
+            jobs.firstWhere((j) => j.jobID == job.jobID).jobStatus) {
+          await _jobDAO.updateJob(job);
+        }
+      }
+    }
+
+    return updatedJobs;
+  }
+
+  // Periodically check and update job statuses
+  void _checkAndUpdateJobStatuses() async {
+    if (!mounted) return;
+
+    try {
+      final updatedJobs = await _updateJobStatusesBasedOnTime(_allJobs);
+
+      if (!mounted) return;
+
+      setState(() {
+        _allJobs = updatedJobs;
+        _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
+      });
+    } catch (e) {
+      debugPrint('Error updating job statuses: $e');
     }
   }
 
@@ -122,7 +211,6 @@ class _JobsPageState extends State<JobsPage> {
         builder: (context) => AddJobPage(addJobController: _addJobController),
       ),
     ).then((_) {
-      // Reload jobs after adding a new one
       _loadJobs();
     });
   }
@@ -232,7 +320,6 @@ class _JobsPageState extends State<JobsPage> {
             ),
           ],
         ),
-        // Add floating action button for adding new jobs
         floatingActionButton: FloatingActionButton(
           onPressed: _navigateToAddJob,
           child: const Icon(Icons.add),
@@ -251,6 +338,31 @@ class _JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate end time for the job
+    String endTime = '';
+    try {
+      final scheduledDateParts = job.scheduledDate.split('-');
+      final scheduledTimeParts = job.scheduledTime.split(':');
+
+      if (scheduledDateParts.length == 3 && scheduledTimeParts.length >= 2) {
+        final scheduledDateTime = DateTime(
+          int.parse(scheduledDateParts[0]),
+          int.parse(scheduledDateParts[1]),
+          int.parse(scheduledDateParts[2]),
+          int.parse(scheduledTimeParts[0]),
+          int.parse(scheduledTimeParts[1]),
+        );
+
+        final endDateTime = scheduledDateTime.add(
+          Duration(hours: job.estimatedDuration),
+        );
+        endTime =
+            '${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      debugPrint('Error calculating end time: $e');
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -274,11 +386,20 @@ class _JobCard extends StatelessWidget {
 
             const SizedBox(height: 4),
 
-            // Service Type (changed from Vehicle)
+            // Service Type
             Text(
-              'Service Type: ${job.jobServiceType}', // Changed to show service type
+              'Service Type: ${job.jobServiceType}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
+
+            const SizedBox(height: 4),
+
+            // Estimated End Time (only show for ongoing jobs)
+            if (job.jobStatus.toLowerCase() == 'ongoing' && endTime.isNotEmpty)
+              Text(
+                'Estimated Finish: $endTime',
+                style: const TextStyle(fontSize: 14, color: Colors.blue),
+              ),
 
             const SizedBox(height: 4),
 
@@ -371,6 +492,31 @@ class JobDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Calculate end time for the job
+    String endTime = '';
+    try {
+      final scheduledDateParts = job.scheduledDate.split('-');
+      final scheduledTimeParts = job.scheduledTime.split(':');
+
+      if (scheduledDateParts.length == 3 && scheduledTimeParts.length >= 2) {
+        final scheduledDateTime = DateTime(
+          int.parse(scheduledDateParts[0]),
+          int.parse(scheduledDateParts[1]),
+          int.parse(scheduledDateParts[2]),
+          int.parse(scheduledTimeParts[0]),
+          int.parse(scheduledTimeParts[1]),
+        );
+
+        final endDateTime = scheduledDateTime.add(
+          Duration(hours: job.estimatedDuration),
+        );
+        endTime =
+            '${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      debugPrint('Error calculating end time: $e');
+    }
+
     return Scaffold(
       appBar: AppBar(title: Text('Job Details - ${job.jobID}')),
       body: SingleChildScrollView(
@@ -406,6 +552,12 @@ class JobDetailsPage extends StatelessWidget {
               children: [
                 _DetailItem(label: 'Scheduled Date', value: job.scheduledDate),
                 _DetailItem(label: 'Scheduled Time', value: job.scheduledTime),
+                if (endTime.isNotEmpty)
+                  _DetailItem(
+                    label: 'Estimated End Time',
+                    value: endTime,
+                    valueColor: Colors.blue,
+                  ),
                 _DetailItem(
                   label: 'Estimated Duration',
                   value: '${job.estimatedDuration} Hours',
@@ -439,7 +591,6 @@ class JobDetailsPage extends StatelessWidget {
               Center(
                 child: ElevatedButton(
                   onPressed: () {
-                    // Navigate to Mechanic Selection Page
                     _navigateToMechanicSelection(context);
                   },
                   child: const Text('Assign Mechanic'),
@@ -485,16 +636,12 @@ class JobDetailsPage extends StatelessWidget {
     ).then((selectedMechanic) {
       if (selectedMechanic != null) {
         if (!context.mounted) return;
-        // Handle the selected mechanic here
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Assigned ${selectedMechanic.mechanicName} to job'),
             duration: const Duration(seconds: 2),
           ),
         );
-
-        // In a real app, you would update the job with the selected mechanic
-        // await _jobDAO.updateJob(job.copyWith(mechanicID: selectedMechanic.mechanicID));
       }
     });
   }
