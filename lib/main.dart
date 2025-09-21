@@ -9,6 +9,8 @@ import 'package:fixero/features/inventory_management/controllers/requested_item_
 import 'package:fixero/features/inventory_management/controllers/restock_request_controller.dart';
 import 'package:fixero/features/inventory_management/controllers/supplier_controller.dart';
 import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
+import 'package:fixero/features/job_management/controllers/manager_controller.dart';
+import 'package:fixero/features/job_management/controllers/mechanic_controller.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:fixero/features/vehicle_management/views/car_models_view.dart';
@@ -46,6 +48,8 @@ void main() async {
 
         ChangeNotifierProvider(create: (_) => JobController()),
         ChangeNotifierProvider(create: (_) => AddJobController()),
+        ChangeNotifierProvider(create: (_) => MechanicController()),
+        ChangeNotifierProvider(create: (_) => ManagerController()),
       ],
       child: MainApp(seenIntro: seenIntro),
     ),

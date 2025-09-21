@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/views/mechanic_selection_page.dart';
+import 'package:fixero/features/job_management/views/personel_details.dart';
 import 'package:provider/provider.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:fixero/data/dao/job_services/job_dao.dart';
@@ -111,16 +112,26 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
                 _DetailItem(label: 'Created At', value: _currentJob.createdAt),
               ],
             ),
-            _DetailSection(
-              icon: Icons.people,
-              title: 'Personnel',
-              items: [
-                _DetailItem(
-                  label: 'Mechanic ID',
-                  value: _currentJob.mechanicID,
+            // Updated Personnel Section - Now clickable
+            GestureDetector(
+              onTap: () => _navigateToPersonnelDetails(context),
+              child: MouseRegion(
+                cursor: SystemMouseCursors.click,
+                child: _DetailSection(
+                  icon: Icons.people,
+                  title: 'Personnel',
+                  items: [
+                    _DetailItem(
+                      label: 'Mechanic ID',
+                      value: _currentJob.mechanicID,
+                    ),
+                    _DetailItem(
+                      label: 'Managed By',
+                      value: _currentJob.managedBy,
+                    ),
+                  ],
                 ),
-                _DetailItem(label: 'Managed By', value: _currentJob.managedBy),
-              ],
+              ),
             ),
             const SizedBox(height: 30),
 
@@ -226,6 +237,18 @@ class _JobDetailsPageState extends State<JobDetailsPage> {
       default:
         return Colors.black;
     }
+  }
+
+  void _navigateToPersonnelDetails(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PersonnelDetailsPage(
+          managerId: _currentJob.managedBy,
+          mechanicId: _currentJob.mechanicID,
+        ),
+      ),
+    );
   }
 
   void _navigateToMechanicSelection(BuildContext context) {

@@ -4,23 +4,24 @@ import 'package:fixero/data/repositories/job_services/mechanic_repository.dart';
 
 class MechanicController with ChangeNotifier {
   final MechanicRepository _mechanicRepository;
+
   List<Mechanic> _mechanics = [];
   bool _isLoading = false;
   String? _errorMessage;
 
-  MechanicController(this._mechanicRepository);
+  // ✅ Optional constructor argument with default
+  MechanicController([MechanicRepository? repository])
+    : _mechanicRepository = repository ?? MechanicRepository();
 
   List<Mechanic> get mechanics => _mechanics;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  /// 🔹 Clear error message
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  /// 🔹 Load all mechanics
   Future<void> loadMechanics() async {
     _isLoading = true;
     _errorMessage = null;
@@ -36,7 +37,6 @@ class MechanicController with ChangeNotifier {
     }
   }
 
-  /// 🔹 Load only available mechanics
   Future<void> loadAvailableMechanics() async {
     _isLoading = true;
     _errorMessage = null;
@@ -52,12 +52,9 @@ class MechanicController with ChangeNotifier {
     }
   }
 
-  /// 🔹 Update mechanic status
   Future<void> updateMechanicStatus(String mechanicID, String status) async {
     try {
       await _mechanicRepository.updateMechanicStatus(mechanicID, status);
-
-      // Update local state efficiently
       final index = _mechanics.indexWhere((m) => m.mechanicID == mechanicID);
       if (index != -1) {
         _mechanics[index] = _mechanics[index].copyWith(mechanicStatus: status);
@@ -69,18 +66,16 @@ class MechanicController with ChangeNotifier {
     }
   }
 
-  /// 🔹 Add a new mechanic
   Future<void> addMechanic(Mechanic mechanic) async {
     try {
       await _mechanicRepository.addMechanic(mechanic);
-      await loadMechanics(); // Refresh the list
+      await loadMechanics();
     } catch (e) {
       _errorMessage = 'Failed to add mechanic: $e';
       notifyListeners();
     }
   }
 
-  /// 🔹 Delete a mechanic
   Future<void> deleteMechanic(String mechanicID) async {
     try {
       await _mechanicRepository.deleteMechanic(mechanicID);
@@ -92,56 +87,51 @@ class MechanicController with ChangeNotifier {
     }
   }
 
-  /// 🔹 Get available mechanics from current list
-  List<Mechanic> getAvailableMechanics() {
-    return _mechanics.where((mechanic) => mechanic.isAvailable).toList();
-  }
+  List<Mechanic> getAvailableMechanics() =>
+      _mechanics.where((m) => m.isAvailable).toList();
 
-  /// 🔹 Get mechanics by specialty
-  List<Mechanic> getMechanicsBySpecialty(String specialty) {
-    return _mechanics
-        .where((mechanic) => mechanic.hasSpecialty(specialty))
-        .toList();
-  }
+  List<Mechanic> getMechanicsBySpecialty(String specialty) =>
+      _mechanics.where((m) => m.hasSpecialty(specialty)).toList();
 
-  /// 🔹 Get mechanic by ID
   Mechanic? getMechanicById(String mechanicID) {
     try {
-      return _mechanics.firstWhere(
-        (mechanic) => mechanic.mechanicID == mechanicID,
-      );
+      return _mechanics.firstWhere((m) => m.mechanicID == mechanicID);
     } catch (e) {
       return null;
     }
   }
 
-  /// 🔹 Get mechanics by status
-  List<Mechanic> getMechanicsByStatus(String status) {
-    return _mechanics
-        .where(
-          (mechanic) =>
-              mechanic.mechanicStatus.toLowerCase() == status.toLowerCase(),
-        )
-        .toList();
+  Future<void> loadMechanicById(String mechanicID) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final mechanic = await _mechanicRepository.fetchMechanicById(mechanicID);
+      if (mechanic != null &&
+          !_mechanics.any((m) => m.mechanicID == mechanic.mechanicID)) {
+        _mechanics.add(mechanic);
+      }
+    } catch (e) {
+      _errorMessage = 'Failed to load mechanic: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
-  /// 🔹 Search mechanics by name
+  List<Mechanic> getMechanicsByStatus(String status) => _mechanics
+      .where((m) => m.mechanicStatus.toLowerCase() == status.toLowerCase())
+      .toList();
+
   List<Mechanic> searchMechanics(String query) {
     if (query.isEmpty) return _mechanics;
 
-    return _mechanics
-        .where(
-          (mechanic) =>
-              mechanic.mechanicName.toLowerCase().contains(
-                query.toLowerCase(),
-              ) ||
-              mechanic.mechanicEmail.toLowerCase().contains(
-                query.toLowerCase(),
-              ) ||
-              mechanic.mechanicSpecialty.toLowerCase().contains(
-                query.toLowerCase(),
-              ),
-        )
-        .toList();
+    return _mechanics.where((m) {
+      final q = query.toLowerCase();
+      return m.mechanicName.toLowerCase().contains(q) ||
+          m.mechanicEmail.toLowerCase().contains(q) ||
+          m.mechanicSpecialty.toLowerCase().contains(q);
+    }).toList();
   }
 }
