@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
 import 'package:fixero/features/invoice_management/Views/invoice_module.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:fixero/features/job_management/views/job_demand_chart_helper.dart';
+import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:fixero/features/job_management/views/service_chart_helper.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
@@ -29,12 +29,9 @@ class _HomePageState extends State<HomePage> {
   String? _managerName;
   String? _profileImgUrl;
 
-  Stream<int>? _unpaidInvoicesStream;
-
   @override
   void initState() {
     super.initState();
-    _unpaidInvoicesStream = _unpaidInvoiceCountStream();
     _loadManagerData();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -69,27 +66,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  // Live stream of UNPAID invoices count from Realtime DB
-  Stream<int> _unpaidInvoiceCountStream() {
-    final ref = FirebaseDatabase.instance.ref('invoices');
-    return ref.onValue
-        .asBroadcastStream() // 🔑 make it reusable
-        .map((event) {
-          final raw = event.snapshot.value;
-          if (raw is Map) {
-            int count = 0;
-            raw.forEach((_, v) {
-              if (v is Map) {
-                final status = (v['status'] ?? '').toString().toLowerCase();
-                if (status == 'unpaid') count++;
-              }
-            });
-            return count;
-          }
-          return 0;
-        });
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -118,29 +94,53 @@ class _HomePageState extends State<HomePage> {
 
             // Dashboard Rows
             _buildDashboardRow(context, [
-              _dashboardCard(
-                context,
-                "Ongoing Jobs",
-                jobController.ongoingJobs.length.toString(),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const JobsPage()),
+                ),
+                child: _dashboardCard(
+                  context,
+                  "Ongoing Jobs",
+                  jobController.ongoingJobs.length.toString(),
+                ),
               ),
-              // Invoices (UNPAID live count + tap → InvoiceModule)
-              StreamBuilder<int>(
-                stream: _unpaidInvoicesStream,
-                builder: (context, snap) {
-                  final unpaid = snap.data ?? 0;
-                  return _dashboardCard(
-                    context,
-                    "Invoices (Unpaid)",
-                    unpaid.toString(),
-                    onTap: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const InvoiceModule(),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const InvoiceModule(),
+                  ),
+                ),
+                child: SizedBox(
+                  height: 100, // 👈 match the height of _dashboardCard
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.8),
+                          theme.colorScheme.primary.withValues(alpha: 0.3),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "View Invoices",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.inversePrimary,
                         ),
-                      );
-                    },
-                  );
-                },
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ]),
             const SizedBox(height: 10),
@@ -242,15 +242,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Dashboard card
-  Widget _dashboardCard(
-    BuildContext context,
-    String title,
-    String value, {
-    VoidCallback? onTap,
-  }) {
+  Widget _dashboardCard(BuildContext context, String title, String value) {
     final theme = Theme.of(context);
 
-    final card = Container(
+    return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -289,8 +284,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-
-    return onTap == null ? card : GestureDetector(onTap: onTap, child: card);
   }
 
   /// Insights Card
