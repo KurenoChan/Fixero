@@ -20,10 +20,11 @@ class _JobsPageState extends State<JobsPage> {
   int _selectedFilterIndex = 0;
   final List<String> _filterOptions = [
     'All',
-    'Ongoing',
-    'Scheduled',
-    'Completed',
     'Pending',
+    'Scheduled',
+    'Ongoing',
+    'Completed',
+    'Cancelled',
   ];
   final JobDAO _jobDAO = JobDAO();
   final AddJobController _addJobController = AddJobController();
@@ -190,23 +191,27 @@ class _JobsPageState extends State<JobsPage> {
 
   List<Job> _filterJobs(List<Job> jobs, int filterIndex) {
     switch (filterIndex) {
-      case 0:
+      case 0: // All
         return jobs;
-      case 1:
+      case 1: // Pending
         return jobs
-            .where((job) => job.jobStatus.toLowerCase() == 'ongoing')
+            .where((job) => job.jobStatus.toLowerCase() == 'pending')
             .toList();
-      case 2:
+      case 2: // Scheduled
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'scheduled')
             .toList();
-      case 3:
+      case 3: // Ongoing
+        return jobs
+            .where((job) => job.jobStatus.toLowerCase() == 'ongoing')
+            .toList();
+      case 4: // Completed
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'completed')
             .toList();
-      case 4:
+      case 5: // Cancelled
         return jobs
-            .where((job) => job.jobStatus.toLowerCase() == 'pending')
+            .where((job) => job.jobStatus.toLowerCase() == 'cancelled')
             .toList();
       default:
         return jobs;

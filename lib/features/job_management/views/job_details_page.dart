@@ -2,19 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:fixero/common/widgets/bars/fixero_sub_appbar.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/views/mechanic_selection_page.dart';
+import 'package:provider/provider.dart';
+import 'package:fixero/features/job_management/controllers/job_controller.dart';
+import 'package:fixero/data/dao/job_services/job_dao.dart';
 
-class JobDetailsPage extends StatelessWidget {
+class JobDetailsPage extends StatefulWidget {
   final Job job;
 
   const JobDetailsPage({super.key, required this.job});
 
   @override
+  State<JobDetailsPage> createState() => _JobDetailsPageState();
+}
+
+class _JobDetailsPageState extends State<JobDetailsPage> {
+  late Job _currentJob;
+  bool _isCancelling = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentJob = widget.job;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final jobController = Provider.of<JobController>(context, listen: false);
+
     // Calculate end time
     String endTime = '';
     try {
-      final scheduledDateParts = job.scheduledDate.split('-');
-      final scheduledTimeParts = job.scheduledTime.split(':');
+      final scheduledDateParts = _currentJob.scheduledDate.split('-');
+      final scheduledTimeParts = _currentJob.scheduledTime.split(':');
 
       if (scheduledDateParts.length == 3 && scheduledTimeParts.length >= 2) {
         final scheduledDateTime = DateTime(
@@ -25,7 +44,7 @@ class JobDetailsPage extends StatelessWidget {
           int.parse(scheduledTimeParts[1]),
         );
         final endDateTime = scheduledDateTime.add(
-          Duration(hours: job.estimatedDuration),
+          Duration(hours: _currentJob.estimatedDuration),
         );
         endTime =
             '${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}';
@@ -42,52 +61,71 @@ class JobDetailsPage extends StatelessWidget {
               icon: Icons.work,
               title: 'Job Information',
               items: [
-                _DetailItem(label: 'Job ID', value: job.jobID),
-                _DetailItem(label: 'Service Type', value: job.jobServiceType),
+                _DetailItem(label: 'Job ID', value: _currentJob.jobID),
+                _DetailItem(
+                  label: 'Service Type',
+                  value: _currentJob.jobServiceType,
+                ),
                 _DetailItem(
                   label: 'Status',
-                  value: job.jobStatus,
-                  valueColor: _getStatusColor(job.jobStatus),
+                  value: _currentJob.jobStatus,
+                  valueColor: _getStatusColor(_currentJob.jobStatus),
                 ),
-                _DetailItem(label: 'Description', value: job.jobDescription),
+                _DetailItem(
+                  label: 'Description',
+                  value: _currentJob.jobDescription,
+                ),
               ],
             ),
             _DetailSection(
               icon: Icons.directions_car,
               title: 'Vehicle Information',
-              items: [_DetailItem(label: 'Vehicle', value: job.plateNo)],
+              items: [
+                _DetailItem(label: 'Vehicle', value: _currentJob.plateNo),
+              ],
             ),
             _DetailSection(
               icon: Icons.schedule,
               title: 'Scheduling',
               items: [
-                _DetailItem(label: 'Scheduled Date', value: job.scheduledDate),
-                _DetailItem(label: 'Scheduled Time', value: job.scheduledTime),
+                _DetailItem(
+                  label: 'Scheduled Date',
+                  value: _currentJob.scheduledDate,
+                ),
+                _DetailItem(
+                  label: 'Scheduled Time',
+                  value: _currentJob.scheduledTime,
+                ),
                 if (endTime.isNotEmpty)
                   _DetailItem(label: 'Estimated End Time', value: endTime),
                 _DetailItem(
                   label: 'Estimated Duration',
-                  value: '${job.estimatedDuration} Hours',
+                  value: '${_currentJob.estimatedDuration} Hours',
                 ),
               ],
             ),
             _DetailSection(
               icon: Icons.access_time,
               title: 'Timestamps',
-              items: [_DetailItem(label: 'Created At', value: job.createdAt)],
+              items: [
+                _DetailItem(label: 'Created At', value: _currentJob.createdAt),
+              ],
             ),
             _DetailSection(
               icon: Icons.people,
               title: 'Personnel',
               items: [
-                _DetailItem(label: 'Mechanic ID', value: job.mechanicID),
-                _DetailItem(label: 'Managed By', value: job.managedBy),
+                _DetailItem(
+                  label: 'Mechanic ID',
+                  value: _currentJob.mechanicID,
+                ),
+                _DetailItem(label: 'Managed By', value: _currentJob.managedBy),
               ],
             ),
             const SizedBox(height: 30),
 
-            // Action Button
-            if (job.jobStatus.toLowerCase() == 'pending')
+            // Action Buttons
+            if (_currentJob.jobStatus.toLowerCase() == 'pending')
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -106,9 +144,61 @@ class JobDetailsPage extends StatelessWidget {
                   onPressed: () => _navigateToMechanicSelection(context),
                 ),
               )
+            else if (_currentJob.jobStatus.toLowerCase() == 'scheduled')
+              Column(
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: Colors.red,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: _isCancelling
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Icon(Icons.cancel, color: Colors.white),
+                      label: _isCancelling
+                          ? const Text(
+                              'Cancelling...',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : const Text(
+                              'Cancel Job',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                      onPressed: _isCancelling
+                          ? null
+                          : () => _showCancelConfirmationDialog(
+                              context,
+                              jobController,
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Manager can cancel scheduled jobs',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              )
             else
               Text(
-                'Mechanic can only be assigned to Pending jobs',
+                _currentJob.jobStatus.toLowerCase() == 'cancelled'
+                    ? 'This job has been cancelled'
+                    : 'Mechanic can only be assigned to Pending jobs',
                 style: TextStyle(
                   color: Colors.grey[600],
                   fontStyle: FontStyle.italic,
@@ -141,7 +231,9 @@ class JobDetailsPage extends StatelessWidget {
   void _navigateToMechanicSelection(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => MechanicSelectionPage(job: job)),
+      MaterialPageRoute(
+        builder: (context) => MechanicSelectionPage(job: _currentJob),
+      ),
     ).then((selectedMechanic) {
       if (selectedMechanic != null) {
         if (!context.mounted) return;
@@ -154,8 +246,88 @@ class JobDetailsPage extends StatelessWidget {
       }
     });
   }
+
+  void _showCancelConfirmationDialog(
+    BuildContext context,
+    JobController jobController,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Cancellation'),
+          content: const Text(
+            'Are you sure you want to cancel this scheduled job?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _cancelJob(context, jobController);
+              },
+              child: const Text('Yes', style: TextStyle(color: Colors.red)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _cancelJob(
+    BuildContext context,
+    JobController jobController,
+  ) async {
+    setState(() {
+      _isCancelling = true;
+    });
+
+    try {
+      // Create updated job with cancelled status
+      final updatedJob = _currentJob.copyWith(jobStatus: 'Cancelled');
+
+      // Update in database through DAO
+      final jobDAO = JobDAO();
+      await jobDAO.updateJob(updatedJob);
+
+      // Update local state
+      setState(() {
+        _currentJob = updatedJob;
+        _isCancelling = false;
+      });
+
+      // Show success message
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Job has been cancelled successfully'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isCancelling = false;
+      });
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to cancel job: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
+  }
 }
 
+// Add the missing widget classes
 class _DetailSection extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -182,7 +354,7 @@ class _DetailSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: primary), // only the icon uses primary color
+                Icon(icon, color: primary),
                 const SizedBox(width: 8),
                 Text(
                   title,
