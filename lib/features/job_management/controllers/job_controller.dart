@@ -55,6 +55,18 @@ class JobController extends ChangeNotifier {
     }
   }
 
+  Future<void> updateJob(Job job) async {
+    try {
+      await _dao.updateJob(job);
+      // Refresh the jobs list to reflect the update
+      await loadJobs();
+    } catch (e) {
+      _errorMessage = e.toString();
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   List<JobDemandChartData> get demandByMonth =>
       aggregateJobDemandByMonth(_jobs);
 }

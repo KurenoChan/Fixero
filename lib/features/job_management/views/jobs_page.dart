@@ -4,8 +4,9 @@ import 'package:fixero/common/widgets/bars/fixero_main_appbar.dart';
 import 'package:fixero/data/dao/job_services/job_dao.dart';
 import 'package:fixero/features/job_management/models/job.dart';
 import 'package:fixero/features/job_management/controllers/add_job_controller.dart';
+import 'package:fixero/features/job_management/views/job_details_page.dart';
 import 'add_job_page.dart';
-import 'mechanic_selection_page.dart';
+import 'dart:async';
 
 class JobsPage extends StatefulWidget {
   static const routeName = '/jobs';
@@ -19,34 +20,40 @@ class _JobsPageState extends State<JobsPage> {
   int _selectedFilterIndex = 0;
   final List<String> _filterOptions = [
     'All',
-    'Ongoing',
-    'Scheduled',
-    'Completed',
     'Pending',
+    'Scheduled',
+    'Ongoing',
+    'Completed',
+    'Cancelled',
   ];
   final JobDAO _jobDAO = JobDAO();
-  final AddJobController _addJobController =
-      AddJobController(); // Add controller instance
+  final AddJobController _addJobController = AddJobController();
   List<Job> _allJobs = [];
   List<Job> _filteredJobs = [];
   bool _isLoading = true;
   String? _errorMessage;
   Future? _loadJobsFuture;
+  Timer? _statusUpdateTimer;
 
   @override
   void initState() {
     super.initState();
     _loadJobsFuture = _loadJobs();
+
+    // periodic status update
+    _statusUpdateTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _checkAndUpdateJobStatuses();
+    });
   }
 
   @override
   void dispose() {
-    _loadJobsFuture?.ignore(); // Cancel the future if it's still running
+    _loadJobsFuture?.ignore();
+    _statusUpdateTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _loadJobs() async {
-    // Return early if widget is disposed
     if (!mounted) return;
 
     setState(() {
@@ -57,16 +64,20 @@ class _JobsPageState extends State<JobsPage> {
     try {
       final jobs = await _jobDAO.getAllJobs();
 
-      // Check if widget is still mounted before updating UI
+      // Update statuses based on current time
+      final updatedJobs = await _updateJobStatusesBasedOnTime(jobs);
+
       if (!mounted) return;
 
       setState(() {
-        _allJobs = jobs;
+        _allJobs = updatedJobs;
         _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
         _isLoading = false;
       });
+
+      // ✅ Immediately re-check statuses after loading
+      _checkAndUpdateJobStatuses();
     } catch (e) {
-      // Check if widget is still mounted before showing error
       if (!mounted) return;
 
       setState(() {
@@ -76,25 +87,131 @@ class _JobsPageState extends State<JobsPage> {
     }
   }
 
+  Future<List<Job>> _updateJobStatusesBasedOnTime(List<Job> jobs) async {
+    final now = DateTime.now();
+    final updatedJobs = <Job>[];
+    bool needsUpdate = false;
+
+    for (final job in jobs) {
+      Job updatedJob = job;
+
+      if (job.jobStatus.toLowerCase() == 'completed' ||
+          job.jobStatus.toLowerCase() == 'cancelled') {
+        updatedJobs.add(updatedJob);
+        continue;
+      }
+
+      try {
+        final scheduledDateParts = job.scheduledDate.split('-');
+        final scheduledTimeParts = job.scheduledTime.split(':');
+
+        if (scheduledDateParts.length == 3 && scheduledTimeParts.length >= 2) {
+          final scheduledDateTime = DateTime(
+            int.parse(scheduledDateParts[0]),
+            int.parse(scheduledDateParts[1]),
+            int.parse(scheduledDateParts[2]),
+            int.parse(scheduledTimeParts[0]),
+            int.parse(scheduledTimeParts[1]),
+          );
+
+          final endDateTime = scheduledDateTime.add(
+            Duration(hours: job.estimatedDuration),
+          );
+
+          if (now.isAfter(endDateTime)) {
+            if (job.jobStatus.toLowerCase() != 'completed') {
+              updatedJob = job.copyWith(jobStatus: 'Completed');
+              needsUpdate = true;
+              debugPrint('Job ${job.jobID} marked as completed');
+            }
+          } else if (now.isAfter(scheduledDateTime) &&
+              now.isBefore(endDateTime)) {
+            if (job.jobStatus.toLowerCase() != 'ongoing') {
+              updatedJob = job.copyWith(jobStatus: 'Ongoing');
+              needsUpdate = true;
+              debugPrint('Job ${job.jobID} marked as ongoing');
+            }
+          } else if (now.isBefore(scheduledDateTime) &&
+              job.jobStatus.toLowerCase() != 'scheduled' &&
+              job.jobStatus.toLowerCase() != 'pending') {
+            updatedJob = job.copyWith(jobStatus: 'Scheduled');
+            needsUpdate = true;
+            debugPrint('Job ${job.jobID} marked as scheduled');
+          }
+        }
+      } catch (e) {
+        debugPrint('Error parsing date for job ${job.jobID}: $e');
+      }
+
+      updatedJobs.add(updatedJob);
+    }
+
+    if (needsUpdate) {
+      for (final job in updatedJobs) {
+        final originalJob = jobs.firstWhere(
+          (j) => j.jobID == job.jobID,
+          orElse: () => job,
+        );
+
+        if (job.jobStatus != originalJob.jobStatus) {
+          await _jobDAO.updateJob(job);
+          debugPrint('Updated job ${job.jobID} status to ${job.jobStatus}');
+        }
+      }
+    }
+
+    return updatedJobs;
+  }
+
+  void _checkAndUpdateJobStatuses() async {
+    if (!mounted) return;
+
+    try {
+      final updatedJobs = await _updateJobStatusesBasedOnTime(_allJobs);
+
+      if (!mounted) return;
+
+      final hasChanges =
+          updatedJobs.length == _allJobs.length &&
+          updatedJobs.asMap().entries.any((entry) {
+            final index = entry.key;
+            return entry.value.jobStatus != _allJobs[index].jobStatus;
+          });
+
+      if (hasChanges) {
+        setState(() {
+          _allJobs = updatedJobs;
+          _filteredJobs = _filterJobs(_allJobs, _selectedFilterIndex);
+        });
+      }
+    } catch (e) {
+      debugPrint('Error updating job statuses: $e');
+    }
+  }
+
   List<Job> _filterJobs(List<Job> jobs, int filterIndex) {
     switch (filterIndex) {
       case 0: // All
         return jobs;
-      case 1: // Ongoing
+      case 1: // Pending
         return jobs
-            .where((job) => job.jobStatus.toLowerCase() == 'ongoing')
+            .where((job) => job.jobStatus.toLowerCase() == 'pending')
             .toList();
       case 2: // Scheduled
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'scheduled')
             .toList();
-      case 3: // Completed
+      case 3: // Ongoing
+        return jobs
+            .where((job) => job.jobStatus.toLowerCase() == 'ongoing')
+            .toList();
+      case 4: // Completed
         return jobs
             .where((job) => job.jobStatus.toLowerCase() == 'completed')
             .toList();
-      case 4: // Pending
+      case 5: // Cancelled
         return jobs
-            .where((job) => job.jobStatus.toLowerCase() == 'pending')
+            .where((job) => job.jobStatus.toLowerCase() == 'cancelled')
             .toList();
       default:
         return jobs;
@@ -112,7 +229,9 @@ class _JobsPageState extends State<JobsPage> {
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => JobDetailsPage(job: job)),
-    );
+    ).then((_) {
+      _loadJobs(); // ✅ reload when returning
+    });
   }
 
   void _navigateToAddJob() {
@@ -122,8 +241,7 @@ class _JobsPageState extends State<JobsPage> {
         builder: (context) => AddJobPage(addJobController: _addJobController),
       ),
     ).then((_) {
-      // Reload jobs after adding a new one
-      _loadJobs();
+      _loadJobs(); // ✅ reload when returning
     });
   }
 
@@ -232,7 +350,6 @@ class _JobsPageState extends State<JobsPage> {
             ),
           ],
         ),
-        // Add floating action button for adding new jobs
         floatingActionButton: FloatingActionButton(
           onPressed: _navigateToAddJob,
           child: const Icon(Icons.add),
@@ -251,6 +368,30 @@ class _JobCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String endTime = '';
+    try {
+      final scheduledDateParts = job.scheduledDate.split('-');
+      final scheduledTimeParts = job.scheduledTime.split(':');
+
+      if (scheduledDateParts.length == 3 && scheduledTimeParts.length >= 2) {
+        final scheduledDateTime = DateTime(
+          int.parse(scheduledDateParts[0]),
+          int.parse(scheduledDateParts[1]),
+          int.parse(scheduledDateParts[2]),
+          int.parse(scheduledTimeParts[0]),
+          int.parse(scheduledTimeParts[1]),
+        );
+
+        final endDateTime = scheduledDateTime.add(
+          Duration(hours: job.estimatedDuration),
+        );
+        endTime =
+            '${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}';
+      }
+    } catch (e) {
+      debugPrint('Error calculating end time: $e');
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Padding(
@@ -258,48 +399,40 @@ class _JobCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Car Plate - FIRST (larger and prominent)
             Text(
               job.plateNo,
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             ),
-
             const SizedBox(height: 8),
-
-            // Job ID
             Text(
               'Job ID: ${job.jobID}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-
             const SizedBox(height: 4),
-
-            // Service Type (changed from Vehicle)
             Text(
-              'Service Type: ${job.jobServiceType}', // Changed to show service type
+              'Service Type: ${job.jobServiceType}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-
             const SizedBox(height: 4),
-
-            // Mechanic Name
+            if (job.jobStatus.toLowerCase() == 'ongoing' && endTime.isNotEmpty)
+              Text(
+                'Estimated Finish: $endTime',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Theme.of(context).primaryColor,
+                ),
+              ),
+            const SizedBox(height: 4),
             Text(
               'Mechanic: ${job.mechanicID}',
               style: const TextStyle(fontSize: 14, color: Colors.grey),
             ),
-
             const SizedBox(height: 12),
-
-            // Divider
             const Divider(height: 1, color: Colors.grey),
-
             const SizedBox(height: 12),
-
-            // Status and Dates row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Status badge
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 8,
@@ -314,8 +447,6 @@ class _JobCard extends StatelessWidget {
                     style: const TextStyle(color: Colors.white, fontSize: 12),
                   ),
                 ),
-
-                // Dates
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -361,212 +492,5 @@ class _JobCard extends StatelessWidget {
     } catch (e) {
       return dateString;
     }
-  }
-}
-
-class JobDetailsPage extends StatelessWidget {
-  final Job job;
-
-  const JobDetailsPage({super.key, required this.job});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('Job Details - ${job.jobID}')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _DetailSection(
-              title: 'Job Information',
-              children: [
-                _DetailItem(label: 'Job ID', value: job.jobID),
-                _DetailItem(label: 'Service Type', value: job.jobServiceType),
-                _DetailItem(
-                  label: 'Status',
-                  value: job.jobStatus,
-                  valueColor: _getStatusColor(job.jobStatus),
-                ),
-                _DetailItem(label: 'Description', value: job.jobDescription),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            _DetailSection(
-              title: 'Vehicle Information',
-              children: [_DetailItem(label: 'Vehicle', value: job.plateNo)],
-            ),
-
-            const SizedBox(height: 20),
-
-            _DetailSection(
-              title: 'Scheduling',
-              children: [
-                _DetailItem(label: 'Scheduled Date', value: job.scheduledDate),
-                _DetailItem(label: 'Scheduled Time', value: job.scheduledTime),
-                _DetailItem(
-                  label: 'Estimated Duration',
-                  value: '${job.estimatedDuration} Hours',
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            _DetailSection(
-              title: 'Timestamps',
-              children: [
-                _DetailItem(label: 'Created At', value: job.createdAt),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            _DetailSection(
-              title: 'Personnel',
-              children: [
-                _DetailItem(label: 'Mechanic ID', value: job.mechanicID),
-                _DetailItem(label: 'Managed By', value: job.managedBy),
-              ],
-            ),
-
-            const SizedBox(height: 30),
-
-            // Only show Assign Mechanic button for Pending status
-            if (job.jobStatus.toLowerCase() == 'pending')
-              Center(
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to Mechanic Selection Page
-                    _navigateToMechanicSelection(context);
-                  },
-                  child: const Text('Assign Mechanic'),
-                ),
-              )
-            else
-              Center(
-                child: Text(
-                  'Mechanic can only be assigned to Pending jobs',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontStyle: FontStyle.italic,
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'ongoing':
-        return Colors.blue;
-      case 'scheduled':
-        return Colors.orange;
-      case 'completed':
-        return Colors.green;
-      case 'cancelled':
-        return Colors.red;
-      case 'pending':
-        return Colors.purple;
-      default:
-        return Colors.black;
-    }
-  }
-
-  void _navigateToMechanicSelection(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MechanicSelectionPage(job: job)),
-    ).then((selectedMechanic) {
-      if (selectedMechanic != null) {
-        if (!context.mounted) return;
-        // Handle the selected mechanic here
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Assigned ${selectedMechanic.mechanicName} to job'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
-
-        // In a real app, you would update the job with the selected mechanic
-        // await _jobDAO.updateJob(job.copyWith(mechanicID: selectedMechanic.mechanicID));
-      }
-    });
-  }
-}
-
-class _DetailSection extends StatelessWidget {
-  final String title;
-  final List<Widget> children;
-
-  const _DetailSection({required this.title, required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 10),
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: children,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _DetailItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color? valueColor;
-
-  const _DetailItem({
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 150,
-            child: Text(
-              label,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              value.isNotEmpty ? value : 'Not specified',
-              style: TextStyle(
-                color: valueColor,
-                fontWeight: valueColor != null ? FontWeight.bold : null,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
