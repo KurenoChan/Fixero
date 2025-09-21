@@ -37,8 +37,10 @@ Widget buildFeedbackLayout({
                 children: const [
                   Icon(Icons.info, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text("Customer & Job Info",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Customer & Job Info",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const Divider(height: 20, thickness: 1),
@@ -49,8 +51,9 @@ Widget buildFeedbackLayout({
                 builder: (context, _, __) {
                   Customer? cust;
                   try {
-                    cust = customerController.allCustomers
-                        .firstWhere((c) => c.custID == fb.customerId);
+                    cust = customerController.allCustomers.firstWhere(
+                      (c) => c.custID == fb.customerId,
+                    );
                   } catch (_) {
                     cust = null;
                   }
@@ -58,11 +61,14 @@ Widget buildFeedbackLayout({
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildInfoRow("Customer", cust?.custName ?? fb.customerName ?? "-"),
+                      _buildInfoRow(
+                        "Customer",
+                        cust?.custName ?? fb.customerName ?? "-",
+                      ),
                       _buildInfoRow("Email", cust?.custEmail ?? "-"),
                       _buildInfoRow("Car Model", fb.carModel ?? "-"),
                       _buildInfoRow("Service Type", fb.serviceType ?? "-"),
-                      _buildInfoRow("Service Date", fb.date),
+                      _buildInfoRow("Job ID", fb.jobID),
                     ],
                   );
                 },
@@ -99,7 +105,7 @@ Widget buildFeedbackLayout({
                   icon: const Icon(Icons.person),
                   label: const Text("View Profile"),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -124,8 +130,10 @@ Widget buildFeedbackLayout({
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Feedback Ratings",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text(
+                "Feedback Ratings",
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               _buildRatingRow("Service Quality", fb.serviceQuality),
               _buildRatingRow("Completion Time", fb.completionEfficiency),
@@ -157,8 +165,10 @@ Widget buildFeedbackLayout({
                 children: const [
                   Icon(Icons.comment, color: Colors.blue),
                   SizedBox(width: 8),
-                  Text("Customer Comment",
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Customer Comment",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                 ],
               ),
               const Divider(height: 20, thickness: 1),
@@ -187,47 +197,63 @@ Widget buildFeedbackLayout({
       const SizedBox(height: 20),
 
       // 🔹 Replies
-      const Text("Replies",
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      const Text(
+        "Replies",
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
       const SizedBox(height: 8),
       replies.isEmpty
           ? const Text("No replies available.")
           : Column(
-        children: replies.map((r) {
-          return Card(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(12),
-              title: Text(r["from"],
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.blue)),
-              subtitle: Padding(
-                padding: const EdgeInsets.only(top: 6),
-                child: Text(r["message"],
-                    style: const TextStyle(color: Colors.black87)),
-              ),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(r["date"],
+              children: replies.map((r) {
+                return Card(
+                  margin: const EdgeInsets.symmetric(vertical: 6),
+                  elevation: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(12),
+                    title: Text(
+                      r["from"],
                       style: const TextStyle(
-                          fontSize: 12, color: Colors.grey)),
-                  if (onDeleteReply != null) // ✅ only show delete in ReplyPage
-                    IconButton(
-                      icon: const Icon(Icons.delete,
-                          color: Colors.red, size: 20),
-                      onPressed: () => onDeleteReply(r["replyID"]),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
                     ),
-                ],
-              ),
+                    subtitle: Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        r["message"],
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          r["date"],
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
+                        if (onDeleteReply !=
+                            null) // ✅ only show delete in ReplyPage
+                          IconButton(
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.red,
+                              size: 20,
+                            ),
+                            onPressed: () => onDeleteReply(r["replyID"]),
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-          );
-        }).toList(),
-      ),
 
       const SizedBox(height: 20),
 
@@ -241,17 +267,18 @@ Widget _buildInfoRow(String label, String value) {
   return Padding(
     padding: const EdgeInsets.symmetric(vertical: 4),
     child: Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Expanded(
-          flex: 2,
-          child: Text("$label:",
-              style: const TextStyle(
-                  fontWeight: FontWeight.w600, color: Colors.black87)),
+        Text(
+          "$label:",
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
         ),
-        Expanded(
-          flex: 3,
-          child: Text(value,
-              style: const TextStyle(fontSize: 15, color: Colors.black87)),
+        Text(
+          value,
+          style: const TextStyle(fontSize: 15, color: Colors.black87),
         ),
       ],
     ),
@@ -265,9 +292,14 @@ Widget _buildRatingRow(String label, int value) {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label,
-            style: const TextStyle(
-                fontSize: 16, fontWeight: FontWeight.w600, color: Colors.black87)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
         Row(
           children: List.generate(5, (index) {
             return Icon(
