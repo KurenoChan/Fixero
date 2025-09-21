@@ -1,7 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
+import 'package:fixero/features/invoice_management/Views/invoice_module.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:fixero/features/job_management/views/job_demand_chart_helper.dart';
 import 'package:fixero/features/job_management/views/service_chart_helper.dart';
@@ -12,9 +14,7 @@ import 'package:provider/provider.dart';
 import 'common/widgets/bars/fixero_bottom_appbar.dart';
 import 'common/widgets/bars/fixero_home_appbar.dart';
 import 'common/widgets/charts/fixero_barchart.dart';
-import 'common/widgets/charts/fixero_linechart.dart';
 import 'common/widgets/charts/fixero_piechart.dart';
-import 'data/dao/income_dao.dart';
 
 class HomePage extends StatefulWidget {
   static const routeName = '/home';
@@ -29,9 +29,12 @@ class _HomePageState extends State<HomePage> {
   String? _managerName;
   String? _profileImgUrl;
 
+  Stream<int>? _unpaidInvoicesStream;
+
   @override
   void initState() {
     super.initState();
+    _unpaidInvoicesStream = _unpaidInvoiceCountStream();
     _loadManagerData();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -108,6 +111,27 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // Live stream of UNPAID invoices count from Realtime DB
+  Stream<int> _unpaidInvoiceCountStream() {
+    final ref = FirebaseDatabase.instance.ref('invoices');
+    return ref.onValue
+        .asBroadcastStream() // 🔑 make it reusable
+        .map((event) {
+          final raw = event.snapshot.value;
+          if (raw is Map) {
+            int count = 0;
+            raw.forEach((_, v) {
+              if (v is Map) {
+                final status = (v['status'] ?? '').toString().toLowerCase();
+                if (status == 'unpaid') count++;
+              }
+            });
+            return count;
+          }
+          return 0;
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -141,7 +165,25 @@ class _HomePageState extends State<HomePage> {
                 "Ongoing Jobs",
                 jobController.ongoingJobs.length.toString(),
               ),
-              _dashboardCard(context, "Invoices", "5"),
+              // Invoices (UNPAID live count + tap → InvoiceModule)
+              StreamBuilder<int>(
+                stream: _unpaidInvoicesStream,
+                builder: (context, snap) {
+                  final unpaid = snap.data ?? 0;
+                  return _dashboardCard(
+                    context,
+                    "Invoices (Unpaid)",
+                    unpaid.toString(),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const InvoiceModule(),
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ]),
             const SizedBox(height: 10),
             _buildDashboardRow(context, [
@@ -249,19 +291,7 @@ class _HomePageState extends State<HomePage> {
                 Column(
                   spacing: 20.0,
                   children: [
-                    // 1. Income
-                    _insightsCard(
-                      context: context,
-                      title: "Income",
-                      value: "RM 10,135",
-                      trend: "+8%",
-                      chart: FixeroLineChart(
-                        data: IncomeDAO.initializeData(),
-                        color: Colors.teal,
-                      ),
-                    ),
-
-                    // 2. Job Demand by year
+                    // 1. Job Demand by year
                     _insightsCard(
                       context: context,
                       title: "Job Demand",
@@ -273,7 +303,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    // 3. Popular Service
+                    // 2. Popular Service
                     _insightsCard(
                       context: context,
                       value: "Popular Services",
@@ -308,10 +338,15 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// Dashboard card
-  Widget _dashboardCard(BuildContext context, String title, String value) {
+  Widget _dashboardCard(
+    BuildContext context,
+    String title,
+    String value, {
+    VoidCallback? onTap,
+  }) {
     final theme = Theme.of(context);
 
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -350,6 +385,8 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
+
+    return onTap == null ? card : GestureDetector(onTap: onTap, child: card);
   }
 
   /// Recommended Service Card
