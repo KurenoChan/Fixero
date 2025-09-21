@@ -3,7 +3,7 @@ import 'package:fixero/features/inventory_management/controllers/item_controller
 import 'package:fixero/features/inventory_management/models/item_usage.dart';
 import 'package:fixero/features/inventory_management/views/item_details_page.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
-import 'package:fixero/features/job_management/views/jobs_page.dart';
+import 'package:fixero/features/job_management/views/job_details_page.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
