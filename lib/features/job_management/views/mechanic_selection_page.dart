@@ -46,9 +46,14 @@ class _MechanicSelectionPageState extends State<MechanicSelectionPage> {
 
     try {
       await _mechanicController.loadMechanics();
+
+      // Always sort A-Z by mechanicName
+      _mechanics = _mechanicController.getAvailableMechanics()
+        ..sort((a, b) => a.mechanicName.compareTo(b.mechanicName));
+
+      _filteredMechanics = List.from(_mechanics);
+
       setState(() {
-        _mechanics = _mechanicController.getAvailableMechanics();
-        _filteredMechanics = _mechanicController.getAvailableMechanics();
         _isLoading = false;
       });
     } catch (e) {
@@ -63,9 +68,10 @@ class _MechanicSelectionPageState extends State<MechanicSelectionPage> {
     setState(() {
       _searchQuery = query;
       if (query.isEmpty) {
-        _filteredMechanics = _mechanicController.getAvailableMechanics();
+        _filteredMechanics = List.from(_mechanics);
       } else {
-        _filteredMechanics = _mechanicController.searchMechanics(query);
+        _filteredMechanics = _mechanicController.searchMechanics(query)
+          ..sort((a, b) => a.mechanicName.compareTo(b.mechanicName));
       }
     });
   }
@@ -83,12 +89,9 @@ class _MechanicSelectionPageState extends State<MechanicSelectionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: FixeroSubAppBar(
-        title: 'Select Mechanic',
-        showBackButton: true,
-      ), // Changed to FixeroSubAppBar
+      appBar: FixeroSubAppBar(title: 'Select Mechanic', showBackButton: true),
       body: RefreshIndicator(
-        onRefresh: _loadMechanics, // Added pull-to-refresh functionality
+        onRefresh: _loadMechanics,
         child: Column(
           children: [
             // Search bar
@@ -139,7 +142,7 @@ class _MechanicSelectionPageState extends State<MechanicSelectionPage> {
                   : _filteredMechanics.isEmpty
                   ? const Center(child: Text('No available mechanics found'))
                   : ListView.builder(
-                      controller: _scrollController, // Added scroll controller
+                      controller: _scrollController,
                       itemCount: _filteredMechanics.length,
                       itemBuilder: (context, index) {
                         final mechanic = _filteredMechanics[index];
@@ -181,6 +184,8 @@ class _MechanicCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isAvailable = mechanic.mechanicStatus.toLowerCase() == "available";
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       color: isSelected ? Colors.blue[50] : null,
@@ -206,7 +211,13 @@ class _MechanicCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Specialty: ${mechanic.mechanicSpecialty}'),
-            Text('Status: ${mechanic.mechanicStatus}'),
+            Text(
+              'Status: ${mechanic.mechanicStatus}',
+              style: TextStyle(
+                color: isAvailable ? Colors.green : Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             Text('Experience: ${mechanic.formattedJoinDate}'),
           ],
         ),

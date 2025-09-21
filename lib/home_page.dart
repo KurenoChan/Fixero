@@ -55,31 +55,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  IconData _getServiceIcon(String serviceType) {
-    switch (serviceType.toLowerCase()) {
-      case "oil change":
-        return Icons.oil_barrel; // 🛢️ fits perfectly
-      case "battery check":
-      case "battery repair":
-        return Icons.battery_full; // 🔋 battery
-      case "tire rotation":
-      case "tire repair":
-        return Icons
-            .tire_repair; // ⭕ if using Flutter 3.24+, else use Icons.build
-      case "brake inspection":
-        return Icons.car_repair; // 🚗 mechanic-like
-      case "alignment":
-      case "vehicle safety check":
-        return Icons.rule; // 📏 alignment / inspection
-      case "fuel tank maintenance":
-        return Icons.local_gas_station; // ⛽ fuel tank
-      case "car repair":
-        return Icons.build; // 🛠️ general repair
-      default:
-        return Icons.miscellaneous_services; // ⚙️ fallback
-    }
-  }
-
   Future<void> _loadManagerData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
@@ -92,23 +67,6 @@ class _HomePageState extends State<HomePage> {
         });
       }
     }
-  }
-
-  void _handleServiceTap(BuildContext context, String label, IconData icon) {
-    // Example behavior: show a dialog
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(label),
-        content: Text("You tapped on $label"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          ),
-        ],
-      ),
-    );
   }
 
   // Live stream of UNPAID invoices count from Realtime DB
@@ -217,63 +175,9 @@ class _HomePageState extends State<HomePage> {
               ),
             ]),
 
-            const SizedBox(height: 40),
-
             // ======================
             // 2. Services Section
             // ======================
-            Column(
-              spacing: 10.0,
-              children: [
-                // Section Title + See All Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("Services", style: TextStyle(fontSize: 17)),
-                    TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        backgroundColor: theme.colorScheme.inversePrimary
-                            .withValues(alpha: 0.4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        "See All",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.inversePrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Service Cards
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    spacing: 10,
-                    children: jobController.getJobServiceTypes().map((
-                      serviceType,
-                    ) {
-                      return _serviceCard(
-                        context,
-                        Formatter.capitalize(serviceType),
-                        _getServiceIcon(serviceType),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-
             const SizedBox(height: 40),
 
             // ===================
@@ -387,37 +291,6 @@ class _HomePageState extends State<HomePage> {
     );
 
     return onTap == null ? card : GestureDetector(onTap: onTap, child: card);
-  }
-
-  /// Recommended Service Card
-  Widget _serviceCard(BuildContext context, String label, IconData icon) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: () => _handleServiceTap(context, label, icon),
-
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: theme.colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(fontSize: 14, color: theme.colorScheme.primary),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   /// Insights Card
