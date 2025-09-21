@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
@@ -6,19 +7,16 @@ import 'package:flutter/material.dart';
 import 'common/widgets/bars/fixero_bottom_appbar.dart';
 import 'common/widgets/bars/fixero_home_appbar.dart';
 import 'common/widgets/charts/fixero_barchart.dart';
-import 'common/widgets/charts/fixero_linechart.dart';
 import 'common/widgets/charts/fixero_piechart.dart';
 import 'common/widgets/fixero_dropdown.dart';
-import 'data/dao/income_dao.dart';
 import 'data/dao/job_demand_dao.dart';
 import 'data/dao/service_dao.dart';
 
-import 'invoice_module.dart';
-import 'package:firebase_database/firebase_database.dart';
+// <-- make sure path matches your file location
+import 'features/invoice_management/Views/invoice_module.dart';
 
 class HomePage extends StatefulWidget {
   static const routeName = '/home';
-
   const HomePage({super.key});
 
   @override
@@ -32,61 +30,51 @@ class _HomePageState extends State<HomePage> {
   String? _managerName;
   String? _profileImgUrl;
 
-  int _unpaidInvoiceCount = 0;
-  StreamSubscription<DatabaseEvent>? _unpaidSub;
-
   @override
   void initState() {
     super.initState();
     _loadManagerData();
     _selectedInsightFilter = insightsFilterOptions[0];
-
-    final unpaidQuery = FirebaseDatabase.instance
-      .ref('invoices')
-      .orderByChild('status')
-      .equalTo('Unpaid');
-
-  _unpaidSub = unpaidQuery.onValue.listen((event) {
-    final val = event.snapshot.value;
-    // invoices node is an object keyed by invoiceNo → record
-    final map = (val is Map) ? val : <Object?, Object?>{};
-    setState(() => _unpaidInvoiceCount = map.length);
-  });
   }
-
-@override
-void dispose() {
-  _unpaidSub?.cancel();
-  super.dispose();
-}
-
-
 
   Future<void> _loadManagerData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
       final repo = ManagerRepository();
-      final manager = await repo.getManager(uid); // correct method name
+      final manager = await repo.getManager(uid);
       if (mounted && manager != null) {
         setState(() {
           _managerName = manager.name;
-          _profileImgUrl =
-              manager.profileImgUrl;
+          _profileImgUrl = manager.profileImgUrl;
         });
       }
     }
   }
 
   void _handleInsightFilterChange(String newFilter) {
-    setState(() {
-      _selectedInsightFilter = newFilter;
-      // TODO: Update data or charts based on newFilter
+    setState(() => _selectedInsightFilter = newFilter);
+  }
+
+  // Live stream of UNPAID invoices count from Realtime DB
+  Stream<int> _unpaidInvoiceCountStream() {
+    final ref = FirebaseDatabase.instance.ref('invoices');
+    return ref.onValue.map((event) {
+      final raw = event.snapshot.value;
+      if (raw is Map) {
+        int count = 0;
+        raw.forEach((_, v) {
+          if (v is Map) {
+            final status = (v['status'] ?? '').toString().toLowerCase();
+            if (status == 'unpaid') count++;
+          }
+        });
+        return count;
+      }
+      return 0;
     });
   }
 
-  // Future<void> _handleSignOut(BuildContext context) async {
   void _handleServiceTap(BuildContext context, String label, IconData icon) {
-    // Example behavior: show a dialog
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -116,9 +104,7 @@ void dispose() {
       child: Scaffold(
         appBar: FixeroHomeAppBar(
           username: Formatter.capitalize(_managerName ?? "Loading..."),
-
-          profileImgUrl:
-              _profileImgUrl ??
+          profileImgUrl: _profileImgUrl ??
               "https://cdn-icons-png.flaticon.com/512/3237/3237476.png",
         ),
 
@@ -128,34 +114,43 @@ void dispose() {
           children: [
             const SizedBox(height: 10),
 
-            // Image.network(
-            //   'https://www.boschautoparts.com/o/commerce-media/accounts/-1/images/2220845',
-            //   height: 200, // optional
-            //   fit: BoxFit.cover, // optional
-            // ),
-
-            
-            // =====================
-            // 1. Dashboard Overview
-            // =====================
-
-            // Dashboard Rows
+            // ================
+            // Dashboard cards
+            // ================
             _buildDashboardRow(context, [
-              _dashboardCard(context, "Unpaid Invoices", '$_unpaidInvoiceCount', onTap: () {
-    Navigator.of(context).pushNamed(InvoiceModule.routeName);
-  }),
-  _dashboardCard(context, "Appointments", "3"),
+              _dashboardCard(context, "Active Jobs", "10"),
+              _dashboardCard(context, "Low Stock Part", "Brake Pads"),
+            ]),
+            const SizedBox(height: 20),
+            _buildDashboardRow(context, [
+              // Invoices (UNPAID live count + tap → InvoiceModule)
+              StreamBuilder<int>(
+                stream: _unpaidInvoiceCountStream(),
+                builder: (context, snap) {
+                  final unpaid = snap.data ?? 0;
+                  return _dashboardCard(
+                    context,
+                    "Invoices (Unpaid)",
+                    unpaid.toString(),
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const InvoiceModule()),
+                      );
+                    },
+                  );
+                },
+              ),
+              _dashboardCard(context, "Appointments", "3"),
             ]),
 
             const SizedBox(height: 40),
 
             // ======================
-            // 2. Recommended Section
+            // Recommended Section
             // ======================
             Column(
               spacing: 10.0,
               children: [
-                // Section Title + See All Button
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -163,8 +158,8 @@ void dispose() {
                     TextButton(
                       onPressed: () {},
                       style: TextButton.styleFrom(
-                        backgroundColor: theme.colorScheme.inversePrimary
-                            .withValues(alpha: 0.4),
+                        backgroundColor:
+                            theme.colorScheme.inversePrimary.withValues(alpha: 0.4),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
@@ -185,44 +180,16 @@ void dispose() {
                   ],
                 ),
 
-                // Service Cards
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: Row(
+                    spacing: 10.0,
                     children: [
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          spacing: 10.0,
-                          children: [
-                            _recommendedServiceCard(
-                              context,
-                              "Oil Change",
-                              Icons.oil_barrel,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Tire Rotation",
-                              Icons.sync,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Battery Check",
-                              Icons.battery_full,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Brake Inspection",
-                              Icons.car_repair,
-                            ),
-                            _recommendedServiceCard(
-                              context,
-                              "Alignment",
-                              Icons.construction,
-                            ),
-                          ],
-                        ),
-                      ),
+                      _recommendedServiceCard(context, "Oil Change", Icons.oil_barrel),
+                      _recommendedServiceCard(context, "Tire Rotation", Icons.sync),
+                      _recommendedServiceCard(context, "Battery Check", Icons.battery_full),
+                      _recommendedServiceCard(context, "Brake Inspection", Icons.car_repair),
+                      _recommendedServiceCard(context, "Alignment", Icons.construction),
                     ],
                   ),
                 ),
@@ -231,39 +198,22 @@ void dispose() {
 
             const SizedBox(height: 40),
 
-            // ===================
-            // 3. Insights Section
-            // ===================
+            // ===============
+            // Insights
+            // ===============
             Column(
               spacing: 20.0,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Section Title
                 const Text("Insights", style: TextStyle(fontSize: 17)),
 
-                // Insights Filter Dropdown (This Month / This Year)
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(horizontal: 15),
                   decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                      right: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                      bottom: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
-                      left: BorderSide(
-                        color: theme.colorScheme.inversePrimary,
-                        width: 1,
-                      ),
+                    border: Border.all(
+                      color: theme.colorScheme.inversePrimary,
+                      width: 1,
                     ),
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -274,23 +224,9 @@ void dispose() {
                   ),
                 ),
 
-                // Insights Cards List
                 Column(
                   spacing: 20.0,
                   children: [
-                    // 1. Income
-                    _insightsCard(
-                      context: context,
-                      title: "Income",
-                      value: "RM 10,135",
-                      trend: "+8%",
-                      chart: FixeroLineChart(
-                        data: IncomeDAO.initializeData(),
-                        color: Colors.teal,
-                      ),
-                    ),
-
-                    // 2. Job Demand
                     _insightsCard(
                       context: context,
                       title: "Job Demand",
@@ -298,11 +234,9 @@ void dispose() {
                       trend: "-5%",
                       chart: FixeroBarChart(
                         data: JobDemandDAO.initializeData(),
-                        color: Color.fromRGBO(255, 178, 122, 1.0),
+                        color: const Color.fromRGBO(255, 178, 122, 1.0),
                       ),
                     ),
-
-                    // 3. Popular Service (only chart)
                     _insightsCard(
                       context: context,
                       value: "Popular Services",
@@ -313,74 +247,85 @@ void dispose() {
                 ),
               ],
             ),
-
-            // Uncomment to test logout
-            // Center(
-            //   child: IconButton(
-            //     onPressed: () => _handleSignOut(context),
-            //     icon: const Icon(Icons.logout),
-            //     tooltip: "Logout",
-            //   ),
-            // ),
           ],
         ),
       ),
     );
   }
 
-  /// Builds a row of two dashboard cards
+  // ---------- UI helpers ----------
+
+  /// Two-card row
   Widget _buildDashboardRow(BuildContext context, List<Widget> children) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: children
           .map(
-            (widget) => SizedBox(
+            (w) => SizedBox(
               width: MediaQuery.of(context).size.width * 0.44,
-              child: widget,
+              child: w,
             ),
           )
           .toList(),
     );
   }
 
-  /// Dashboard card
-Widget _dashboardCard(BuildContext context, String title, String value, {VoidCallback? onTap}) {
-  final theme = Theme.of(context);
-  return InkWell(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(10),
-    child: Container(
+  /// Dashboard gradient card (optional onTap)
+  Widget _dashboardCard(
+    BuildContext context,
+    String title,
+    String value, {
+    VoidCallback? onTap,
+  }) {
+    final theme = Theme.of(context);
+    final card = Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [ theme.colorScheme.primary, theme.colorScheme.primary.withValues(alpha: 0.5) ],
-          begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          colors: [
+            theme.colorScheme.primary,
+            theme.colorScheme.primary.withValues(alpha: 0.5),
+          ],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: TextStyle(fontSize: 16, color: theme.colorScheme.inversePrimary)),
+          Text(
+            title,
+            style: TextStyle(
+              fontSize: 16,
+              color: theme.colorScheme.inversePrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           const SizedBox(height: 5),
-          Text(value, style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold, color: theme.colorScheme.inversePrimary)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.inversePrimary,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ],
       ),
-    ),
-  );
-}
+    );
 
+    if (onTap == null) return card;
+    return GestureDetector(onTap: onTap, child: card);
+  }
 
-  /// Recommended Service Card
-  Widget _recommendedServiceCard(
-    BuildContext context,
-    String label,
-    IconData icon,
-  ) {
+  Widget _recommendedServiceCard(BuildContext context, String label, IconData icon) {
     final theme = Theme.of(context);
     return GestureDetector(
       onTap: () => _handleServiceTap(context, label, icon),
-
       child: Container(
         width: 100,
         padding: const EdgeInsets.all(10),
@@ -406,25 +351,19 @@ Widget _dashboardCard(BuildContext context, String title, String value, {VoidCal
     );
   }
 
-  /// Insights Card
   Widget _insightsCard({
     required BuildContext context,
     required Widget chart,
-    String? title, // e.g., "Income"
-    String? value, // e.g., "RM 10,135"
-    String? trend, // e.g., "+8%" or "-5%"
-    Color? trendColor, // Optional override
+    String? title,
+    String? value,
+    String? trend,
+    Color? trendColor,
   }) {
     final theme = Theme.of(context);
-
-    // Auto-determine color if not provided
-    Color effectiveTrendColor =
-        trendColor ??
+    final effectiveTrendColor = trendColor ??
         (trend != null && trend.startsWith('-')
             ? Colors.red
-            : (trend != null && trend.startsWith('+')
-                  ? Colors.green
-                  : Colors.grey));
+            : (trend != null && trend.startsWith('+') ? Colors.green : Colors.grey));
 
     return Container(
       width: double.infinity,
@@ -445,7 +384,6 @@ Widget _dashboardCard(BuildContext context, String title, String value, {VoidCal
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title and Value
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -469,8 +407,6 @@ Widget _dashboardCard(BuildContext context, String title, String value, {VoidCal
                         ),
                     ],
                   ),
-
-                  // Trend %
                   if (trend != null)
                     Text(
                       trend,
@@ -483,8 +419,6 @@ Widget _dashboardCard(BuildContext context, String title, String value, {VoidCal
                 ],
               ),
             ),
-
-          // Chart Section
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 200, maxHeight: 320),
             child: Padding(
@@ -496,26 +430,4 @@ Widget _dashboardCard(BuildContext context, String title, String value, {VoidCal
       ),
     );
   }
-
-  // Counts invoices where status != 'Paid'
-  
-Stream<int> _pendingInvoiceCountStream() {
-  final ref = FirebaseDatabase.instance.ref('invoices');
-  return ref.onValue.map((event) {
-    final raw = event.snapshot.value;
-    if (raw is Map) {
-      int count = 0;
-      raw.forEach((_, v) {
-        if (v is Map) {
-          final status = (v['status'] ?? '').toString();
-          if (status.toLowerCase() != 'paid') count++;
-        }
-      });
-      return count;
-    }
-    return 0;
-  });
-}
-
-
 }
