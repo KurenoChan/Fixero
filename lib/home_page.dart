@@ -2,8 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fixero/data/repositories/users/manager_repository.dart';
 import 'package:fixero/features/inventory_management/controllers/item_controller.dart';
 import 'package:fixero/features/inventory_management/views/stock_alerts_page.dart';
+import 'package:fixero/features/invoice_management/Views/invoice_module.dart';
 import 'package:fixero/features/job_management/controllers/job_controller.dart';
 import 'package:fixero/features/job_management/views/job_demand_chart_helper.dart';
+import 'package:fixero/features/job_management/views/jobs_page.dart';
 import 'package:fixero/features/job_management/views/service_chart_helper.dart';
 import 'package:fixero/utils/formatters/formatter.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +14,7 @@ import 'package:provider/provider.dart';
 import 'common/widgets/bars/fixero_bottom_appbar.dart';
 import 'common/widgets/bars/fixero_home_appbar.dart';
 import 'common/widgets/charts/fixero_barchart.dart';
-import 'common/widgets/charts/fixero_linechart.dart';
 import 'common/widgets/charts/fixero_piechart.dart';
-import 'data/dao/income_dao.dart';
 
 class HomePage extends StatefulWidget {
   static const routeName = '/home';
@@ -52,31 +52,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  IconData _getServiceIcon(String serviceType) {
-    switch (serviceType.toLowerCase()) {
-      case "oil change":
-        return Icons.oil_barrel; // 🛢️ fits perfectly
-      case "battery check":
-      case "battery repair":
-        return Icons.battery_full; // 🔋 battery
-      case "tire rotation":
-      case "tire repair":
-        return Icons
-            .tire_repair; // ⭕ if using Flutter 3.24+, else use Icons.build
-      case "brake inspection":
-        return Icons.car_repair; // 🚗 mechanic-like
-      case "alignment":
-      case "vehicle safety check":
-        return Icons.rule; // 📏 alignment / inspection
-      case "fuel tank maintenance":
-        return Icons.local_gas_station; // ⛽ fuel tank
-      case "car repair":
-        return Icons.build; // 🛠️ general repair
-      default:
-        return Icons.miscellaneous_services; // ⚙️ fallback
-    }
-  }
-
   Future<void> _loadManagerData() async {
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid != null) {
@@ -89,23 +64,6 @@ class _HomePageState extends State<HomePage> {
         });
       }
     }
-  }
-
-  void _handleServiceTap(BuildContext context, String label, IconData icon) {
-    // Example behavior: show a dialog
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text(label),
-        content: Text("You tapped on $label"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("Close"),
-          ),
-        ],
-      ),
-    );
   }
 
   @override
@@ -136,12 +94,54 @@ class _HomePageState extends State<HomePage> {
 
             // Dashboard Rows
             _buildDashboardRow(context, [
-              _dashboardCard(
-                context,
-                "Ongoing Jobs",
-                jobController.ongoingJobs.length.toString(),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const JobsPage()),
+                ),
+                child: _dashboardCard(
+                  context,
+                  "Ongoing Jobs",
+                  jobController.ongoingJobs.length.toString(),
+                ),
               ),
-              _dashboardCard(context, "Invoices", "5"),
+              GestureDetector(
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const InvoiceModule(),
+                  ),
+                ),
+                child: SizedBox(
+                  height: 100, // 👈 match the height of _dashboardCard
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.8),
+                          theme.colorScheme.primary.withValues(alpha: 0.3),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "View Invoices",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.inversePrimary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ]),
             const SizedBox(height: 10),
             _buildDashboardRow(context, [
@@ -175,63 +175,9 @@ class _HomePageState extends State<HomePage> {
               ),
             ]),
 
-            const SizedBox(height: 40),
-
             // ======================
             // 2. Services Section
             // ======================
-            Column(
-              spacing: 10.0,
-              children: [
-                // Section Title + See All Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("Services", style: TextStyle(fontSize: 17)),
-                    TextButton(
-                      onPressed: () {},
-                      style: TextButton.styleFrom(
-                        backgroundColor: theme.colorScheme.inversePrimary
-                            .withValues(alpha: 0.4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      child: Text(
-                        "See All",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.inversePrimary,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // Service Cards
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    spacing: 10,
-                    children: jobController.getJobServiceTypes().map((
-                      serviceType,
-                    ) {
-                      return _serviceCard(
-                        context,
-                        Formatter.capitalize(serviceType),
-                        _getServiceIcon(serviceType),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
-            ),
-
             const SizedBox(height: 40),
 
             // ===================
@@ -249,19 +195,7 @@ class _HomePageState extends State<HomePage> {
                 Column(
                   spacing: 20.0,
                   children: [
-                    // 1. Income
-                    _insightsCard(
-                      context: context,
-                      title: "Income",
-                      value: "RM 10,135",
-                      trend: "+8%",
-                      chart: FixeroLineChart(
-                        data: IncomeDAO.initializeData(),
-                        color: Colors.teal,
-                      ),
-                    ),
-
-                    // 2. Job Demand by year
+                    // 1. Job Demand by year
                     _insightsCard(
                       context: context,
                       title: "Job Demand",
@@ -273,7 +207,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
 
-                    // 3. Popular Service
+                    // 2. Popular Service
                     _insightsCard(
                       context: context,
                       value: "Popular Services",
@@ -348,37 +282,6 @@ class _HomePageState extends State<HomePage> {
             overflow: TextOverflow.ellipsis,
           ),
         ],
-      ),
-    );
-  }
-
-  /// Recommended Service Card
-  Widget _serviceCard(BuildContext context, String label, IconData icon) {
-    final theme = Theme.of(context);
-    return GestureDetector(
-      onTap: () => _handleServiceTap(context, label, icon),
-
-      child: Container(
-        width: 100,
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.primary.withValues(alpha: 0.2),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: theme.colorScheme.primary),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(fontSize: 14, color: theme.colorScheme.primary),
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ],
-        ),
       ),
     );
   }
