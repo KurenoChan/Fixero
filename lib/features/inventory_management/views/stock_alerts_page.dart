@@ -145,40 +145,41 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
 
               return CustomScrollView(
                 slivers: [
+                  SliverToBoxAdapter(
+                    child: // Search bar
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: FixeroSearchBar(
+                        searchHints: ['Items'],
+                        searchTerms: controller.items
+                            .map((e) => e.itemName)
+                            .toList(),
+                        onItemSelected: (selected) {
+                          final matchedItem = controller.items.firstWhere(
+                            (e) => e.itemName == selected,
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ItemDetailsPage(itemID: matchedItem.itemID),
+                            ),
+                          );
+                        },
+                        onChanged: (query) {
+                          setState(() {
+                            _searchQuery = query;
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
                   SliverPersistentHeader(
                     pinned: true,
                     delegate: _StickyHeaderDelegate(
                       child: Column(
                         children: [
-                          // Search bar
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: FixeroSearchBar(
-                              searchHints: ['Items'],
-                              searchTerms: controller.items
-                                  .map((e) => e.itemName)
-                                  .toList(),
-                              onItemSelected: (selected) {
-                                final matchedItem = controller.items.firstWhere(
-                                  (e) => e.itemName == selected,
-                                );
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => ItemDetailsPage(
-                                      itemID: matchedItem.itemID,
-                                    ),
-                                  ),
-                                );
-                              },
-                              onChanged: (query) {
-                                setState(() {
-                                  _searchQuery = query;
-                                });
-                              },
-                            ),
-                          ),
-
                           // Filter chips
                           SingleChildScrollView(
                             scrollDirection: Axis.horizontal,
@@ -190,7 +191,9 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                                   selected: _filter == StockFilter.all,
                                   onSelected: (_) =>
                                       setState(() => _filter = StockFilter.all),
-                                  selectedColor: Theme.of(context).colorScheme.primary,
+                                  selectedColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                 ),
                                 ChoiceChip(
                                   label: Text("Low Stock ($lowCount)"),
@@ -198,7 +201,9 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                                   onSelected: (_) => setState(
                                     () => _filter = StockFilter.lowStock,
                                   ),
-                                  selectedColor: Theme.of(context).colorScheme.primary,
+                                  selectedColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                 ),
                                 ChoiceChip(
                                   label: Text("Out of Stock ($outCount)"),
@@ -206,7 +211,9 @@ class _StockAlertsPageState extends State<StockAlertsPage> {
                                   onSelected: (_) => setState(
                                     () => _filter = StockFilter.outOfStock,
                                   ),
-                                  selectedColor: Theme.of(context).colorScheme.primary,
+                                  selectedColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
                                 ),
                               ],
                             ),
@@ -403,9 +410,9 @@ class _StickyHeaderDelegate extends SliverPersistentHeaderDelegate {
   }
 
   @override
-  double get maxExtent => 180; // adjust according to your content height
+  double get maxExtent => 120; // adjust according to your content height
   @override
-  double get minExtent => 180;
+  double get minExtent => 120;
   @override
   bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) =>
       false;
